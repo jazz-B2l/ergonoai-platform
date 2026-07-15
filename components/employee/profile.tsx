@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react'
 import { User, Briefcase, Calendar, MapPin, Heart, Ruler, Scale, Clock, ArrowRight, ChevronLeft, LogOut } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useApp } from '@/lib/app-context'
-import type { PersonalData } from '@/lib/mock-data'
+import type { PersonalData } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 const EMPTY: PersonalData = {
   fullName: '',
@@ -213,17 +214,20 @@ export function EmployeeProfile() {
           {personalDataSubmitted && <div className="w-px h-4 bg-border" />}
           <span className="text-sm font-semibold text-foreground">Personal Profile</span>
         </div>
-        <button
-          onClick={async () => {
-            await supabase.auth.signOut()
-            setRole(null)
-            router.push('/')
-          }}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive transition-colors cursor-pointer"
-        >
-          <LogOut className="w-3.5 h-3.5" />
-          Log Out
-        </button>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <button
+            onClick={async () => {
+              await supabase.auth.signOut()
+              setRole(null)
+              router.push('/')
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive transition-colors cursor-pointer"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            Log Out
+          </button>
+        </div>
       </header>
 
       <div className="flex-1 flex items-start justify-center py-10 px-4">

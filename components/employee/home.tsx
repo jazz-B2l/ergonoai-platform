@@ -18,9 +18,11 @@ import {
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useApp } from '@/lib/app-context'
-import type { SubmittedForm, StandaloneNote } from '@/lib/mock-data'
+import type { SubmittedForm, StandaloneNote } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
+import { supabase } from '@/lib/supabase'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -152,6 +154,60 @@ function NoteModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (text
 // ─── Form Review Modal (read-only) ────────────────────────────────────────────
 
 function ReviewModal({ form, onClose }: { form: SubmittedForm; onClose: () => void }) {
+  const [questions, setQuestions] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const { data } = await supabase
+          .from('assessment_questions')
+          .select(`
+            id,
+            question_text,
+            question_type,
+            options:question_options (
+              id,
+              option_text,
+              option_value
+            )
+          `)
+        if (data) {
+          setQuestions(data)
+        }
+      } catch (err) {
+        console.error('Error loading questions in ReviewModal:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchQuestions()
+  }, [])
+
+  function renderAnswerRow(qId: string, answer: string) {
+    const q = questions.find(x => x.id === qId)
+    const displayQuestion = q ? q.question_text : `Question ID: ${qId}`
+
+    let displayAnswer = answer
+    if (q && q.question_type === 'radio' && q.options) {
+      const opt = q.options.find((o: any) => o.id === answer || o.option_value === answer)
+      if (opt) {
+        displayAnswer = opt.option_text
+      }
+    }
+
+    return (
+      <div key={qId} className="flex flex-col gap-1 py-3 border-b border-border last:border-0 text-left">
+        <span className="text-xs font-semibold text-slate-500">
+          {displayQuestion}
+        </span>
+        <span className="text-sm font-medium text-foreground">
+          {displayAnswer}
+        </span>
+      </div>
+    )
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div className="w-full max-w-2xl max-h-[80vh] flex flex-col bg-card border border-border rounded-2xl shadow-2xl">
@@ -173,18 +229,17 @@ function ReviewModal({ form, onClose }: { form: SubmittedForm; onClose: () => vo
               This form has been submitted. Answers are read-only and cannot be edited.
             </p>
           </div>
-          {Object.keys(form.answers).length === 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-6 h-6 animate-spin text-brand" />
+            </div>
+          ) : Object.keys(form.answers).length === 0 ? (
             <div className="text-center py-12 text-muted-foreground text-sm">
               This is a historical mock form — detailed answers were not stored.
             </div>
           ) : (
-            <div className="space-y-2">
-              {Object.entries(form.answers).map(([qId, answer]) => (
-                <div key={qId} className="flex items-start justify-between gap-3 py-2.5 border-b border-border last:border-0">
-                  <span className="text-xs text-muted-foreground font-mono">{qId}</span>
-                  <span className="text-sm text-foreground text-right">{answer}</span>
-                </div>
-              ))}
+            <div className="space-y-1 divide-y divide-border">
+              {Object.entries(form.answers).map(([qId, answer]) => renderAnswerRow(qId, answer))}
             </div>
           )}
         </div>
@@ -284,7 +339,7 @@ export function EmployeeHome() {
                 <Brain className="w-4 h-4 text-brand" />
               </div>
               <span className="text-base font-semibold tracking-tight text-foreground">
-                ERGO<span className="text-brand">PSYC</span>.AI
+                Ergono<span className="text-brand">AI</span>
               </span>
             </div>
             <div className="flex items-center gap-3">
@@ -298,6 +353,7 @@ export function EmployeeHome() {
                 </div>
                 <span className="text-sm font-medium text-foreground">{displayName}</span>
               </Link>
+              <ThemeToggle />
               <button
                 onClick={() => {
                   setRole(null)

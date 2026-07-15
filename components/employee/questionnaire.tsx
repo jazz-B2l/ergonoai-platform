@@ -11,9 +11,10 @@ import {
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useApp } from '@/lib/app-context'
-import { buildFullQuestionList } from '@/lib/mock-data'
-import type { Question } from '@/lib/mock-data'
+import type { Question } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { supabase } from '@/lib/supabase'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 // ─── Body region badge ────────────────────────────────────────────────────────
 
@@ -81,7 +82,7 @@ function RadioWidget({ value, onChange, options }: {
   )
 }
 
-function ScaleWidget({ value, onChange, min = 1, max = 5, lowLabel, highLabel }: {
+function ScaleWidget({ value, onChange, min = 1, max = 10, lowLabel, highLabel }: {
   value: string
   onChange: (v: string) => void
   min?: number
@@ -89,30 +90,57 @@ function ScaleWidget({ value, onChange, min = 1, max = 5, lowLabel, highLabel }:
   lowLabel?: string
   highLabel?: string
 }) {
-  const ticks = Array.from({ length: max - min + 1 }, (_, i) => i + min)
+  const currentVal = value ? parseInt(value, 10) : 5
+
+  useEffect(() => {
+    if (!value) {
+      onChange('5')
+    }
+  }, [value, onChange])
+
+  const getColor = (val: number) => {
+    if (val <= 4) return 'text-destructive bg-destructive/10 border-destructive/20'
+    if (val <= 7) return 'text-warning bg-warning/10 border-warning/20'
+    return 'text-success bg-success/10 border-success/20'
+  }
+
+  const getSliderColor = (val: number) => {
+    if (val <= 4) return '#ef4444' // red
+    if (val <= 7) return '#f59e0b' // amber
+    return '#22c55e' // green
+  }
+
   return (
-    <div className="mt-2">
-      <div className="flex gap-1.5">
-        {ticks.map(tick => (
-          <button
-            key={tick}
-            type="button"
-            onClick={() => onChange(String(tick))}
-            className={cn(
-              'flex-1 py-2.5 rounded-lg text-sm font-semibold border transition-all',
-              value === String(tick)
-                ? 'bg-brand text-brand-foreground border-brand shadow-sm'
-                : 'bg-muted border-border text-muted-foreground hover:border-brand/50 hover:text-foreground'
-            )}
-          >
-            {tick}
-          </button>
-        ))}
+    <div className="mt-3 flex flex-col gap-4">
+      {/* Value Indicator Bubble */}
+      <div className="flex justify-between items-center">
+        <span className="text-xs text-muted-foreground font-medium">Select rating (1-10):</span>
+        <div className={`px-3 py-1 rounded-full border text-sm font-bold transition-all shadow-sm ${getColor(currentVal)}`}>
+          {value || '5'}
+        </div>
       </div>
+
+      {/* Slider Container */}
+      <div className="relative flex items-center px-3 py-3.5 bg-muted/20 border border-border rounded-xl">
+        <input
+          type="range"
+          min={min}
+          max={max}
+          value={currentVal}
+          onChange={e => onChange(e.target.value)}
+          className="w-full h-2 rounded-lg cursor-pointer appearance-none bg-gradient-to-r from-red-500 via-amber-500 to-green-500"
+          style={{
+            background: `linear-gradient(to right, #ef4444 0%, #f59e0b 50%, #22c55e 100%)`,
+            accentColor: getSliderColor(currentVal)
+          }}
+        />
+      </div>
+
+      {/* Low & High Labels */}
       {(lowLabel || highLabel) && (
-        <div className="flex justify-between mt-1">
-          <span className="text-xs text-muted-foreground">{lowLabel}</span>
-          <span className="text-xs text-muted-foreground">{highLabel}</span>
+        <div className="flex justify-between px-1">
+          <span className="text-xs text-muted-foreground font-medium">{lowLabel}</span>
+          <span className="text-xs text-muted-foreground font-medium">{highLabel}</span>
         </div>
       )}
     </div>
@@ -298,13 +326,106 @@ function buildPages(questions: Question[]): Question[][] {
 
 // ─── Main Questionnaire ───────────────────────────────────────────────────────
 
-const ALL_QUESTIONS = buildFullQuestionList()
-const PAGES = buildPages(ALL_QUESTIONS)
-const TOTAL_PAGES = PAGES.length
-
 export function EmployeeQuestionnaire() {
   const router = useRouter()
   const { questionAnswers, personalDataSubmitted, loadingProfile } = useApp()
+  const [questions, setQuestions] = useState<Question[]>([])
+  const [loadingQuestions, setLoadingQuestions] = useState(true)
+
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const { data: questionsData, error } = await supabase
+          .from('assessment_questions')
+          .select(`
+            id,
+            question_code,
+            question_text,
+            question_type,
+            category,
+            is_required,
+            display_order,
+            options:question_options (
+              id,
+              option_text,
+              option_value,
+              display_order
+            )
+          `)
+          .order('display_order', { ascending: true })
+
+        if (error) {
+          console.error('Error fetching questions:', error.message, error.details, error.code)
+          return
+        }
+
+        if (questionsData) {
+          const bodyRegionMap: Record<string, string> = {
+            neck: 'Neck',
+            shoulders: 'Shoulders',
+            upper_back: 'Upper Back',
+            elbows: 'Elbows',
+            wrists_hands: 'Wrists / Hands',
+            lower_back: 'Lower Back',
+            hips_thighs: 'Hips / Thighs',
+            knees: 'Knees',
+            ankles_feet: 'Ankles / Feet',
+          }
+
+          const mapped: Question[] = questionsData.map(q => {
+            const code = q.question_code || ''
+            let section: 'NMQ_summary' | 'NMQ_detail' | 'ISO7730' = 'ISO7730'
+            if (code.startsWith('nmq_sum')) section = 'NMQ_summary'
+            else if (code.startsWith('nmq_det')) section = 'NMQ_detail'
+
+            let scaleMin, scaleMax, scaleLowLabel, scaleHighLabel
+            if (q.question_type === 'scale') {
+              scaleMin = 1
+              scaleMax = 5
+              if (code === 'iso_1') {
+                scaleLowLabel = 'Very poor'
+                scaleHighLabel = 'Excellent'
+              } else if (code === 'iso_39') {
+                scaleLowLabel = 'Very dissatisfied'
+                scaleHighLabel = 'Very satisfied'
+              }
+            }
+
+            const options = q.options && q.options.length > 0
+              ? [...q.options]
+                  .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+                  .map(o => ({
+                    value: o.id,
+                    label: o.option_text,
+                    optionValue: o.option_value
+                  }))
+              : undefined
+
+            return {
+              id: q.id,
+              section,
+              bodyRegion: bodyRegionMap[q.category || ''] || undefined,
+              text: q.question_text,
+              answerType: q.question_type as any,
+              options,
+              scaleMin,
+              scaleMax,
+              scaleLowLabel,
+              scaleHighLabel,
+            }
+          })
+
+          setQuestions(mapped)
+        }
+      } catch (err) {
+        console.error('Unhandled error fetching questions:', err)
+      } finally {
+        setLoadingQuestions(false)
+      }
+    }
+
+    fetchQuestions()
+  }, [])
 
   // Redirect to profile if not submitted
   useEffect(() => {
@@ -313,7 +434,12 @@ export function EmployeeQuestionnaire() {
     }
   }, [loadingProfile, personalDataSubmitted, router])
 
-  if (loadingProfile) {
+  const [pageIndex, setPageIndex] = useState(0)
+  const [direction, setDirection] = useState<'forward' | 'backward'>('forward')
+  const [animating, setAnimating] = useState(false)
+  const [openNoteForPage, setOpenNoteForPage] = useState<number | null>(null)
+
+  if (loadingProfile || loadingQuestions) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-brand" />
@@ -321,14 +447,21 @@ export function EmployeeQuestionnaire() {
     )
   }
 
-  const [pageIndex, setPageIndex] = useState(0)
-  const [direction, setDirection] = useState<'forward' | 'backward'>('forward')
-  const [animating, setAnimating] = useState(false)
-  const [openNoteForPage, setOpenNoteForPage] = useState<number | null>(null)
+  if (questions.length === 0) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center">
+          <p className="text-muted-foreground text-sm">No questions found in the database.</p>
+        </div>
+      </div>
+    )
+  }
 
-  const currentPage = PAGES[pageIndex]
+  const pages = buildPages(questions)
+  const totalPages = pages.length
+  const currentPage = pages[pageIndex] || []
   const firstQuestion = currentPage[0]
-  const progress = ((pageIndex + 1) / TOTAL_PAGES) * 100
+  const progress = totalPages > 0 ? ((pageIndex + 1) / totalPages) * 100 : 0
 
   // Count answered on current page
   const answeredOnPage = currentPage.filter(q => (questionAnswers[q.id] ?? '').trim() !== '').length
@@ -347,7 +480,7 @@ export function EmployeeQuestionnaire() {
   }
 
   function handleNext() {
-    if (pageIndex < TOTAL_PAGES - 1) navigate('forward')
+    if (pageIndex < totalPages - 1) navigate('forward')
     else router.push('/employee/review')
   }
 
@@ -382,7 +515,7 @@ export function EmployeeQuestionnaire() {
                 {sectionLabel(firstQuestion)}
               </span>
               <span className="text-xs text-muted-foreground">
-                Page {pageIndex + 1} of {TOTAL_PAGES}
+                Page {pageIndex + 1} of {totalPages}
                 {answeredOnPage < currentPage.length && (
                   <span className="ml-1.5 text-warning font-medium">
                     ({answeredOnPage}/{currentPage.length} answered)
@@ -391,6 +524,7 @@ export function EmployeeQuestionnaire() {
               </span>
             </div>
           </div>
+          <ThemeToggle />
         </div>
       </header>
 
@@ -441,15 +575,15 @@ export function EmployeeQuestionnaire() {
 
             <button
               onClick={handleNext}
-              disabled={animating}
+              disabled={animating || answeredOnPage < currentPage.length}
               className={cn(
                 'flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors disabled:opacity-40',
-                pageIndex === TOTAL_PAGES - 1
+                pageIndex === totalPages - 1
                   ? 'bg-success text-white hover:bg-success/90'
                   : 'bg-brand text-brand-foreground hover:bg-brand/90'
               )}
             >
-              {pageIndex === TOTAL_PAGES - 1 ? 'Review Answers' : 'Next'}
+              {pageIndex === totalPages - 1 ? 'Review Answers' : 'Next'}
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
