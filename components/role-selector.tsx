@@ -32,11 +32,10 @@ export function RoleSelector() {
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {/* HR Manager */}
           <button
             onClick={() => {
               setRole('hr')
-              router.push('/hr')
+              router.push('/signup?role=hr')
             }}
             className="group relative p-8 rounded-2xl border border-border bg-card hover:border-brand/40 hover:bg-brand/5 transition-all duration-200 text-left cursor-pointer"
           >
@@ -69,7 +68,7 @@ export function RoleSelector() {
             </div>
 
             <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
-              <div className="text-xs text-brand font-medium">Enter dashboard →</div>
+              <div className="text-xs text-brand font-medium">Get Started →</div>
             </div>
           </button>
 
@@ -77,7 +76,7 @@ export function RoleSelector() {
           <button
             onClick={() => {
               setRole('employee')
-              router.push('/employee')
+              router.push('/signup?role=employee')
             }}
             className="group relative p-8 rounded-2xl border border-border bg-card hover:border-success/40 hover:bg-success/5 transition-all duration-200 text-left cursor-pointer"
           >
@@ -110,7 +109,7 @@ export function RoleSelector() {
             </div>
 
             <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
-              <div className="text-xs text-success font-medium">Enter dashboard →</div>
+              <div className="text-xs text-success font-medium">Get Started →</div>
             </div>
           </button>
         </div>
