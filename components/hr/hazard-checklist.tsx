@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { CheckCircle2, XCircle, AlertCircle, MinusCircle, ChevronDown, ChevronUp, Info } from 'lucide-react'
-import { hazardChecklist, type HazardCategory, type HazardItem } from '@/lib/mock-data'
+import { hazardChecklist, type HazardCategory, type HazardItem } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 const CATEGORIES: HazardCategory[] = [

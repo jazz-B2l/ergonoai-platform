@@ -28,7 +28,7 @@ import {
 import {
   organizationWellbeingTrend,
   aiRecommendations,
-} from '@/lib/mock-data'
+} from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/lib/app-context'
 import { supabase } from '@/lib/supabase'

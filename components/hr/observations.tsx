@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Eye, EyeOff, MapPin, Calendar, User, ChevronDown } from 'lucide-react'
-import { hazardObservations } from '@/lib/mock-data'
+import { hazardObservations } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 const riskConfig = {
