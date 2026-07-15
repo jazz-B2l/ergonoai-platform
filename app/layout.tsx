@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Sora, Geist_Mono } from 'next/font/google'
 import { AppProvider } from '@/lib/app-context'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
+const sora = Sora({ subsets: ['latin'], variable: '--font-sora' })
+const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono' })
 
 export const metadata: Metadata = {
   title: 'ERGOPSYC.AI — Occupational Health & Wellbeing Platform',
@@ -21,7 +23,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className="bg-background">
-      <body className={`${inter.className} antialiased`}>
+      <body className={`${inter.variable} ${sora.variable} ${geistMono.variable} font-sans antialiased`}>
         <AppProvider>{children}</AppProvider>
       </body>
     </html>

@@ -1,0 +1,126 @@
+/* Advanced visual effects for the landing page */
+
+.heroBackground {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: -1;
+  background-color: #020617; /* Slate 950 / Dark Navy */
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(15, 118, 110, 0.3), transparent),
+    radial-gradient(ellipse 60% 60% at 80% 120%, rgba(20, 184, 166, 0.15), transparent);
+}
+
+.animatedGrid {
+  position: absolute;
+  inset: 0;
+  background-size: 50px 50px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  mask-image: linear-gradient(to bottom, black 20%, transparent 80%);
+  animation: gridMove 20s linear infinite;
+}
+
+@keyframes gridMove {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(50px); }
+}
+
+.glowingParticle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background-color: #14b8a6;
+  border-radius: 50%;
+  box-shadow: 0 0 10px 2px #14b8a6;
+  opacity: 0;
+  animation: floatParticle 8s ease-in-out infinite;
+}
+
+@keyframes floatParticle {
+  0% { opacity: 0; transform: translateY(0) translateX(0) scale(0.5); }
+  25% { opacity: 0.8; }
+  50% { transform: translateY(-100px) translateX(20px) scale(1.2); }
+  75% { opacity: 0.8; }
+  100% { opacity: 0; transform: translateY(-200px) translateX(-20px) scale(0.5); }
+}
+
+.blurredCircle1 {
+  position: absolute;
+  top: 10%;
+  left: 20%;
+  width: 40vw;
+  height: 40vw;
+  background: rgba(15, 118, 110, 0.4);
+  filter: blur(100px);
+  border-radius: 50%;
+  animation: pulse 10s alternate infinite ease-in-out;
+}
+
+.blurredCircle2 {
+  position: absolute;
+  bottom: -10%;
+  right: 10%;
+  width: 30vw;
+  height: 30vw;
+  background: rgba(20, 184, 166, 0.3);
+  filter: blur(120px);
+  border-radius: 50%;
+  animation: pulse 12s alternate-reverse infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1) translate(0, 0); }
+  100% { transform: scale(1.1) translate(20px, -20px); }
+}
+
+/* 3D Dashboard Mockup styles */
+.dashboardWrapper {
+  perspective: 1200px;
+  transform-style: preserve-3d;
+  position: relative;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.dashboardElement {
+  transform: rotateX(10deg) rotateY(-5deg) translateY(0);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.dashboardElement:hover {
+  transform: rotateX(5deg) rotateY(-2deg) translateY(-10px);
+}
+
+.floatingCard1 {
+  position: absolute;
+  top: 20%;
+  left: -5%;
+  transform: translateZ(50px);
+  animation: float 6s infinite ease-in-out;
+}
+
+.floatingCard2 {
+  position: absolute;
+  bottom: 20%;
+  right: -5%;
+  transform: translateZ(80px);
+  animation: float 8s infinite ease-in-out reverse;
+}
+
+@keyframes float {
+  0% { transform: translateZ(50px) translateY(0); }
+  50% { transform: translateZ(50px) translateY(-15px); }
+  100% { transform: translateZ(50px) translateY(0); }
+}
+
+.glassCard {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}

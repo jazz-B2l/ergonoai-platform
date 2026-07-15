@@ -1,7 +1,14 @@
 'use client'
 
-import { HRSettings } from '@/components/hr/settings'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function HRSettingsPage() {
-  return <HRSettings />
+  const router = useRouter()
+  
+  useEffect(() => {
+    router.replace('/org/profile')
+  }, [router])
+
+  return null
 }
