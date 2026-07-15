@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   TrendingUp,
   TrendingDown,
@@ -7,6 +7,13 @@ import {
   Activity,
   Lightbulb,
   ChevronRight,
+  Plus,
+  ArrowRight,
+  Loader2,
+  Building2,
+  UserPlus,
+  Sparkles,
+  Play
 } from 'lucide-react'
 import {
   LineChart,
@@ -19,13 +26,12 @@ import {
   Legend,
 } from 'recharts'
 import {
-  departments,
-  companyWellbeingTrend,
-  hazardObservations,
+  organizationWellbeingTrend,
   aiRecommendations,
 } from '@/lib/mock-data'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/lib/app-context'
+import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 
 function ScoreRing({ score }: { score: number }) {
@@ -45,22 +51,230 @@ export function HROverview() {
   const [modalOpen, setModalOpen] = useState(false)
   const [title, setTitle] = useState('Q3 2026 Ergonomic Assessment')
 
-  const avgScore =
-    departments.reduce((s, d) => s + d.overallScore, 0) / departments.length
-  const criticalCount = hazardObservations.filter((o) => o.riskLevel === 'critical').length
-  const openObservations = hazardObservations.filter((o) => o.status !== 'resolved').length
-  const totalEmployees = departments.reduce((s, d) => s + d.headcount, 0)
-  const avgResponseRate =
-    departments.reduce((s, d) => s + d.responseRate, 0) / departments.length
+  // DB States
+  const [loading, setLoading] = useState(true)
+  const [deptsList, setDeptsList] = useState<any[]>([])
+  const [totalEmployees, setTotalEmployees] = useState(0)
+  const [criticalCount, setCriticalCount] = useState(0)
+  const [openObservations, setOpenObservations] = useState(0)
+  const [recsCount, setRecsCount] = useState(0)
+  const [recentObs, setRecentObs] = useState<any[]>([])
 
+  async function loadData() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      // Get the HR manager's organization_id
+      const { data: member } = await supabase
+        .from('organization_members')
+        .select('organization_id')
+        .eq('profile_id', user.id)
+        .eq('is_active', true)
+        .limit(1)
+        .single()
+
+      if (!member) return
+      const organizationId = member.organization_id
+
+      // Fetch departments in this organization
+      const { data: depts } = await supabase
+        .from('departments')
+        .select('*')
+        .eq('organization_id', organizationId)
+
+      // Count total organization members (employees)
+      const { count: memberCount } = await supabase
+        .from('organization_members')
+        .select('*', { count: 'exact', head: true })
+        .eq('organization_id', organizationId)
+
+      // Fetch hazard observations for this organization
+      const { data: hazards } = await supabase
+        .from('hazard_occurrences')
+        .select('*')
+        .eq('organization_id', organizationId)
+
+      // Fetch AI Recommendations count
+      const { data: recs } = await supabase
+        .from('assessment_ai_recommendations')
+        .select('id, priority')
+        .limit(10)
+
+      setDeptsList(depts || [])
+      setTotalEmployees(memberCount || 0)
+
+      if (hazards) {
+        const open = hazards.filter(h => h.status === 'OPEN')
+        setOpenObservations(open.length)
+        setCriticalCount(open.filter(h => h.severity === 'CRITICAL' || h.severity === 'HIGH').length)
+        setRecentObs(hazards.slice(0, 3))
+      }
+
+      setRecsCount(recs ? recs.length : 0)
+    } catch (err) {
+      console.error('Error fetching overview data:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-screen bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-brand" />
+      </div>
+    )
+  }
+
+  const avgScore = 0
+  const avgResponseRate = 0
+
+  function renderCampaignModal() {
+    return (
+      <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-card border border-border rounded-xl shadow-lg p-6 relative">
+          <h3 className="text-lg font-semibold text-foreground mb-2">Launch New Assessment Campaign</h3>
+          <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+            Launch a new ergonomic assessment cycle. All employees will be required to fill this out upon entering the employee space.
+          </p>
+          <div className="mb-4">
+            <label className="block text-xs font-medium text-muted-foreground mb-1.5">Assessment Campaign Title</label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg bg-input border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition-colors"
+            />
+          </div>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setModalOpen(false)}
+              className="px-4 py-2 rounded-lg text-sm font-medium border border-border text-foreground hover:bg-muted transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                if (title.trim()) {
+                  setActiveAssessment({
+                    id: `assessment_${Date.now()}`,
+                    title: title.trim(),
+                    createdAt: new Date().toISOString(),
+                  })
+                  setModalOpen(false)
+                }
+              }}
+              className="px-4 py-2 rounded-lg bg-brand text-brand-foreground text-sm font-semibold hover:bg-brand/90 transition-colors cursor-pointer"
+            >
+              Launch Campaign
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Onboarding Checklist for Empty State
+  if (deptsList.length === 0) {
+    return (
+      <div className="flex-1 h-full flex flex-col items-center justify-center p-6 bg-slate-50/50 overflow-y-auto">
+        <div className="w-full max-w-5xl space-y-10 my-auto text-center">
+          
+          <div className="space-y-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-teal-600 bg-teal-50 px-3 py-1 rounded-full border border-teal-200/50">
+              Onboarding Checklist
+            </span>
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 font-sora sm:text-4xl">
+              Welcome to ErgonoAI
+            </h1>
+            <p className="text-sm text-slate-500 max-w-lg mx-auto leading-relaxed">
+              Configure your workspace in three simple steps to start analyzing ergonomic wellbeing and identifying hazard trends.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2 items-stretch max-w-4xl mx-auto">
+            {[
+              {
+                icon: Building2,
+                color: 'text-teal-600 bg-teal-50 border-teal-100',
+                title: '1. Departments',
+                description: 'Set up distinct workspaces to group employees.',
+                action: (
+                  <Link
+                    href="/hr/departments"
+                    className="mt-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-teal-600 text-white text-xs font-semibold hover:bg-teal-700 transition-all w-full text-center shadow-sm"
+                  >
+                    Configure Spaces
+                    <Plus className="w-3.5 h-3.5" />
+                  </Link>
+                )
+              },
+              {
+                icon: UserPlus,
+                color: 'text-indigo-600 bg-indigo-50 border-indigo-100',
+                title: '2. Invite Staff',
+                description: 'Create site locations and generate invite codes.',
+                action: (
+                  <Link
+                    href="/hr/settings"
+                    className="mt-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-all w-full text-center shadow-sm"
+                  >
+                    Invite Employees
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                )
+              },
+              {
+                icon: Sparkles,
+                color: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+                title: '3. Launch Survey',
+                description: 'Start an ISO-compliant ergonomics assessment.',
+                action: (
+                  <button
+                    onClick={() => setModalOpen(true)}
+                    className="mt-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-all cursor-pointer w-full text-center shadow-sm"
+                  >
+                    Launch Campaign
+                    <Play className="w-3 h-3 text-emerald-600 fill-emerald-600" />
+                  </button>
+                )
+              }
+            ].map(({ icon: Icon, color, title, description, action }) => (
+              <div key={title} className="group relative flex flex-col p-6 rounded-2xl bg-white border border-slate-200 hover:border-slate-300 transition-all duration-300 hover:shadow-md h-full justify-between space-y-6">
+                <div className="flex flex-col items-center text-center space-y-3 flex-1">
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center border font-bold text-sm shrink-0 transition-transform group-hover:scale-105 ${color}`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-base font-bold text-slate-900 font-sora">{title}</h3>
+                  <p className="text-xs text-slate-500 leading-relaxed max-w-[200px] flex-1">{description}</p>
+                </div>
+                <div className="pt-2">
+                  {action}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {modalOpen && renderCampaignModal()}
+      </div>
+    )
+  }
+
+  // Normal Dashboard (once they have departments configured)
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Company Overview</h1>
+          <h1 className="text-xl font-semibold text-foreground">Organization Overview</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Last assessment cycle: April 2026 · 5 departments · {totalEmployees} employees
+            Active Workspace · {deptsList.length} departments · {totalEmployees} employees
           </p>
         </div>
 
@@ -74,7 +288,7 @@ export function HROverview() {
               </div>
               <button
                 onClick={() => setActiveAssessment(null)}
-                className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-colors"
+                className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-colors cursor-pointer"
               >
                 End Campaign
               </button>
@@ -82,7 +296,7 @@ export function HROverview() {
           ) : (
             <button
               onClick={() => setModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-brand text-brand-foreground text-sm font-semibold hover:bg-brand/90 transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-brand text-brand-foreground text-sm font-semibold hover:bg-brand/90 transition-colors cursor-pointer"
             >
               Launch Assessment
             </button>
@@ -96,28 +310,28 @@ export function HROverview() {
           {
             label: 'Overall Wellbeing Score',
             value: <ScoreRing score={avgScore} />,
-            sub: <span className="flex items-center gap-1 text-success text-xs"><TrendingUp className="w-3 h-3" />+0.4 vs last quarter</span>,
+            sub: <span className="text-xs text-muted-foreground">Waiting for assessment results</span>,
             icon: Activity,
             accent: 'brand',
           },
           {
-            label: 'Avg. Response Rate',
-            value: <div className="text-3xl font-bold text-foreground">{avgResponseRate.toFixed(0)}<span className="text-base font-normal text-muted-foreground">%</span></div>,
-            sub: <span className="text-xs text-muted-foreground">{departments.filter(d => d.responseRate >= 60).length}/{departments.length} depts above threshold</span>,
+            label: 'Total Registered Staff',
+            value: <div className="text-3xl font-bold text-foreground">{totalEmployees}<span className="text-base font-normal text-muted-foreground"> members</span></div>,
+            sub: <span className="text-xs text-muted-foreground">{deptsList.length} departments configured</span>,
             icon: Users,
             accent: 'success',
           },
           {
             label: 'Critical Hazards',
-            value: <div className="text-3xl font-bold text-danger">{criticalCount}</div>,
+            value: <div className={cn("text-3xl font-bold", criticalCount > 0 ? "text-danger" : "text-foreground")}>{criticalCount}</div>,
             sub: <span className="text-xs text-muted-foreground">{openObservations} observations open</span>,
             icon: AlertTriangle,
             accent: 'danger',
           },
           {
             label: 'AI Recommendations',
-            value: <div className="text-3xl font-bold text-warning">{aiRecommendations.length}</div>,
-            sub: <span className="text-xs text-muted-foreground">{aiRecommendations.filter(r => r.priority === 'high').length} high priority</span>,
+            value: <div className="text-3xl font-bold text-foreground">{recsCount}</div>,
+            sub: <span className="text-xs text-muted-foreground">Generated by AI inspection</span>,
             icon: Lightbulb,
             accent: 'warning',
           },
@@ -154,27 +368,15 @@ export function HROverview() {
           <div className="flex items-center justify-between mb-5">
             <div>
               <h2 className="text-sm font-semibold text-foreground">Wellbeing Trend</h2>
-              <p className="text-xs text-muted-foreground">Company-wide · Last 7 months</p>
+              <p className="text-xs text-muted-foreground">Organization-wide · Assessment History</p>
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={companyWellbeingTrend} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="oklch(1 0 0 / 6%)" />
-              <XAxis dataKey="month" tick={{ fill: 'oklch(0.55 0.01 240)', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis domain={[0, 10]} tick={{ fill: 'oklch(0.55 0.01 240)', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <Tooltip
-                contentStyle={{ background: 'oklch(0.18 0.01 240)', border: '1px solid oklch(1 0 0 / 10%)', borderRadius: 8, fontSize: 12, color: 'oklch(0.96 0.005 240)' }}
-                cursor={{ stroke: 'oklch(1 0 0 / 10%)' }}
-              />
-              <Legend iconType="circle" iconSize={6} wrapperStyle={{ fontSize: 11 }} />
-              <Line type="monotone" dataKey="musculoskeletal" name="Musculoskeletal" stroke="oklch(0.72 0.16 190)" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="environment" name="Environment" stroke="oklch(0.70 0.18 155)" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="overall" name="Overall" stroke="oklch(0.78 0.18 75)" strokeWidth={2} dot={{ fill: 'oklch(0.78 0.18 75)', r: 3 }} />
-            </LineChart>
-          </ResponsiveContainer>
+          <div className="h-[220px] flex items-center justify-center bg-muted/10 border border-dashed border-border rounded-xl">
+            <p className="text-xs text-muted-foreground">Trend data will compile once your first assessment cycle completes.</p>
+          </div>
         </div>
 
-        {/* Department scores */}
+        {/* Department list */}
         <div className="xl:col-span-2 bg-card rounded-xl border border-border p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-foreground">Departments</h2>
@@ -183,46 +385,17 @@ export function HROverview() {
             </Link>
           </div>
           <ul className="space-y-3">
-            {departments.map((dept) => {
-              const color =
-                dept.overallScore >= 7
-                  ? 'text-success'
-                  : dept.overallScore >= 5
-                  ? 'text-warning'
-                  : 'text-danger'
-              const barColor =
-                dept.overallScore >= 7
-                  ? 'bg-success'
-                  : dept.overallScore >= 5
-                  ? 'bg-warning'
-                  : 'bg-danger'
-              return (
-                <li key={dept.id}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div>
-                      <span className="text-xs font-medium text-foreground">{dept.name}</span>
-                      <span className="text-xs text-muted-foreground ml-2">{dept.site}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      {dept.trend >= 0 ? (
-                        <TrendingUp className="w-3 h-3 text-success" />
-                      ) : (
-                        <TrendingDown className="w-3 h-3 text-danger" />
-                      )}
-                      <span className={cn('text-xs font-semibold tabular-nums', color)}>
-                        {dept.overallScore.toFixed(1)}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                    <div
-                      className={cn('h-full rounded-full transition-all', barColor)}
-                      style={{ width: `${(dept.overallScore / 10) * 100}%` }}
-                    />
-                  </div>
-                </li>
-              )
-            })}
+            {deptsList.slice(0, 5).map((dept) => (
+              <li key={dept.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
+                <div>
+                  <span className="text-xs font-semibold text-foreground block">{dept.name}</span>
+                  <span className="text-[10px] text-muted-foreground block truncate max-w-[150px]">{dept.description || 'No description'}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-xs font-medium text-brand block">Active</span>
+                </div>
+              </li>
+            ))}
           </ul>
         </div>
       </div>
@@ -235,77 +408,35 @@ export function HROverview() {
             View all <ChevronRight className="w-3 h-3" />
           </Link>
         </div>
-        <div className="space-y-2">
-          {hazardObservations.slice(0, 3).map((obs) => (
-            <div key={obs.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/40 border border-border">
-              <span className={cn(
-                'shrink-0 mt-0.5 text-xs font-semibold px-2 py-0.5 rounded-md',
-                obs.riskLevel === 'critical' && 'bg-danger/15 text-danger',
-                obs.riskLevel === 'high' && 'bg-warning/15 text-warning',
-                obs.riskLevel === 'medium' && 'bg-brand/15 text-brand',
-                obs.riskLevel === 'low' && 'bg-success/15 text-success',
-              )}>
-                {obs.riskLevel}
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{obs.title}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{obs.location} · {obs.date}</p>
-              </div>
-              <span className={cn(
-                'shrink-0 text-xs px-2 py-0.5 rounded-full',
-                obs.status === 'open' && 'bg-danger/10 text-danger',
-                obs.status === 'in-progress' && 'bg-warning/10 text-warning',
-                obs.status === 'resolved' && 'bg-success/10 text-success',
-              )}>
-                {obs.status}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-      {/* Campaign Launcher Modal */}
-      {modalOpen && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-card border border-border rounded-xl shadow-lg p-6 relative">
-            <h3 className="text-lg font-semibold text-foreground mb-2">Launch New Assessment Campaign</h3>
-            <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-              Launch a new ergonomic assessment cycle. All employees will be required to fill this out upon entering the employee space.
-            </p>
-            <div className="mb-4">
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Assessment Campaign Title</label>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-input border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition-colors"
-              />
-            </div>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setModalOpen(false)}
-                className="px-4 py-2 rounded-lg text-sm font-medium border border-border text-foreground hover:bg-muted transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  if (title.trim()) {
-                    setActiveAssessment({
-                      id: `assessment_${Date.now()}`,
-                      title: title.trim(),
-                      createdAt: new Date().toISOString(),
-                    })
-                    setModalOpen(false)
-                  }
-                }}
-                className="px-4 py-2 rounded-lg bg-brand text-brand-foreground text-sm font-semibold hover:bg-brand/90 transition-colors"
-              >
-                Launch Campaign
-              </button>
-            </div>
+        
+        {recentObs.length === 0 ? (
+          <div className="p-6 text-center border border-dashed border-border rounded-xl bg-muted/10">
+            <p className="text-xs text-muted-foreground">No occupational hazards have been reported yet.</p>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="space-y-2">
+            {recentObs.map((obs) => (
+              <div key={obs.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/40 border border-border">
+                <span className={cn(
+                  'shrink-0 mt-0.5 text-xs font-semibold px-2 py-0.5 rounded-md',
+                  obs.severity === 'CRITICAL' && 'bg-danger/15 text-danger',
+                  obs.severity === 'HIGH' && 'bg-warning/15 text-warning',
+                  obs.severity === 'MEDIUM' && 'bg-brand/15 text-brand',
+                  obs.severity === 'LOW' && 'bg-success/15 text-success',
+                )}>
+                  {obs.severity}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{obs.description}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{obs.status} · {new Date(obs.created_at).toLocaleDateString()}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {modalOpen && renderCampaignModal()}
     </div>
   )
 }

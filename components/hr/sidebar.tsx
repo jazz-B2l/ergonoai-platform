@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import {
   Brain,
   LayoutDashboard,
@@ -8,7 +9,6 @@ import {
   Eye,
   Lightbulb,
   FileBarChart,
-  Settings,
   LogOut,
   ChevronRight,
 } from 'lucide-react'
@@ -16,6 +16,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useApp, type HRPage } from '@/lib/app-context'
 import { cn } from '@/lib/utils'
+import { supabase } from '@/lib/supabase'
 
 const navItems: { id: HRPage; label: string; icon: React.ElementType; badge?: number }[] = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -24,13 +25,53 @@ const navItems: { id: HRPage; label: string; icon: React.ElementType; badge?: nu
   { id: 'observations', label: 'Observations', icon: Eye, badge: 2 },
   { id: 'recommendations', label: 'AI Recommendations', icon: Lightbulb, badge: 3 },
   { id: 'reports', label: 'Reports', icon: FileBarChart },
-  { id: 'settings', label: 'Settings', icon: Settings },
 ]
 
 export function HRSidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { setRole } = useApp()
+  const [orgName, setOrgName] = useState<string>('')
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchUserData() {
+      try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+        if (authError || !user) {
+          setLoading(false)
+          return
+        }
+
+        // Get organization name
+        const { data: member } = await supabase
+          .from('organization_members')
+          .select('organization_id')
+          .eq('profile_id', user.id)
+          .eq('is_active', true)
+          .limit(1)
+          .single()
+
+        if (member) {
+          const { data: orgData } = await supabase
+            .from('organizations')
+            .select('name')
+            .eq('id', member.organization_id)
+            .single()
+
+          if (orgData) {
+            setOrgName(orgData.name || '')
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching user data in sidebar:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUserData()
+  }, [])
 
   const getIsActive = (id: HRPage) => {
     if (id === 'overview') {
@@ -50,15 +91,6 @@ export function HRSidebar() {
           <span className="text-base font-semibold tracking-tight text-foreground">
             ERGO<span className="text-brand">PSYC</span>.AI
           </span>
-        </div>
-        <div className="mt-2.5 flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full bg-brand/20 flex items-center justify-center text-xs font-medium text-brand">
-            S
-          </div>
-          <div>
-            <p className="text-xs font-medium text-foreground">Salma Hassan</p>
-            <p className="text-xs text-muted-foreground">HR Manager</p>
-          </div>
         </div>
       </div>
 
@@ -105,16 +137,39 @@ export function HRSidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="px-3 py-4 border-t border-border">
+      <div className="px-3 py-4 border-t border-border space-y-2.5">
+        {/* Account Button */}
+        <Link
+          href="/org/profile"
+          className={cn(
+            "w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all border",
+            pathname === '/org/profile'
+              ? "bg-brand/10 text-brand border-brand/20"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground border-transparent"
+          )}
+        >
+          <div className="w-8 h-8 rounded-full bg-brand/20 text-brand flex items-center justify-center font-semibold text-xs shrink-0 border border-brand/30">
+            {orgName ? orgName[0]?.toUpperCase() : 'O'}
+          </div>
+          <div className="flex-1 min-w-0 text-left">
+            <p className="text-xs font-semibold text-foreground truncate">
+              {loading ? 'Loading...' : orgName || 'HR Manager'}
+            </p>
+            <p className="text-[10px] text-muted-foreground truncate">My Account</p>
+          </div>
+        </Link>
+
+        {/* Log Out Button */}
         <button
-          onClick={() => {
+          onClick={async () => {
+            await supabase.auth.signOut()
             setRole(null)
             router.push('/')
           }}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
         >
           <LogOut className="w-4 h-4" />
-          Switch Role
+          Log Out
         </button>
       </div>
     </aside>
