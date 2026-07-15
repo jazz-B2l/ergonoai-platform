@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   Clock,
   Hash,
+  Loader2,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useApp } from '@/lib/app-context'
@@ -206,6 +207,7 @@ export function EmployeeHome() {
   const router = useRouter()
   const {
     setRole,
+    loadingProfile,
     activeAssessment,
     personalData,
     personalDataSubmitted,
@@ -222,10 +224,18 @@ export function EmployeeHome() {
 
   // Redirect to profile if not submitted
   useEffect(() => {
-    if (!personalDataSubmitted) {
+    if (!loadingProfile && !personalDataSubmitted) {
       router.push('/employee/profile')
     }
-  }, [personalDataSubmitted, router])
+  }, [loadingProfile, personalDataSubmitted, router])
+
+  if (loadingProfile) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-brand" />
+      </div>
+    )
+  }
 
   function handleSubmitNote(text: string) {
     addStandaloneNote({

@@ -7,6 +7,7 @@ import {
   StickyNote,
   X,
   Check,
+  Loader2,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useApp } from '@/lib/app-context'
@@ -303,14 +304,22 @@ const TOTAL_PAGES = PAGES.length
 
 export function EmployeeQuestionnaire() {
   const router = useRouter()
-  const { questionAnswers, personalDataSubmitted } = useApp()
+  const { questionAnswers, personalDataSubmitted, loadingProfile } = useApp()
 
   // Redirect to profile if not submitted
   useEffect(() => {
-    if (!personalDataSubmitted) {
+    if (!loadingProfile && !personalDataSubmitted) {
       router.push('/employee/profile')
     }
-  }, [personalDataSubmitted, router])
+  }, [loadingProfile, personalDataSubmitted, router])
+
+  if (loadingProfile) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-brand" />
+      </div>
+    )
+  }
 
   const [pageIndex, setPageIndex] = useState(0)
   const [direction, setDirection] = useState<'forward' | 'backward'>('forward')

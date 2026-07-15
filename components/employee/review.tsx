@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, Pencil, Check, X, StickyNote, Send } from 'lucide-react'
+import { ChevronLeft, Pencil, Check, X, StickyNote, Send, Loader2 } from 'lucide-react'
 import { useApp } from '@/lib/app-context'
 import { buildFullQuestionList } from '@/lib/mock-data'
 import type { Question, SubmittedForm } from '@/lib/mock-data'
@@ -158,6 +158,7 @@ export function EmployeeReview() {
   const {
     activeAssessment,
     personalDataSubmitted,
+    loadingProfile,
     questionAnswers, setQuestionAnswers,
     questionNotes, setQuestionNotes,
     addSubmittedForm,
@@ -167,10 +168,18 @@ export function EmployeeReview() {
 
   // Redirect to profile if not submitted
   useEffect(() => {
-    if (!personalDataSubmitted) {
+    if (!loadingProfile && !personalDataSubmitted) {
       router.push('/employee/profile')
     }
-  }, [personalDataSubmitted, router])
+  }, [loadingProfile, personalDataSubmitted, router])
+
+  if (loadingProfile) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-brand" />
+      </div>
+    )
+  }
 
   const [submitting, setSubmitting] = useState(false)
 

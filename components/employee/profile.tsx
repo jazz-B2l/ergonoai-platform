@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
-import { User, Briefcase, Calendar, MapPin, Heart, Ruler, Scale, Clock, ArrowRight, ChevronLeft } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { User, Briefcase, Calendar, MapPin, Heart, Ruler, Scale, Clock, ArrowRight, ChevronLeft, LogOut } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useApp } from '@/lib/app-context'
 import type { PersonalData } from '@/lib/mock-data'
 import { cn } from '@/lib/utils'
+import { supabase } from '@/lib/supabase'
 
 const EMPTY: PersonalData = {
   fullName: '',
@@ -44,9 +45,89 @@ const selectCls = cn(inputCls, "cursor-pointer")
 
 export function EmployeeProfile() {
   const router = useRouter()
-  const { personalData, setPersonalData, personalDataSubmitted, setPersonalDataSubmitted } = useApp()
+  const { personalData, setPersonalData, personalDataSubmitted, setPersonalDataSubmitted, setRole } = useApp()
   const [data, setData] = useState<PersonalData>(personalData || EMPTY)
   const [errors, setErrors] = useState<Partial<Record<keyof PersonalData, string>>>({})
+  const [profileFirstName, setProfileFirstName] = useState<string>('')
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('user_id', user.id)
+          .maybeSingle()
+
+        if (profileError) {
+          console.error('Error loading profiles row:', profileError.message, profileError.details, profileError.code)
+        }
+
+        if (profile) {
+          const firstName = profile.first_name || ''
+          const lastName = profile.last_name || ''
+          setProfileFirstName(firstName)
+
+          // Pre-fill Full Name only if not already set
+          setData(prev => ({
+            ...prev,
+            fullName: prev.fullName || `${firstName} ${lastName}`.trim(),
+          }))
+        }
+
+        // Also load saved employee_profiles data if it exists
+        // Resolve member_id via organization_members
+        const { data: member, error: memberError } = await supabase
+          .from('organization_members')
+          .select('id')
+          .eq('profile_id', user.id)
+          .eq('is_active', true)
+          .limit(1)
+          .maybeSingle()
+
+        if (memberError) {
+          console.error('Error loading organization_members row:', memberError.message, memberError.details, memberError.code)
+        }
+
+        if (member) {
+          const { data: empProfile, error: empProfileError } = await supabase
+            .from('employee_profiles')
+            .select('full_name, work_position, gender, date_of_birth, place_of_birth, marital_status, height_cm, weight_kg, years_in_role, working_hours_per_day, has_part_time_job')
+            .eq('member_id', member.id)
+            .maybeSingle()
+
+          if (empProfileError) {
+            console.error('Error loading employee_profiles row:', empProfileError.message, empProfileError.details, empProfileError.code)
+          }
+
+          if (empProfile) {
+            const dataToSet = {
+              fullName: empProfile.full_name || `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim(),
+              workPosition: empProfile.work_position || '',
+              gender: empProfile.gender || '',
+              dateOfBirth: empProfile.date_of_birth || '',
+              placeOfBirth: empProfile.place_of_birth || '',
+              maritalStatus: empProfile.marital_status || '',
+              height: empProfile.height_cm ? String(empProfile.height_cm) : '',
+              weight: empProfile.weight_kg ? String(empProfile.weight_kg) : '',
+              yearsWorking: empProfile.years_in_role ? String(empProfile.years_in_role) : '',
+              workingHoursPerDay: empProfile.working_hours_per_day ? String(empProfile.working_hours_per_day) : '',
+              hasPartTimeJob: empProfile.has_part_time_job,
+            }
+            setData(dataToSet)
+            setPersonalData(dataToSet)
+            setPersonalDataSubmitted(true)
+          }
+        }
+      } catch (err) {
+        console.error('Unhandled error in profile load:', err)
+      }
+    }
+    loadProfile()
+  }, [setPersonalData, setPersonalDataSubmitted])
 
   function set<K extends keyof PersonalData>(key: K, value: PersonalData[K]) {
     setData(prev => ({ ...prev, [key]: value }))
@@ -70,9 +151,46 @@ export function EmployeeProfile() {
     return Object.keys(e).length === 0
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!validate()) return
+
+    // Save to Supabase employee_profiles
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: member } = await supabase
+          .from('organization_members')
+          .select('id')
+          .eq('profile_id', user.id)
+          .eq('is_active', true)
+          .limit(1)
+          .single()
+
+        if (member) {
+          await supabase
+            .from('employee_profiles')
+            .upsert({
+              member_id: member.id,
+              full_name: data.fullName,
+              work_position: data.workPosition,
+              gender: data.gender,
+              date_of_birth: data.dateOfBirth || null,
+              place_of_birth: data.placeOfBirth,
+              marital_status: data.maritalStatus,
+              height_cm: data.height ? parseFloat(data.height) : null,
+              weight_kg: data.weight ? parseFloat(data.weight) : null,
+              years_in_role: data.yearsWorking ? parseFloat(data.yearsWorking) : null,
+              working_hours_per_day: data.workingHoursPerDay ? parseFloat(data.workingHoursPerDay) : null,
+              has_part_time_job: data.hasPartTimeJob,
+              updated_at: new Date().toISOString(),
+            }, { onConflict: 'member_id' })
+        }
+      }
+    } catch (err) {
+      console.error('Error saving employee profile:', err)
+    }
+
     setPersonalData(data)
     setPersonalDataSubmitted(true)
     router.push('/employee')
@@ -95,7 +213,17 @@ export function EmployeeProfile() {
           {personalDataSubmitted && <div className="w-px h-4 bg-border" />}
           <span className="text-sm font-semibold text-foreground">Personal Profile</span>
         </div>
-        <span className="text-xs text-muted-foreground">User settings</span>
+        <button
+          onClick={async () => {
+            await supabase.auth.signOut()
+            setRole(null)
+            router.push('/')
+          }}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive transition-colors cursor-pointer"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          Log Out
+        </button>
       </header>
 
       <div className="flex-1 flex items-start justify-center py-10 px-4">
@@ -103,7 +231,12 @@ export function EmployeeProfile() {
           {/* Intro */}
           <div className="mb-8">
             <h1 className="text-2xl font-semibold text-foreground text-balance">
-              {personalDataSubmitted ? 'Update your profile details' : 'Complete your profile to get started'}
+              {personalDataSubmitted
+                ? 'Update your profile details'
+                : profileFirstName
+                  ? <>Hi <span className="text-brand">{profileFirstName}</span>, complete your profile to get started</>
+                  : 'Complete your profile to get started'
+              }
             </h1>
             <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
               This information helps us contextualise your assessment results. It is stored privately and will never be shared with your employer in identifiable form.
@@ -146,7 +279,6 @@ export function EmployeeProfile() {
                     <option value="">Select gender</option>
                     <option value="male">Male</option>
                     <option value="female">Female</option>
-                    <option value="other">Other / Prefer not to say</option>
                   </select>
                 </Field>
                 <Field label="Marital Status" icon={Heart} error={errors.maritalStatus}>
