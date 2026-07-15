@@ -82,6 +82,46 @@
   --radius: 0.5rem;
 }
 
+.dark {
+  color-scheme: dark;
+  /* Dark mode — clinical, high-contrast, premium aesthetic */
+  --background:    oklch(0.12 0.01 240);
+  --foreground:    oklch(0.97 0.005 240);
+
+  --card:          oklch(0.16 0.01 240);
+  --card-foreground: oklch(0.97 0.005 240);
+
+  --popover:       oklch(0.16 0.01 240);
+  --popover-foreground: oklch(0.97 0.005 240);
+
+  --brand:         oklch(0.65 0.16 190);
+  --brand-foreground: oklch(0.12 0.01 240);
+  --brand-muted:   oklch(0.65 0.16 190 / 15%);
+
+  --primary:       oklch(0.65 0.16 190);
+  --primary-foreground: oklch(0.12 0.01 240);
+
+  --secondary:     oklch(0.20 0.01 240);
+  --secondary-foreground: oklch(0.97 0.005 240);
+
+  --muted:         oklch(0.19 0.01 240);
+  --muted-foreground: oklch(0.60 0.01 240);
+
+  --accent:        oklch(0.65 0.16 190 / 15%);
+  --accent-foreground: oklch(0.70 0.12 190);
+
+  --destructive:   oklch(0.62 0.22 25);
+  --border:        oklch(1 1 1 / 12%);
+  --input:         oklch(1 1 1 / 8%);
+  --ring:          oklch(0.65 0.16 190 / 50%);
+
+  --success:       oklch(0.62 0.17 155);
+  --warning:       oklch(0.68 0.18 75);
+  --danger:        oklch(0.62 0.22 25);
+
+  --radius: 0.5rem;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -81,7 +81,7 @@
   transform-style: preserve-3d;
   position: relative;
   width: 100%;
-  max-width: 1000px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
@@ -101,22 +101,26 @@
   position: absolute;
   top: 20%;
   left: -5%;
-  transform: translateZ(50px);
+  --card-z: 50px;
+  transform: translateZ(var(--card-z));
   animation: float 6s infinite ease-in-out;
+  z-index: 10;
 }
 
 .floatingCard2 {
   position: absolute;
   bottom: 20%;
   right: -5%;
-  transform: translateZ(80px);
+  --card-z: 120px;
+  transform: translateZ(var(--card-z));
   animation: float 8s infinite ease-in-out reverse;
+  z-index: 20;
 }
 
 @keyframes float {
-  0% { transform: translateZ(50px) translateY(0); }
-  50% { transform: translateZ(50px) translateY(-15px); }
-  100% { transform: translateZ(50px) translateY(0); }
+  0% { transform: translateZ(var(--card-z)) translateY(0); }
+  50% { transform: translateZ(var(--card-z)) translateY(-15px); }
+  100% { transform: translateZ(var(--card-z)) translateY(0); }
 }
 
 .glassCard {
