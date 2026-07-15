@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Brain, ArrowRight, Loader2, Eye, EyeOff, User } from 'lucide-react'
 import { useApp } from '@/lib/app-context'
 import { supabase } from '@/lib/supabase'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 function EmployeeLoginContent() {
   const router = useRouter()
@@ -99,16 +100,20 @@ function EmployeeLoginContent() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-background text-foreground flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Background gradients */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-teal-500/5 via-slate-50 to-slate-50 z-0"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-brand/5 via-transparent to-transparent z-0"></div>
+      {/* Floating ThemeToggle */}
+      <div className="absolute top-4 right-4 z-20">
+        <ThemeToggle />
+      </div>
       
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
         <Link href="/" className="flex items-center justify-center gap-2 mb-6">
           <div className="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center">
             <Brain className="w-5 h-5 text-white" />
           </div>
-          <span className="font-sora font-semibold text-2xl tracking-tight text-slate-900">ErgonoAI</span>
+          <span className="font-sora font-semibold text-2xl tracking-tight text-foreground">ErgonoAI</span>
         </Link>
 
         <div className="flex justify-center mb-4">
@@ -118,7 +123,7 @@ function EmployeeLoginContent() {
           </div>
         </div>
 
-        <h2 className="text-center text-3xl font-extrabold font-sora tracking-tight text-slate-900">
+        <h2 className="text-center text-3xl font-extrabold font-sora tracking-tight text-foreground">
           Sign in as Employee
         </h2>
         <p className="mt-2 text-center text-sm text-slate-500 font-medium">
@@ -127,7 +132,7 @@ function EmployeeLoginContent() {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
-        <div className="bg-white py-8 px-4 border border-slate-200 shadow-xl rounded-2xl sm:px-10">
+        <div className="bg-card py-8 px-4 border border-border shadow-xl rounded-2xl sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-600 font-medium">
