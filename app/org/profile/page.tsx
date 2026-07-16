@@ -409,7 +409,7 @@ export default function OrgProfilePage() {
 
           <div className="flex items-center gap-3">
             <Link
-              href="/hr"
+              href="/org"
               className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold transition-all shadow-sm"
             >
               <ArrowLeft className="w-4 h-4" /> Back to Dashboard
