@@ -7,6 +7,7 @@ import { Save, User, Phone, Mail, ArrowLeft, Loader2, Check, Building2, MapPin, 
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { WILAYAS } from '@/lib/constants'
+import { useApp } from '@/lib/app-context'
 
 // Dynamically import MapPicker with SSR disabled to prevent Leaflet window errors
 const MapPicker = dynamic(() => import('@/components/map-picker'), {
@@ -37,7 +38,7 @@ export default function OrgProfilePage() {
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('') 
   const [phone, setPhone] = useState('')
-  const [language, setLanguage] = useState<'en' | 'ar'>('en')
+  const { language, setLanguage: setGlobalLanguage } = useApp()
 
   // Organization fields
   const [organizationId, setOrganizationId] = useState<string | null>(null)
@@ -60,10 +61,6 @@ export default function OrgProfilePage() {
   const [socialLinkedin, setSocialLinkedin] = useState('')
   const [socialTwitter, setSocialTwitter] = useState('')
   const [socialFacebook, setSocialFacebook] = useState('')
-
-  // Settings State (mapped to organization_settings table columns)
-  const [orgLanguage, setOrgLanguage] = useState('en')
-  const [orgTheme, setOrgTheme] = useState('system')
 
   // Invite Codes State
   const [inviteCodes, setInviteCodes] = useState<any[]>([])
@@ -811,34 +808,18 @@ export default function OrgProfilePage() {
           {activeTab === 'settings' && (
             <div className="space-y-8 animate-in fade-in duration-300">
               
-              {/* Platform preferences */}
               <div>
                 <h3 className="text-base font-bold text-slate-900 mb-4 border-b border-slate-100 pb-2">Platform Customization</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="orgTheme" className="block text-sm font-medium text-slate-700 mb-1.5">Display Theme</label>
-                    <select
-                      id="orgTheme"
-                      value={orgTheme}
-                      onChange={(e) => setOrgTheme(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all appearance-none"
-                    >
-                      <option value="light">Light Mode</option>
-                      <option value="dark">Dark Mode</option>
-                      <option value="system">System Preference</option>
-                    </select>
-                  </div>
-
-                  <div>
                     <label htmlFor="orgLanguage" className="block text-sm font-medium text-slate-700 mb-1.5">Preferred Language</label>
                     <select
                       id="orgLanguage"
-                      value={orgLanguage}
-                      onChange={(e) => setOrgLanguage(e.target.value)}
+                      value={language}
+                      onChange={(e) => setGlobalLanguage(e.target.value as 'en' | 'ar')}
                       className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all appearance-none"
                     >
                       <option value="en">English (US)</option>
-                      <option value="fr">French (FR)</option>
                       <option value="ar">Arabic (العربية)</option>
                     </select>
                   </div>

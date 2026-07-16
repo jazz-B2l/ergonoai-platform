@@ -17,6 +17,8 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useApp, type HRPage } from '@/lib/app-context'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
+import { ThemeToggle } from '@/components/theme-toggle'
+import { translations } from '@/lib/translations'
 
 const navItems: { id: HRPage; label: string; icon: React.ElementType; badge?: number }[] = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -30,9 +32,11 @@ const navItems: { id: HRPage; label: string; icon: React.ElementType; badge?: nu
 export function HRSidebar() {
   const pathname = usePathname()
   const router = useRouter()
-  const { setRole } = useApp()
+  const { setRole, language } = useApp()
   const [orgName, setOrgName] = useState<string>('')
   const [loading, setLoading] = useState(true)
+
+  const t = translations[language].dashboard
 
   useEffect(() => {
     async function fetchUserData() {
@@ -75,13 +79,22 @@ export function HRSidebar() {
 
   const getIsActive = (id: HRPage) => {
     if (id === 'overview') {
-      return pathname === '/hr' || pathname === '/hr/overview'
+      return pathname === '/org' || pathname === '/org/overview'
     }
-    return pathname === `/hr/${id}`
+    return pathname === `/org/${id}`
+  }
+
+  const labelMap: Record<string, string> = {
+    'Overview': t.overview,
+    'Departments': t.departments,
+    'Hazard Checklist': t.hazardChecklist,
+    'Observations': t.observations,
+    'AI Recommendations': t.recommendations,
+    'Reports': t.reports,
   }
 
   return (
-    <aside className="w-60 shrink-0 h-screen flex flex-col bg-card border-r border-border">
+    <aside className="w-60 shrink-0 h-screen flex flex-col bg-card border-r border-border" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       {/* Brand */}
       <div className="px-5 py-5 border-b border-border">
         <div className="flex items-center gap-2.5">
@@ -89,20 +102,21 @@ export function HRSidebar() {
             <Brain className="w-4 h-4 text-brand" />
           </div>
           <span className="text-base font-semibold tracking-tight text-foreground">
-            ERGO<span className="text-brand">PSYC</span>.AI
+            Ergono<span className="text-brand">AI</span>
           </span>
         </div>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 py-4 px-3 overflow-y-auto">
-        <p className="px-2 mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-          Dashboard
+        <p className="px-2 mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider text-left">
+          {t.title}
         </p>
         <ul className="space-y-0.5">
           {navItems.map(({ id, label, icon: Icon, badge }) => {
             const isActive = getIsActive(id)
-            const href = id === 'overview' ? '/hr' : `/hr/${id}`
+            const href = id === 'overview' ? '/org' : `/org/${id}`
+            const translatedLabel = labelMap[label] || label
             return (
               <li key={id}>
                 <Link
@@ -115,7 +129,7 @@ export function HRSidebar() {
                   )}
                 >
                   <Icon className="w-4 h-4 shrink-0" />
-                  <span className="flex-1 text-left">{label}</span>
+                  <span className="flex-1 text-left">{translatedLabel}</span>
                   {badge !== undefined && (
                     <span
                       className={cn(
@@ -128,7 +142,7 @@ export function HRSidebar() {
                       {badge}
                     </span>
                   )}
-                  {isActive && <ChevronRight className="w-3 h-3 shrink-0" />}
+                  {isActive && <ChevronRight className={cn("w-3 h-3 shrink-0", language === 'ar' && "rotate-180")} />}
                 </Link>
               </li>
             )
@@ -153,24 +167,27 @@ export function HRSidebar() {
           </div>
           <div className="flex-1 min-w-0 text-left">
             <p className="text-xs font-semibold text-foreground truncate">
-              {loading ? 'Loading...' : orgName || 'HR Manager'}
+              {loading ? 'Loading...' : orgName || (language === 'ar' ? 'مسؤول المنشأة' : 'Organization Admin')}
             </p>
-            <p className="text-[10px] text-muted-foreground truncate">My Account</p>
+            <p className="text-[10px] text-muted-foreground truncate">{t.myAccount}</p>
           </div>
         </Link>
 
-        {/* Log Out Button */}
-        <button
-          onClick={async () => {
-            await supabase.auth.signOut()
-            setRole(null)
-            router.push('/')
-          }}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-        >
-          <LogOut className="w-4 h-4" />
-          Log Out
-        </button>
+        {/* Action Buttons Row */}
+        <div className="flex gap-2 w-full items-center">
+          <button
+            onClick={async () => {
+              await supabase.auth.signOut()
+              setRole(null)
+              router.push('/')
+            }}
+            className="flex-1 flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+          >
+            <LogOut className="w-4 h-4" />
+            {t.logout}
+          </button>
+          <ThemeToggle />
+        </div>
       </div>
     </aside>
   )

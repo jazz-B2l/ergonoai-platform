@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Lightbulb, Users, ChevronRight, ChevronDown, Sparkles } from 'lucide-react'
-import { aiRecommendations } from '@/lib/mock-data'
+import { aiRecommendations } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 const priorityConfig = {

@@ -8,6 +8,8 @@ import { useApp } from '@/lib/app-context'
 import { supabase } from '@/lib/supabase'
 import { WILAYAS } from '@/lib/constants'
 
+import { translations } from '@/lib/translations'
+
 const InputLabel = ({ htmlFor, children }: { htmlFor: string, children: React.ReactNode }) => (
   <label htmlFor={htmlFor} className="block text-sm font-semibold text-slate-700 mb-1">{children}</label>
 )
@@ -22,7 +24,7 @@ const Input = (props: React.InputHTMLAttributes<HTMLInputElement>) => (
 function SignupContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { setRole: setAppRole } = useApp()
+  const { setRole: setAppRole, language, setLanguage } = useApp()
   
   const roleParam = searchParams.get('role')
   const initialRole = roleParam === 'hr' || roleParam === 'employee' ? roleParam : 'hr'
@@ -37,7 +39,6 @@ function SignupContent() {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [phone, setPhone] = useState('')
-  const [language, setLanguage] = useState<'en' | 'ar'>('en')
   
   // Employee specifics
   const [employeeNumber, setEmployeeNumber] = useState('')
@@ -73,6 +74,9 @@ function SignupContent() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+
+  const t = translations[language].signup
+  const tc = translations[language].common
 
   useEffect(() => {
     if (roleParam === 'hr' || roleParam === 'employee') {
@@ -133,15 +137,25 @@ function SignupContent() {
     setError(null)
 
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-supabase-url')) {
-      setError('Supabase is not configured. Please add your credentials to the .env.local file.')
+      setError(language === 'ar' ? 'لم يتم إعداد قاعدة البيانات. يرجى تهيئة ملف الإعدادات الخاص بك.' : 'Supabase is not configured. Please add your credentials to the .env.local file.')
       setLoading(false)
       return
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match. Please check and try again.')
+      setError(language === 'ar' ? 'كلمتا المرور غير متطابقتين. يرجى التحقق وإعادة المحاولة.' : 'Passwords do not match. Please check and try again.')
       setLoading(false)
       return
+    }
+
+    if (role === 'hr' && organizationFounded) {
+      const year = parseInt(organizationFounded)
+      const currentYear = new Date().getFullYear()
+      if (isNaN(year) || year < 1800 || year > currentYear) {
+        setError(language === 'ar' ? `سنة التأسيس يجب أن تكون بين 1800 و ${currentYear}` : `Founded year must be between 1800 and ${currentYear}`)
+        setLoading(false)
+        return
+      }
     }
 
     try {
@@ -152,7 +166,7 @@ function SignupContent() {
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
-            full_name: `${firstName} ${lastName}`.trim(),
+            full_name: role === 'hr' ? organizationName : `${firstName} ${lastName}`.trim(),
             role: role,
           }
         }
@@ -169,9 +183,9 @@ function SignupContent() {
         .upsert({
           id: user.id,
           user_id: user.id,
-          first_name: firstName,
-          last_name: lastName,
-          phone: phone || null,
+          first_name: role === 'hr' ? organizationName : firstName,
+          last_name: role === 'hr' ? 'Admin' : lastName,
+          phone: role === 'hr' ? (organizationPhone || null) : (phone || null),
           language: language,
           updated_at: new Date().toISOString()
         })
@@ -188,7 +202,7 @@ function SignupContent() {
             industry: organizationIndustry,
             organization_size: organizationSize,
             founded_year: organizationFounded ? parseInt(organizationFounded) : null,
-            contact_email: organizationEmail,
+            contact_email: email,
             contact_phone: organizationPhone,
             website: organizationWebsite,
             district: organizationDistrict,
@@ -197,6 +211,8 @@ function SignupContent() {
             location_lng: organizationLng ? parseFloat(organizationLng) : null,
             logo_url: organizationLogo,
             banner_url: organizationBanner,
+            created_by: user.id,
+            updated_by: user.id,
             social_media: {
               linkedin: organizationLinkedin,
               twitter: organizationTwitter,
@@ -208,26 +224,26 @@ function SignupContent() {
 
         if (organizationError) throw new Error(`Organization creation failed: ${organizationError.message}`)
 
-        let { data: hrRole } = await supabase
+        let { data: adminRole } = await supabase
           .from('roles')
           .select('id')
-          .eq('name', 'HR')
+          .eq('name', 'Admin')
           .single()
 
-        if (!hrRole) {
+        if (!adminRole) {
           const { data: newRole } = await supabase
             .from('roles')
-            .insert({ name: 'HR' })
+            .insert({ name: 'Admin', description: 'Organization Administrator' })
             .select()
             .single()
-          hrRole = newRole
+          adminRole = newRole
         }
 
-        if (hrRole) {
+        if (adminRole) {
           await supabase.from('organization_members').insert({
             profile_id: user.id,
             organization_id: organization.id,
-            role_id: hrRole.id,
+            role_id: adminRole.id,
             is_active: true
           })
         }
@@ -239,7 +255,7 @@ function SignupContent() {
           .single()
 
         if (inviteError || !invite) {
-          throw new Error('Invalid or expired invitation code. Please contact your HR Manager.')
+          throw new Error(language === 'ar' ? 'رمز دعوة غير صالح أو منتهي الصلاحية. يرجى التواصل مع مسؤول الموارد البشرية.' : 'Invalid or expired invitation code. Please contact your HR Manager.')
         }
 
         const { data: member, error: memberError } = await supabase
@@ -266,22 +282,20 @@ function SignupContent() {
       setSuccess(true)
       
       setTimeout(() => {
-        router.push(role === 'hr' ? '/hr' : '/employee')
+        router.push(role === 'hr' ? '/org' : '/employee')
       }, 2000)
 
     } catch (err: any) {
       const errMsg = err.message || '';
       if (errMsg.includes('fetch') || errMsg.includes('network')) {
-        setError('Cannot connect to the database. Please ensure your .env.local file is configured with Supabase credentials.')
+        setError(language === 'ar' ? 'لا يمكن الاتصال بقاعدة البيانات. يرجى التأكد من تكوين ملف .env.local الخاص بك.' : 'Cannot connect to the database. Please ensure your .env.local file is configured with Supabase credentials.')
       } else {
-        setError(errMsg || 'An error occurred during signup.')
+        setError(errMsg || (language === 'ar' ? 'حدث خطأ أثناء إنشاء الحساب.' : 'An error occurred during signup.'))
       }
     } finally {
       setLoading(false)
     }
   }
-
-
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -295,12 +309,12 @@ function SignupContent() {
           <span className="font-sora font-semibold text-2xl tracking-tight text-slate-900">ErgonoAI</span>
         </Link>
         <h2 className="text-center text-3xl font-extrabold font-sora tracking-tight text-slate-900">
-          Create your account
+          {t.createAccount}
         </h2>
         <p className="mt-2 text-center text-sm text-slate-500 font-medium">
-          Already have an account?{' '}
+          {t.alreadyHaveAccount}{' '}
           <Link href="/login" className="font-semibold text-teal-600 hover:text-teal-700">
-            Sign in
+            {tc.login}
           </Link>
         </p>
       </div>
@@ -313,8 +327,8 @@ function SignupContent() {
               <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200">
                 <Check className="w-6 h-6 animate-pulse" />
               </div>
-              <h3 className="text-xl font-bold font-sora text-slate-900">Account created!</h3>
-              <p className="text-slate-500 text-sm font-medium">Redirecting to your dashboard...</p>
+              <h3 className="text-xl font-bold font-sora text-slate-900">{t.accountCreated}</h3>
+              <p className="text-slate-500 text-sm font-medium">{t.redirecting}</p>
               <div className="flex justify-center pt-4">
                 <Loader2 className="w-6 h-6 animate-spin text-teal-600" />
               </div>
@@ -326,12 +340,10 @@ function SignupContent() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6">
                 <div>
                   <h4 className="text-sm font-bold text-slate-900 font-sora">
-                    {role === 'hr' ? 'Organization Registration' : 'Employee Registration'}
+                    {role === 'hr' ? t.orgReg : t.empReg}
                   </h4>
                   <p className="text-xs text-slate-500 mt-0.5 font-medium">
-                    {role === 'hr' 
-                      ? 'Creating a new organization profile & admin account' 
-                      : 'Joining an existing organization with an invite code'}
+                    {role === 'hr' ? t.orgRegDesc : t.empRegDesc}
                   </p>
                 </div>
                 <Link
@@ -341,25 +353,22 @@ function SignupContent() {
                   {role === 'hr' ? (
                     <>
                       <User className="w-3.5 h-3.5" />
-                      Switch to Employee
+                      {t.switchToEmployee}
                     </>
                   ) : (
                     <>
                       <Shield className="w-3.5 h-3.5" />
-                      Switch to Admin
+                      {t.switchToAdmin}
                     </>
                   )}
                 </Link>
               </div>
-
               {/* Progress Bar (HR Only) */}
               {role === 'hr' && (
                 <div className="flex items-center justify-between mb-8 mt-6 max-w-md mx-auto">
                   <div className={`h-2 rounded-full flex-1 ${step >= 1 ? 'bg-teal-600' : 'bg-slate-200'}`}></div>
                   <div className="w-2"></div>
                   <div className={`h-2 rounded-full flex-1 ${step >= 2 ? 'bg-teal-600' : 'bg-slate-200'}`}></div>
-                  <div className="w-2"></div>
-                  <div className={`h-2 rounded-full flex-1 ${step >= 3 ? 'bg-teal-600' : 'bg-slate-200'}`}></div>
                 </div>
               )}
 
@@ -369,107 +378,107 @@ function SignupContent() {
                 </div>
               )}
 
-              {/* STEP 1: Login & Admin Details */}
+              {/* STEP 1: Login Details */}
               {step === 1 && (
                 <div className="space-y-4 animate-in fade-in duration-300">
                   <h3 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-2 mb-4 font-sora">
-                    {role === 'hr' ? '1. Admin Login Details' : 'Your Personal Details'}
+                    {role === 'hr' ? t.stepOrgCredentials : 'Your Personal Details'}
                   </h3>
                   
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <InputLabel htmlFor="firstName">First Name</InputLabel>
-                      <Input id="firstName" type="text" required value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="John" />
-                    </div>
-                    <div>
-                      <InputLabel htmlFor="lastName">Last Name</InputLabel>
-                      <Input id="lastName" type="text" required value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Doe" />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <InputLabel htmlFor="email">Email address</InputLabel>
-                      <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
-                    </div>
-                    <div>
-                      <InputLabel htmlFor="password">Password</InputLabel>
-                      <div className="relative">
-                        <input
-                          id="password"
-                          type={showPassword ? 'text' : 'password'}
-                          required
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          placeholder="••••••••"
-                          className="block w-full pl-4 pr-12 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
-                        >
-                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <InputLabel htmlFor="confirmPassword">Confirm Password</InputLabel>
-                      <div className="relative">
-                        <input
-                          id="confirmPassword"
-                          type={showConfirmPassword ? 'text' : 'password'}
-                          required
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          placeholder="••••••••"
-                          className={`block w-full pl-4 pr-12 py-3 bg-white border rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all ${
-                            confirmPassword && password !== confirmPassword
-                              ? 'border-red-300 focus:ring-red-400'
-                              : confirmPassword && password === confirmPassword
-                              ? 'border-emerald-300 focus:ring-emerald-400'
-                              : 'border-slate-200'
-                          }`}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
-                        >
-                          {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                      </div>
-                      {confirmPassword && password !== confirmPassword && (
-                        <p className="text-xs text-red-500 font-medium mt-1">Passwords do not match</p>
-                      )}
-                      {confirmPassword && password === confirmPassword && (
-                        <p className="text-xs text-emerald-600 font-medium mt-1">Passwords match ✓</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <InputLabel htmlFor="phone">Personal Phone</InputLabel>
-                      <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+213 555 123 456" />
-                    </div>
-                    <div>
-                      <InputLabel htmlFor="language">Interface Language</InputLabel>
-                      <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200 h-[50px] items-center">
-                        <button type="button" onClick={() => setLanguage('en')} className={`py-1.5 rounded-lg text-sm font-semibold transition-all ${language === 'en' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>English</button>
-                        <button type="button" onClick={() => setLanguage('ar')} className={`py-1.5 rounded-lg text-sm font-semibold transition-all ${language === 'ar' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>العربية</button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {role === 'employee' && (
+                  {role === 'employee' ? (
                     <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <InputLabel htmlFor="firstName">{t.firstName}</InputLabel>
+                          <Input id="firstName" type="text" required value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="John" />
+                        </div>
+                        <div>
+                          <InputLabel htmlFor="lastName">{t.lastName}</InputLabel>
+                          <Input id="lastName" type="text" required value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Doe" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <InputLabel htmlFor="email">{t.email}</InputLabel>
+                          <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+                        </div>
+                        <div>
+                          <InputLabel htmlFor="password">{t.password}</InputLabel>
+                          <div className="relative">
+                            <input
+                              id="password"
+                              type={showPassword ? 'text' : 'password'}
+                              required
+                              value={password}
+                              onChange={(e) => setPassword(e.target.value)}
+                              placeholder="••••••••"
+                              className="block w-full pl-4 pr-12 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                            >
+                              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <InputLabel htmlFor="confirmPassword">{t.confirmPassword}</InputLabel>
+                          <div className="relative">
+                            <input
+                              id="confirmPassword"
+                              type={showConfirmPassword ? 'text' : 'password'}
+                              required
+                              value={confirmPassword}
+                              onChange={(e) => setConfirmPassword(e.target.value)}
+                              placeholder="••••••••"
+                              className={`block w-full pl-4 pr-12 py-3 bg-white border rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all ${
+                                confirmPassword && password !== confirmPassword
+                                  ? 'border-red-300 focus:ring-red-400'
+                                  : confirmPassword && password === confirmPassword
+                                  ? 'border-emerald-300 focus:ring-emerald-400'
+                                  : 'border-slate-200'
+                              }`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                            >
+                              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
+                          {confirmPassword && password !== confirmPassword && (
+                            <p className="text-xs text-red-500 font-medium mt-1">{language === 'ar' ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match'}</p>
+                          )}
+                          {confirmPassword && password === confirmPassword && (
+                            <p className="text-xs text-emerald-600 font-medium mt-1">{language === 'ar' ? 'كلمتا المرور متطابقتان ✓' : 'Passwords match ✓'}</p>
+                          )}
+                        </div>
+                        <div>
+                          <InputLabel htmlFor="phone">{t.phone}</InputLabel>
+                          <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+213 555 123 456" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <InputLabel htmlFor="language">{t.lang}</InputLabel>
+                          <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200 h-[50px] items-center">
+                            <button type="button" onClick={() => setLanguage('en')} className={`py-1.5 rounded-lg text-sm font-semibold transition-all ${language === 'en' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>English</button>
+                            <button type="button" onClick={() => setLanguage('ar')} className={`py-1.5 rounded-lg text-sm font-semibold transition-all ${language === 'ar' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>العربية</button>
+                          </div>
+                        </div>
+                      </div>
+
                       <div className="pt-4 border-t border-slate-100 mt-4 space-y-4">
                         <div>
-                          <InputLabel htmlFor="inviteCode">Invite Code</InputLabel>
+                          <InputLabel htmlFor="inviteCode">{t.inviteCode}</InputLabel>
                           <div className="relative">
                             <Input id="inviteCode" type="text" required value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} placeholder="Provided by your HR" />
                             {verifyingInvite && (
@@ -478,11 +487,14 @@ function SignupContent() {
                               </div>
                             )}
                           </div>
+                          {inviteVerified && (
+                            <p className="text-xs text-emerald-600 font-medium mt-1">{t.inviteValid}</p>
+                          )}
                         </div>
 
                         {inviteVerified && (
                           <div className="space-y-1.5 animate-in fade-in duration-200">
-                            <label htmlFor="signupDept" className="block text-sm font-semibold text-slate-700 mb-1">Select Your Department</label>
+                            <label htmlFor="signupDept" className="block text-sm font-semibold text-slate-700 mb-1">{t.selectDept}</label>
                             {signupDepts.length > 0 ? (
                               <select
                                 id="signupDept"
@@ -502,12 +514,85 @@ function SignupContent() {
                         )}
                       </div>
                     </>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <InputLabel htmlFor="email">{t.contactEmail} *</InputLabel>
+                          <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="contact@organization.com" />
+                        </div>
+                        <div>
+                          <InputLabel htmlFor="password">{t.password}</InputLabel>
+                          <div className="relative">
+                            <input
+                              id="password"
+                              type={showPassword ? 'text' : 'password'}
+                              required
+                              value={password}
+                              onChange={(e) => setPassword(e.target.value)}
+                              placeholder="••••••••"
+                              className="block w-full pl-4 pr-12 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                            >
+                              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <InputLabel htmlFor="confirmPassword">{t.confirmPassword}</InputLabel>
+                          <div className="relative">
+                            <input
+                              id="confirmPassword"
+                              type={showConfirmPassword ? 'text' : 'password'}
+                              required
+                              value={confirmPassword}
+                              onChange={(e) => setConfirmPassword(e.target.value)}
+                              placeholder="••••••••"
+                              className={`block w-full pl-4 pr-12 py-3 bg-white border rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all ${
+                                confirmPassword && password !== confirmPassword
+                                  ? 'border-red-300 focus:ring-red-400'
+                                  : confirmPassword && password === confirmPassword
+                                  ? 'border-emerald-300 focus:ring-emerald-400'
+                                  : 'border-slate-200'
+                              }`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                            >
+                              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
+                          {confirmPassword && password !== confirmPassword && (
+                            <p className="text-xs text-red-500 font-medium mt-1">{language === 'ar' ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match'}</p>
+                          )}
+                          {confirmPassword && password === confirmPassword && (
+                            <p className="text-xs text-emerald-600 font-medium mt-1">{language === 'ar' ? 'كلمتا المرور متطابقتان ✓' : 'Passwords match ✓'}</p>
+                          )}
+                        </div>
+                        <div>
+                          <InputLabel htmlFor="language">{t.lang}</InputLabel>
+                          <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200 h-[50px] items-center">
+                            <button type="button" onClick={() => setLanguage('en')} className={`py-1.5 rounded-lg text-sm font-semibold transition-all ${language === 'en' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>English</button>
+                            <button type="button" onClick={() => setLanguage('ar')} className={`py-1.5 rounded-lg text-sm font-semibold transition-all ${language === 'ar' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>العربية</button>
+                          </div>
+                        </div>
+                      </div>
+                    </>
                   )}
                   
                   {role === 'hr' ? (
                     <div className="pt-4 flex justify-end">
                       <button type="button" onClick={nextStep} className="flex items-center gap-2 py-3 px-6 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold transition-all shadow-md cursor-pointer">
-                        Next: Organization Info <ChevronRight className="w-4 h-4" />
+                        {t.nextOrgInfo} <ChevronRight className="w-4 h-4" />
                       </button>
                     </div>
                   ) : (
@@ -523,39 +608,39 @@ function SignupContent() {
               {/* STEP 2: Organization Identity */}
               {step === 2 && role === 'hr' && (
                 <div className="space-y-4 animate-in fade-in duration-300">
-                  <h3 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-2 mb-4 font-sora">2. Organization Identity</h3>
+                  <h3 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-2 mb-4 font-sora">{t.stepOrgIdentity}</h3>
                   
                   <div>
-                    <InputLabel htmlFor="organizationName">Organization Name *</InputLabel>
-                    <Input id="organizationName" type="text" required value={organizationName} onChange={(e) => setOrganizationName(e.target.value)} placeholder="e.g. Sonatrach" />
+                    <InputLabel htmlFor="organizationName">{t.orgName} *</InputLabel>
+                    <Input id="organizationName" type="text" required value={organizationName} onChange={(e) => setOrganizationName(e.target.value)} placeholder={t.orgNamePlaceholder} />
                   </div>
 
                   <div>
-                    <InputLabel htmlFor="organizationDescription">Organization Description</InputLabel>
+                    <InputLabel htmlFor="organizationDescription">{t.orgDesc}</InputLabel>
                     <textarea
                       id="organizationDescription"
                       rows={3}
                       value={organizationDescription}
                       onChange={(e) => setOrganizationDescription(e.target.value)}
-                      placeholder="Brief overview of the organization..."
+                      placeholder={t.orgDescPlaceholder}
                       className="block w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all resize-none"
                     />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <InputLabel htmlFor="organizationIndustry">Industry</InputLabel>
+                      <InputLabel htmlFor="organizationIndustry">{t.industry}</InputLabel>
                       <Input id="organizationIndustry" type="text" value={organizationIndustry} onChange={(e) => setOrganizationIndustry(e.target.value)} placeholder="e.g. Energy" />
                     </div>
                     <div>
-                      <InputLabel htmlFor="organizationSize">Organization Size</InputLabel>
+                      <InputLabel htmlFor="organizationSize">{t.orgSize}</InputLabel>
                       <select
                         id="organizationSize"
                         value={organizationSize}
                         onChange={(e) => setOrganizationSize(e.target.value)}
                         className="block w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all appearance-none"
                       >
-                        <option value="">Select Size</option>
+                        <option value="">{t.selectSize}</option>
                         <option value="1-10">1 - 10 employees</option>
                         <option value="11-50">11 - 50 employees</option>
                         <option value="51-200">51 - 200 employees</option>
@@ -564,98 +649,24 @@ function SignupContent() {
                       </select>
                     </div>
                     <div>
-                      <InputLabel htmlFor="organizationFounded">Founded Year</InputLabel>
+                      <InputLabel htmlFor="organizationFounded">{t.foundedYear}</InputLabel>
                       <Input id="organizationFounded" type="number" min="1800" max={new Date().getFullYear()} value={organizationFounded} onChange={(e) => setOrganizationFounded(e.target.value)} placeholder="e.g. 1963" />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <InputLabel htmlFor="organizationLogo">Logo URL</InputLabel>
-                      <Input id="organizationLogo" type="url" value={organizationLogo} onChange={(e) => setOrganizationLogo(e.target.value)} placeholder="https://example.com/logo.png" />
-                    </div>
-                    <div>
-                      <InputLabel htmlFor="organizationBanner">Banner URL</InputLabel>
-                      <Input id="organizationBanner" type="url" value={organizationBanner} onChange={(e) => setOrganizationBanner(e.target.value)} placeholder="https://example.com/banner.jpg" />
-                    </div>
-                  </div>
-
-                  <div className="pt-4 flex justify-between">
-                    <button type="button" onClick={prevStep} className="flex items-center gap-2 py-3 px-6 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition-all cursor-pointer">
-                      <ChevronLeft className="w-4 h-4" /> Back
-                    </button>
-                    <button type="button" onClick={nextStep} className="flex items-center gap-2 py-3 px-6 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold transition-all shadow-md cursor-pointer">
-                      Next: Contact & Location <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 3: Organization Contact & Location */}
-              {step === 3 && role === 'hr' && (
-                <div className="space-y-4 animate-in fade-in duration-300">
-                  <h3 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-2 mb-4 font-sora">3. Contact & Location</h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <InputLabel htmlFor="organizationEmail">Contact Email *</InputLabel>
-                      <Input id="organizationEmail" type="email" required value={organizationEmail} onChange={(e) => setOrganizationEmail(e.target.value)} placeholder="contact@organization.com" />
-                    </div>
-                    <div>
-                      <InputLabel htmlFor="organizationPhone">Contact Phone</InputLabel>
+                      <InputLabel htmlFor="organizationPhone">{t.contactPhone}</InputLabel>
                       <Input id="organizationPhone" type="tel" value={organizationPhone} onChange={(e) => setOrganizationPhone(e.target.value)} placeholder="+213 ..." />
                     </div>
-                  </div>
-
-                  <div>
-                    <InputLabel htmlFor="organizationWebsite">Website</InputLabel>
-                    <Input id="organizationWebsite" type="url" value={organizationWebsite} onChange={(e) => setOrganizationWebsite(e.target.value)} placeholder="https://www.organization.dz" />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <InputLabel htmlFor="organizationDistrict">District (Daira / City)</InputLabel>
-                      <Input id="organizationDistrict" type="text" value={organizationDistrict} onChange={(e) => setOrganizationDistrict(e.target.value)} placeholder="Hydra" />
-                    </div>
-                    <div>
-                      <InputLabel htmlFor="organizationWilaya">Wilaya (Province)</InputLabel>
-                      <select
-                        id="organizationWilaya"
-                        value={organizationWilaya}
-                        onChange={(e) => {
-                          const val = e.target.value
-                          setOrganizationWilaya(val)
-                          const selected = WILAYAS.find(w => w.french === val)
-                          if (selected) {
-                            setOrganizationLat(selected.latitude.toString())
-                            setOrganizationLng(selected.longitude.toString())
-                          }
-                        }}
-                        className="block w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                      >
-                        <option value="">Select Wilaya</option>
-                        {WILAYAS.map(w => (
-                          <option key={w.id} value={w.french}>
-                            {w.id} - {w.french} ({w.arabic})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <InputLabel htmlFor="organizationLat">Latitude</InputLabel>
-                      <Input id="organizationLat" type="number" step="any" value={organizationLat} onChange={(e) => setOrganizationLat(e.target.value)} placeholder="36.752887" />
-                    </div>
-                    <div>
-                      <InputLabel htmlFor="organizationLng">Longitude</InputLabel>
-                      <Input id="organizationLng" type="number" step="any" value={organizationLng} onChange={(e) => setOrganizationLng(e.target.value)} placeholder="3.042048" />
+                      <InputLabel htmlFor="organizationWebsite">{t.website}</InputLabel>
+                      <Input id="organizationWebsite" type="url" value={organizationWebsite} onChange={(e) => setOrganizationWebsite(e.target.value)} placeholder="https://www.organization.dz" />
                     </div>
                   </div>
 
                   <div className="pt-2 border-t border-slate-100 mt-4 space-y-4">
-                    <h4 className="text-sm font-semibold text-slate-800">Social Media Links</h4>
+                    <h4 className="text-sm font-semibold text-slate-800">{t.socialLinks}</h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <Input id="organizationLinkedin" type="url" value={organizationLinkedin} onChange={(e) => setOrganizationLinkedin(e.target.value)} placeholder="LinkedIn URL" />
                       <Input id="organizationTwitter" type="url" value={organizationTwitter} onChange={(e) => setOrganizationTwitter(e.target.value)} placeholder="Twitter URL" />
@@ -665,10 +676,10 @@ function SignupContent() {
 
                   <div className="pt-4 flex justify-between">
                     <button type="button" onClick={prevStep} className="flex items-center gap-2 py-3 px-6 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition-all cursor-pointer">
-                      <ChevronLeft className="w-4 h-4" /> Back
+                      <ChevronLeft className="w-4 h-4" /> {t.back}
                     </button>
                     <button type="submit" disabled={loading} className="flex items-center justify-center gap-2 py-3 px-6 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold transition-all shadow-md cursor-pointer">
-                      {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Create Account <Check className="w-4 h-4" /></>}
+                      {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>{t.createAccountBtn} <Check className="w-4 h-4" /></>}
                     </button>
                   </div>
                 </div>
@@ -679,7 +690,7 @@ function SignupContent() {
           <div className="mt-6 flex items-start gap-3 p-4 rounded-xl bg-slate-50 border border-slate-200">
             <Activity className="w-4 h-4 text-teal-600 mt-0.5 shrink-0 animate-pulse" />
             <p className="text-xs text-slate-500 leading-relaxed font-medium">
-              By registering, you agree to our GDPR-compliant health data policy. Individual wellbeing scores remain strictly private.
+              {t.gdprNotice}
             </p>
           </div>
         </div>
