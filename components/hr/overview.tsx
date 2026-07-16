@@ -33,6 +33,7 @@ import { cn } from '@/lib/utils'
 import { useApp } from '@/lib/app-context'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
+import { translations } from '@/lib/translations'
 
 function ScoreRing({ score }: { score: number }) {
   const pct = (score / 10) * 100
@@ -47,7 +48,8 @@ function ScoreRing({ score }: { score: number }) {
 }
 
 export function HROverview() {
-  const { activeAssessment, setActiveAssessment } = useApp()
+  const { activeAssessment, setActiveAssessment, language } = useApp()
+  const t = translations[language].dashboard
   const [modalOpen, setModalOpen] = useState(false)
   const [title, setTitle] = useState('Q3 2026 Ergonomic Assessment')
 
@@ -187,13 +189,13 @@ export function HROverview() {
           
           <div className="space-y-3">
             <span className="text-xs font-bold uppercase tracking-wider text-teal-600 bg-teal-50 px-3 py-1 rounded-full border border-teal-200/50">
-              Onboarding Checklist
+              {t.onboardingTitle}
             </span>
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 font-sora sm:text-4xl">
-              Welcome to ErgonoAI
+              {t.welcome}
             </h1>
             <p className="text-sm text-slate-500 max-w-lg mx-auto leading-relaxed">
-              Configure your workspace in three simple steps to start analyzing ergonomic wellbeing and identifying hazard trends.
+              {t.onboardingDesc}
             </p>
           </div>
 
@@ -202,14 +204,14 @@ export function HROverview() {
               {
                 icon: Building2,
                 color: 'text-teal-600 bg-teal-50 border-teal-100',
-                title: '1. Departments',
-                description: 'Set up distinct workspaces to group employees.',
+                title: t.stepDeptsTitle,
+                description: t.stepDeptsDesc,
                 action: (
                   <Link
-                    href="/hr/departments"
+                    href="/org/departments"
                     className="mt-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-teal-600 text-white text-xs font-semibold hover:bg-teal-700 transition-all w-full text-center shadow-sm"
                   >
-                    Configure Spaces
+                    {t.stepDeptsAction}
                     <Plus className="w-3.5 h-3.5" />
                   </Link>
                 )
@@ -217,14 +219,14 @@ export function HROverview() {
               {
                 icon: UserPlus,
                 color: 'text-indigo-600 bg-indigo-50 border-indigo-100',
-                title: '2. Invite Staff',
-                description: 'Create site locations and generate invite codes.',
+                title: t.stepInviteTitle,
+                description: t.stepInviteDesc,
                 action: (
                   <Link
-                    href="/hr/settings"
+                    href="/org/settings"
                     className="mt-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-all w-full text-center shadow-sm"
                   >
-                    Invite Employees
+                    {t.stepInviteAction}
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 )
@@ -232,14 +234,14 @@ export function HROverview() {
               {
                 icon: Sparkles,
                 color: 'text-emerald-600 bg-emerald-50 border-emerald-100',
-                title: '3. Launch Survey',
-                description: 'Start an ISO-compliant ergonomics assessment.',
+                title: t.stepSurveyTitle,
+                description: t.stepSurveyDesc,
                 action: (
                   <button
                     onClick={() => setModalOpen(true)}
                     className="mt-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-all cursor-pointer w-full text-center shadow-sm"
                   >
-                    Launch Campaign
+                    {t.stepSurveyAction}
                     <Play className="w-3 h-3 text-emerald-600 fill-emerald-600" />
                   </button>
                 )
@@ -380,7 +382,7 @@ export function HROverview() {
         <div className="xl:col-span-2 bg-card rounded-xl border border-border p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-foreground">Departments</h2>
-            <Link href="/hr/departments" className="text-xs text-brand hover:underline flex items-center gap-1">
+            <Link href="/org/departments" className="text-xs text-brand hover:underline flex items-center gap-1">
               View all <ChevronRight className="w-3 h-3" />
             </Link>
           </div>
@@ -404,7 +406,7 @@ export function HROverview() {
       <div className="bg-card rounded-xl border border-border p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-foreground">Recent Hazard Observations</h2>
-          <Link href="/hr/observations" className="text-xs text-brand hover:underline flex items-center gap-1">
+          <Link href="/org/observations" className="text-xs text-brand hover:underline flex items-center gap-1">
             View all <ChevronRight className="w-3 h-3" />
           </Link>
         </div>
