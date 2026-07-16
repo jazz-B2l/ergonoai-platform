@@ -7,10 +7,12 @@ import { Brain, ArrowRight, Loader2, Eye, EyeOff, User } from 'lucide-react'
 import { useApp } from '@/lib/app-context'
 import { supabase } from '@/lib/supabase'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { translations } from '@/lib/translations'
 
 function EmployeeLoginContent() {
   const router = useRouter()
-  const { setRole: setAppRole } = useApp()
+  const { setRole: setAppRole, language } = useApp()
+  const t = translations[language].loginEmployee
   
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -83,16 +85,16 @@ function EmployeeLoginContent() {
 
       // Redirect
       if (userRole === 'hr') {
-        router.push('/hr')
+        router.push('/org')
       } else {
         router.push('/employee')
       }
     } catch (err: any) {
       const errMsg = err.message || ''
       if (errMsg.includes('fetch') || errMsg.includes('network') || !process.env.NEXT_PUBLIC_SUPABASE_URL) {
-         setError('Cannot connect to the database. Please ensure your .env.local file is configured with Supabase credentials.')
+         setError(language === 'ar' ? 'لا يمكن الاتصال بقاعدة البيانات. يرجى التأكد من تكوين ملف .env.local الخاص بك.' : 'Cannot connect to the database. Please ensure your .env.local file is configured with Supabase credentials.')
       } else {
-         setError(errMsg || 'Invalid email or password.')
+         setError(errMsg || (language === 'ar' ? 'البريد الإلكتروني أو كلمة المرور غير صالحة.' : 'Invalid email or password.'))
       }
     } finally {
       setLoading(false)
@@ -117,17 +119,17 @@ function EmployeeLoginContent() {
         </Link>
 
         <div className="flex justify-center mb-4">
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold">
             <User className="w-3.5 h-3.5" />
-            Employee Portal
+            {t.portal}
           </div>
         </div>
 
         <h2 className="text-center text-3xl font-extrabold font-sora tracking-tight text-foreground">
-          Sign in as Employee
+          {t.signInTitle}
         </h2>
-        <p className="mt-2 text-center text-sm text-slate-500 font-medium">
-          Access your private self-assessments and dashboard
+        <p className="mt-2 text-center text-sm text-muted-foreground font-medium">
+          {t.signInSubtitle}
         </p>
       </div>
 
@@ -142,8 +144,8 @@ function EmployeeLoginContent() {
 
             <div className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-semibold text-slate-700">
-                  Email address
+                <label htmlFor="email" className="block text-sm font-semibold text-muted-foreground">
+                  {t.emailAddress}
                 </label>
                 <input
                   id="email"
@@ -152,13 +154,13 @@ function EmployeeLoginContent() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@company.com"
-                  className="mt-1.5 block w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                  className="mt-1.5 block w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-semibold text-slate-700">
-                  Password
+                <label htmlFor="password" className="block text-sm font-semibold text-muted-foreground">
+                  {t.password}
                 </label>
                 <div className="mt-1.5 relative">
                   <input
@@ -168,12 +170,12 @@ function EmployeeLoginContent() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="block w-full pl-4 pr-12 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                    className="block w-full pl-4 pr-12 py-3 bg-background border border-border rounded-xl text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                    className="absolute inset-y-0 ltr:right-0 ltr:pr-4 rtl:left-0 rtl:pl-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -188,13 +190,13 @@ function EmployeeLoginContent() {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500 focus:ring-offset-0 cursor-pointer"
+                  className="w-4 h-4 rounded border-slate-300 text-brand focus:ring-brand focus:ring-offset-0 cursor-pointer"
                 />
-                <span className="text-xs font-semibold text-slate-600">Remember me</span>
+                <span className="text-xs font-semibold text-muted-foreground">{t.rememberMe}</span>
               </label>
 
-              <Link href="#" className="text-xs font-semibold text-teal-600 hover:text-teal-700">
-                Forgot password?
+              <Link href="#" className="text-xs font-semibold text-brand hover:underline">
+                {t.forgotPassword}
               </Link>
             </div>
 
@@ -208,7 +210,7 @@ function EmployeeLoginContent() {
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
-                    Sign In
+                    {t.signInButton}
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
@@ -216,11 +218,11 @@ function EmployeeLoginContent() {
             </div>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-slate-100 text-center">
-            <p className="text-sm text-slate-500">
-              Are you managing an organization?{' '}
-              <Link href="/login/org" className="font-semibold text-teal-600 hover:text-teal-700">
-                Sign in as Organization
+          <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800 text-center">
+            <p className="text-sm text-muted-foreground">
+              {t.manageOrgNotice}{' '}
+              <Link href="/login/org" className="font-semibold text-brand hover:underline">
+                {t.signInAsOrg}
               </Link>
             </p>
           </div>

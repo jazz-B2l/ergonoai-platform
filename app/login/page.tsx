@@ -4,8 +4,14 @@ import Link from 'next/link'
 import { Shield, User, Brain, ArrowRight } from 'lucide-react'
 import styles from '@/app/landing.module.css'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { useApp } from '@/lib/app-context'
+import { translations } from '@/lib/translations'
 
 export default function LoginRoleSelectionPage() {
+  const { language } = useApp()
+  const t = translations[language].login
+  const tc = translations[language].common
+
   return (
     <div className="min-h-screen text-slate-900 dark:text-slate-100 flex flex-col items-center justify-center p-6 relative overflow-hidden bg-background">
       {/* Landing Page Background System (Visible/glowing in dark mode, clean/subtle in light mode) */}
@@ -38,7 +44,7 @@ export default function LoginRoleSelectionPage() {
           href="/" 
           className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors py-2 px-4 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 backdrop-blur-md"
         >
-          ← Back to Site
+          {language === 'ar' ? '← ' + tc.backToSite : tc.backToSite + ' →'}
         </Link>
         <ThemeToggle />
       </div>
@@ -54,14 +60,14 @@ export default function LoginRoleSelectionPage() {
           </span>
         </Link>
         <p className="text-muted-foreground text-sm max-w-sm leading-relaxed">
-          Sign in to access your occupational health & ergonomics portal
+          {t.subtitle}
         </p>
       </div>
 
       {/* Role selection */}
       <div className="w-full max-w-3xl relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <p className="text-center text-xs uppercase tracking-widest text-muted-foreground/75 mb-8 font-mono">
-          Select your destination to sign in
+          {t.destinationTitle}
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -80,11 +86,11 @@ export default function LoginRoleSelectionPage() {
                 </div>
                 <div>
                   <h2 className="font-sora text-lg font-bold text-foreground mb-2 flex items-center gap-1.5">
-                    Organization Portal
+                    {t.orgPortal}
                     <ArrowRight className="w-4 h-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 text-brand" />
                   </h2>
                   <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                    For HR Managers & Admin. Manage department spaces, review safety compliance checklists, and view AI recommendation telemetry.
+                    {t.orgPortalDesc}
                   </p>
                 </div>
               </div>
@@ -92,10 +98,10 @@ export default function LoginRoleSelectionPage() {
 
             <div className="relative z-10 mt-6 pt-4 border-t border-border dark:border-white/5 flex justify-between items-center">
               <span className="text-xs text-muted-foreground group-hover:text-foreground font-medium transition-colors">
-                Organization Dashboard
+                {t.orgDashboard}
               </span>
               <span className="text-xs text-brand font-bold">
-                Log in →
+                {t.logIn} →
               </span>
             </div>
           </Link>
@@ -115,11 +121,11 @@ export default function LoginRoleSelectionPage() {
                 </div>
                 <div>
                   <h2 className="font-sora text-lg font-bold text-foreground mb-2 flex items-center gap-1.5">
-                    Employee Portal
+                    {t.employeePortal}
                     <ArrowRight className="w-4 h-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 text-success" />
                   </h2>
                   <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                    For Staff & Team Members. Access your private assessments, track score histories, and report ergonomic hazard observations.
+                    {t.employeePortalDesc}
                   </p>
                 </div>
               </div>
@@ -127,10 +133,10 @@ export default function LoginRoleSelectionPage() {
 
             <div className="relative z-10 mt-6 pt-4 border-t border-border dark:border-white/5 flex justify-between items-center">
               <span className="text-xs text-muted-foreground group-hover:text-foreground font-medium transition-colors">
-                Personal Space
+                {t.personalSpace}
               </span>
               <span className="text-xs text-success font-bold">
-                Log in →
+                {t.logIn} →
               </span>
             </div>
           </Link>
@@ -139,11 +145,12 @@ export default function LoginRoleSelectionPage() {
         {/* Signup notice */}
         <div className="mt-12 text-center">
           <p className="text-sm text-muted-foreground font-medium">
-            Don't have an account?{' '}
+            {t.dontHaveAccount}{' '}
             <Link href="/role-select" className="font-semibold text-brand hover:underline transition-colors">
-              Get started
+              {tc.getStarted}
             </Link>
           </p>
+
         </div>
       </div>
     </div>
