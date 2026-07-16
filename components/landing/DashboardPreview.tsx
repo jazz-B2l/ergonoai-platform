@@ -1,14 +1,23 @@
+'use client'
+
+import { useApp } from '@/lib/app-context'
+import { translations } from '@/lib/translations'
+
 export function DashboardPreview() {
+  const { language } = useApp()
+  const t = translations[language].dashboardPreview
+
   return (
     <section className="py-32 bg-[#020617] border-y border-slate-800 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 text-center mb-16">
         <h2 className="font-sora text-3xl md:text-5xl font-bold text-white mb-6 tracking-tight">
-          Enterprise-grade Insights
+          {t.title}
         </h2>
         <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-          Monitor your entire organization from a single, powerful dashboard.
+          {t.desc}
         </p>
       </div>
+
 
       {/* Massive Dashboard UI Screenshot Simulation */}
       <div className="max-w-6xl mx-auto px-6">

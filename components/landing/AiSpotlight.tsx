@@ -1,11 +1,21 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useApp } from '@/lib/app-context'
+import { translations } from '@/lib/translations'
 
 export function AiSpotlight() {
+  const { language } = useApp()
+  const t = translations[language].aiSpotlight
+
   const [isVisible, setIsVisible] = useState(false)
-  const fullText = "Show departments with the highest ergonomic risk."
+  const fullText = t.userQuery
   const [typedText, setTypedText] = useState('')
+
+  useEffect(() => {
+    // Reset typing when language changes
+    setTypedText('')
+  }, [language, fullText])
 
   useEffect(() => {
     // Simple intersection observer simulation for demo
@@ -29,7 +39,7 @@ export function AiSpotlight() {
       }, 50)
       return () => clearTimeout(timeout)
     }
-  }, [isVisible, typedText])
+  }, [isVisible, typedText, fullText])
 
   return (
     <section id="ai-spotlight" className="py-32 bg-slate-50 relative overflow-hidden">
@@ -39,17 +49,17 @@ export function AiSpotlight() {
       <div className="max-w-4xl mx-auto px-6 relative z-10">
         <div className="text-center mb-16">
           <h2 className="font-sora text-3xl md:text-5xl font-bold text-slate-900 mb-6 tracking-tight">
-            Meet your AI Ergonomist
+            {t.title}
           </h2>
           <p className="text-lg text-slate-600">
-            Ask questions, get instant insights, and automate risk detection.
+            {t.desc}
           </p>
         </div>
 
         {/* ChatGPT Style Window */}
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
           <div className="h-12 bg-slate-50 border-b border-slate-200 flex items-center px-4 justify-center relative">
-            <span className="text-xs font-semibold text-slate-500 font-sora">ErgonoAI Copilot</span>
+            <span className="text-xs font-semibold text-slate-500 font-sora">{t.copilotTitle}</span>
           </div>
           
           <div className="p-8 space-y-8 min-h-[400px]">
@@ -67,21 +77,21 @@ export function AiSpotlight() {
             {typedText === fullText && (
               <div className="flex justify-start animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <div className="bg-slate-100 text-slate-800 rounded-2xl rounded-tl-sm px-6 py-6 max-w-[90%] border border-slate-200">
-                  <p className="font-inter mb-4">Here are the departments with the highest ergonomic risk scores based on recent assessments:</p>
+                  <p className="font-inter mb-4">{t.aiIntro}</p>
                   
                   <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm mb-4">
                     <div className="flex justify-between items-center mb-2">
-                      <span className="font-bold text-slate-900 font-sora">Production Line A</span>
-                      <span className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-bold font-geist-mono">Risk 84%</span>
+                      <span className="font-bold text-slate-900 font-sora">{t.issuesTitle}</span>
+                      <span className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-bold font-geist-mono">{t.riskLabel}</span>
                     </div>
                     <ul className="text-sm text-slate-600 space-y-1">
-                      <li>• <span className="font-semibold">Primary Issue:</span> Poor Lighting</li>
-                      <li>• <span className="font-semibold">Secondary Issue:</span> Sustained Neck Flexion</li>
-                      <li>• <span className="font-semibold">Impact:</span> High reports of neck pain</li>
+                      <li>• <span className="font-semibold">{t.primaryIssue}:</span> {t.primaryIssueVal}</li>
+                      <li>• <span className="font-semibold">{t.secondaryIssue}:</span> {t.secondaryIssueVal}</li>
+                      <li>• <span className="font-semibold">{t.impact}:</span> {t.impactVal}</li>
                     </ul>
                   </div>
 
-                  <p className="text-sm text-slate-600 font-medium">Recommended actions have been drafted and are awaiting your approval in the Corrective Actions dashboard.</p>
+                  <p className="text-sm text-slate-600 font-medium">{t.aiFooter}</p>
                 </div>
               </div>
             )}
@@ -91,3 +101,4 @@ export function AiSpotlight() {
     </section>
   )
 }
+

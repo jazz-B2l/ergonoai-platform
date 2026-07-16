@@ -1,13 +1,12 @@
 'use client'
+
+import { useApp } from '@/lib/app-context'
+import { translations } from '@/lib/translations'
 import { useState } from 'react'
 
 export function Faq() {
-  const faqs = [
-    { q: "How does the AI assessment work?", a: "Our AI processes video feeds, images, and user-submitted questionnaires to calculate precise ergonomic risk scores based on established standards like ISO 7730 and REBA." },
-    { q: "Is our employee data secure?", a: "Yes. ErgonoAI is GDPR compliant, uses end-to-end encryption, and never uses your company's private health data to train external models." },
-    { q: "Can we integrate with our existing HR tools?", a: "Enterprise customers can use our robust API to sync employee profiles and organizational structures with Workday, BambooHR, and other major HRIS platforms." },
-    { q: "Do you offer custom assessments?", a: "Yes. The Assessment Builder allows you to create completely custom questionnaires and scoring logic tailored to your specific industry hazards." }
-  ]
+  const { language } = useApp()
+  const t = translations[language].faq
 
   const [openIdx, setOpenIdx] = useState<number | null>(0)
 
@@ -16,16 +15,16 @@ export function Faq() {
       <div className="max-w-3xl mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="font-sora text-3xl md:text-5xl font-bold text-slate-900 mb-6 tracking-tight">
-            Frequently Asked Questions
+            {t.title}
           </h2>
         </div>
 
         <div className="space-y-4">
-          {faqs.map((faq, idx) => (
+          {t.items.map((faq: any, idx: number) => (
             <div key={idx} className="border border-slate-200 rounded-2xl overflow-hidden transition-all duration-200">
               <button 
                 onClick={() => setOpenIdx(openIdx === idx ? null : idx)}
-                className="w-full text-left px-6 py-4 flex justify-between items-center focus:outline-none hover:bg-slate-50 transition-colors"
+                className="w-full text-start px-6 py-4 flex justify-between items-center focus:outline-none hover:bg-slate-50 transition-colors"
               >
                 <span className="font-sora font-semibold text-slate-900">{faq.q}</span>
                 <span className={`text-slate-400 transition-transform duration-300 ${openIdx === idx ? 'rotate-180' : ''}`}>

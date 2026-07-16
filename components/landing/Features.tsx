@@ -1,37 +1,29 @@
+'use client'
+
+import { useApp } from '@/lib/app-context'
+import { translations } from '@/lib/translations'
+
 export function Features() {
-  const features = [
-    {
-      title: "AI Ergonomic Analysis",
-      desc: "Our AI evaluates posture, questionnaire responses, and environmental factors to pinpoint risks with high precision.",
-      image: "linear-gradient(135deg, #0f766e, #14b8a6)"
-    },
-    {
-      title: "Assessment Builder",
-      desc: "Create ISO, NMQ, REBA and custom assessments dynamically. Deploy them to workstations instantly.",
-      image: "linear-gradient(135deg, #1e293b, #334155)"
-    },
-    {
-      title: "Corrective Actions",
-      desc: "Automatically generate improvement plans and track them through resolution directly on the platform.",
-      image: "linear-gradient(135deg, #f59e0b, #fbbf24)"
-    },
-    {
-      title: "Analytics",
-      desc: "Beautiful dashboards with historical trends showing the exact impact of your ergonomic interventions.",
-      image: "linear-gradient(135deg, #3b82f6, #60a5fa)"
-    }
+  const { language } = useApp()
+  const items = translations[language].featuresSection.items
+
+  const gradients = [
+    "linear-gradient(135deg, #0f766e, #14b8a6)",
+    "linear-gradient(135deg, #1e293b, #334155)",
+    "linear-gradient(135deg, #f59e0b, #fbbf24)",
+    "linear-gradient(135deg, #3b82f6, #60a5fa)"
   ]
 
   return (
     <section id="features" className="py-32 bg-white">
       <div className="max-w-7xl mx-auto px-6 space-y-32">
-        {features.map((feature, idx) => (
+        {items.map((feature: any, idx: number) => (
           <div key={idx} className={`flex flex-col md:flex-row items-center gap-16 ${idx % 2 === 1 ? 'md:flex-row-reverse' : ''}`}>
             {/* Image Side - Mocked with CSS gradient for realistic preview block */}
             <div className="w-full md:w-1/2">
               <div 
                 className="aspect-[4/3] rounded-2xl shadow-2xl relative overflow-hidden"
-                style={{ background: feature.image }}
+                style={{ background: gradients[idx] || gradients[0] }}
               >
                 <div className="absolute inset-0 bg-white/10 backdrop-blur-sm m-8 rounded-xl border border-white/20 p-6 shadow-inner">
                   {/* Abstract UI representation */}
@@ -60,3 +52,4 @@ export function Features() {
     </section>
   )
 }
+
