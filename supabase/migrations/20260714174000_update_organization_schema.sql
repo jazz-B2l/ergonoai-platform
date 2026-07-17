@@ -1,0 +1,14 @@
+-- Add new organization fields to the companies table
+
+ALTER TABLE public.companies
+ADD COLUMN IF NOT EXISTS description TEXT,
+ADD COLUMN IF NOT EXISTS founded_year INTEGER,
+ADD COLUMN IF NOT EXISTS organization_size TEXT,
+ADD COLUMN IF NOT EXISTS contact_email TEXT,
+ADD COLUMN IF NOT EXISTS contact_phone TEXT,
+ADD COLUMN IF NOT EXISTS district TEXT,
+ADD COLUMN IF NOT EXISTS wilaya TEXT,
+ADD COLUMN IF NOT EXISTS location_lat DOUBLE PRECISION,
+ADD COLUMN IF NOT EXISTS location_lng DOUBLE PRECISION,
+ADD COLUMN IF NOT EXISTS social_media JSONB DEFAULT '{}'::jsonb,
+ADD COLUMN IF NOT EXISTS banner_url TEXT;
