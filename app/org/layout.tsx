@@ -8,7 +8,7 @@ export default async function OrgLayout({ children }: { children: React.ReactNod
   // 1. Verify Authentication
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) {
-    redirect('/login/org')
+    redirect('/login')
   }
 
   // 2. Verify Role-Based Access Control (RBAC)
@@ -22,7 +22,7 @@ export default async function OrgLayout({ children }: { children: React.ReactNod
 
   if (roleError || !member) {
     // If no active member record, deny access
-    redirect('/login/employee')
+    redirect('/login')
   }
 
   // Check if role is HR or Admin

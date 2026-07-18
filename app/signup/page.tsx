@@ -78,12 +78,23 @@ function SignupContent() {
   const t = translations[language].signup
   const tc = translations[language].common
 
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
   useEffect(() => {
     if (roleParam === 'hr' || roleParam === 'employee') {
       setRoleState(roleParam)
       setStep(1)
     }
   }, [roleParam])
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setIsLoggedIn(true)
+        setEmail(user.email || '')
+      }
+    })
+  }, [])
 
   const verifyInviteCode = async (code: string) => {
     if (!code || code.trim().length < 5) {
@@ -142,7 +153,7 @@ function SignupContent() {
       return
     }
 
-    if (password !== confirmPassword) {
+    if (!isLoggedIn && password !== confirmPassword) {
       setError(language === 'ar' ? 'كلمتا المرور غير متطابقتين. يرجى التحقق وإعادة المحاولة.' : 'Passwords do not match. Please check and try again.')
       setLoading(false)
       return
@@ -159,22 +170,30 @@ function SignupContent() {
     }
 
     try {
-      // 1. Supabase Auth Signup
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-          data: {
-            full_name: role === 'hr' ? organizationName : `${firstName} ${lastName}`.trim(),
-            role: role,
+      let user = null
+      if (isLoggedIn) {
+        const { data: { session } } = await supabase.auth.getSession()
+        user = session?.user || null
+      }
+
+      if (!user) {
+        // 1. Supabase Auth Signup
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            data: {
+              full_name: role === 'hr' ? organizationName : `${firstName} ${lastName}`.trim(),
+              role: role,
+            }
           }
-        }
-      })
+        })
 
-      if (authError) throw authError
+        if (authError) throw authError
+        user = authData?.user
+      }
 
-      const user = authData?.user
       if (!user) throw new Error('No user data returned.')
 
       // 2. Insert into public.profiles
@@ -401,65 +420,69 @@ function SignupContent() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <InputLabel htmlFor="email">{t.email}</InputLabel>
-                          <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+                          <Input id="email" type="email" required disabled={isLoggedIn} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
                         </div>
-                        <div>
-                          <InputLabel htmlFor="password">{t.password}</InputLabel>
-                          <div className="relative">
-                            <input
-                              id="password"
-                              type={showPassword ? 'text' : 'password'}
-                              required
-                              value={password}
-                              onChange={(e) => setPassword(e.target.value)}
-                              placeholder="••••••••"
-                              className="block w-full pl-4 pr-12 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
-                            >
-                              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </button>
+                        {!isLoggedIn && (
+                          <div>
+                            <InputLabel htmlFor="password">{t.password}</InputLabel>
+                            <div className="relative">
+                              <input
+                                id="password"
+                                type={showPassword ? 'text' : 'password'}
+                                required
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="••••••••"
+                                className="block w-full pl-4 pr-12 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                              >
+                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              </button>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <InputLabel htmlFor="confirmPassword">{t.confirmPassword}</InputLabel>
-                          <div className="relative">
-                            <input
-                              id="confirmPassword"
-                              type={showConfirmPassword ? 'text' : 'password'}
-                              required
-                              value={confirmPassword}
-                              onChange={(e) => setConfirmPassword(e.target.value)}
-                              placeholder="••••••••"
-                              className={`block w-full pl-4 pr-12 py-3 bg-white border rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all ${
-                                confirmPassword && password !== confirmPassword
-                                  ? 'border-red-300 focus:ring-red-400'
-                                  : confirmPassword && password === confirmPassword
-                                  ? 'border-emerald-300 focus:ring-emerald-400'
-                                  : 'border-slate-200'
-                              }`}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                              className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
-                            >
-                              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </button>
+                        {!isLoggedIn ? (
+                          <div>
+                            <InputLabel htmlFor="confirmPassword">{t.confirmPassword}</InputLabel>
+                            <div className="relative">
+                              <input
+                                id="confirmPassword"
+                                type={showConfirmPassword ? 'text' : 'password'}
+                                required
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                placeholder="••••••••"
+                                className={`block w-full pl-4 pr-12 py-3 bg-white border rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all ${
+                                  confirmPassword && password !== confirmPassword
+                                    ? 'border-red-300 focus:ring-red-400'
+                                    : confirmPassword && password === confirmPassword
+                                    ? 'border-emerald-300 focus:ring-emerald-400'
+                                    : 'border-slate-200'
+                                }`}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                              >
+                                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              </button>
+                            </div>
+                            {confirmPassword && password !== confirmPassword && (
+                              <p className="text-xs text-red-500 font-medium mt-1">{language === 'ar' ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match'}</p>
+                            )}
+                            {confirmPassword && password === confirmPassword && (
+                              <p className="text-xs text-emerald-600 font-medium mt-1">{language === 'ar' ? 'كلمتا المرور متطابقتان ✓' : 'Passwords match ✓'}</p>
+                            )}
                           </div>
-                          {confirmPassword && password !== confirmPassword && (
-                            <p className="text-xs text-red-500 font-medium mt-1">{language === 'ar' ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match'}</p>
-                          )}
-                          {confirmPassword && password === confirmPassword && (
-                            <p className="text-xs text-emerald-600 font-medium mt-1">{language === 'ar' ? 'كلمتا المرور متطابقتان ✓' : 'Passwords match ✓'}</p>
-                          )}
-                        </div>
+                        ) : null}
                         <div>
                           <InputLabel htmlFor="phone">{t.phone}</InputLabel>
                           <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+213 555 123 456" />
@@ -519,65 +542,69 @@ function SignupContent() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <InputLabel htmlFor="email">{t.contactEmail} *</InputLabel>
-                          <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="contact@organization.com" />
+                          <Input id="email" type="email" required disabled={isLoggedIn} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="contact@organization.com" />
                         </div>
-                        <div>
-                          <InputLabel htmlFor="password">{t.password}</InputLabel>
-                          <div className="relative">
-                            <input
-                              id="password"
-                              type={showPassword ? 'text' : 'password'}
-                              required
-                              value={password}
-                              onChange={(e) => setPassword(e.target.value)}
-                              placeholder="••••••••"
-                              className="block w-full pl-4 pr-12 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
-                            >
-                              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </button>
+                        {!isLoggedIn && (
+                          <div>
+                            <InputLabel htmlFor="password">{t.password}</InputLabel>
+                            <div className="relative">
+                              <input
+                                id="password"
+                                type={showPassword ? 'text' : 'password'}
+                                required
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="••••••••"
+                                className="block w-full pl-4 pr-12 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                              >
+                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              </button>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <InputLabel htmlFor="confirmPassword">{t.confirmPassword}</InputLabel>
-                          <div className="relative">
-                            <input
-                              id="confirmPassword"
-                              type={showConfirmPassword ? 'text' : 'password'}
-                              required
-                              value={confirmPassword}
-                              onChange={(e) => setConfirmPassword(e.target.value)}
-                              placeholder="••••••••"
-                              className={`block w-full pl-4 pr-12 py-3 bg-white border rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all ${
-                                confirmPassword && password !== confirmPassword
-                                  ? 'border-red-300 focus:ring-red-400'
-                                  : confirmPassword && password === confirmPassword
-                                  ? 'border-emerald-300 focus:ring-emerald-400'
-                                  : 'border-slate-200'
-                              }`}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                              className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
-                            >
-                              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </button>
+                        {!isLoggedIn ? (
+                          <div>
+                            <InputLabel htmlFor="confirmPassword">{t.confirmPassword}</InputLabel>
+                            <div className="relative">
+                              <input
+                                id="confirmPassword"
+                                type={showConfirmPassword ? 'text' : 'password'}
+                                required
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                placeholder="••••••••"
+                                className={`block w-full pl-4 pr-12 py-3 bg-white border rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all ${
+                                  confirmPassword && password !== confirmPassword
+                                    ? 'border-red-300 focus:ring-red-400'
+                                    : confirmPassword && password === confirmPassword
+                                    ? 'border-emerald-300 focus:ring-emerald-400'
+                                    : 'border-slate-200'
+                                }`}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                              >
+                                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              </button>
+                            </div>
+                            {confirmPassword && password !== confirmPassword && (
+                              <p className="text-xs text-red-500 font-medium mt-1">{language === 'ar' ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match'}</p>
+                            )}
+                            {confirmPassword && password === confirmPassword && (
+                              <p className="text-xs text-emerald-600 font-medium mt-1">{language === 'ar' ? 'كلمتا المرور متطابقتان ✓' : 'Passwords match ✓'}</p>
+                            )}
                           </div>
-                          {confirmPassword && password !== confirmPassword && (
-                            <p className="text-xs text-red-500 font-medium mt-1">{language === 'ar' ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match'}</p>
-                          )}
-                          {confirmPassword && password === confirmPassword && (
-                            <p className="text-xs text-emerald-600 font-medium mt-1">{language === 'ar' ? 'كلمتا المرور متطابقتان ✓' : 'Passwords match ✓'}</p>
-                          )}
-                        </div>
+                        ) : null}
                         <div>
                           <InputLabel htmlFor="language">{t.lang}</InputLabel>
                           <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200 h-[50px] items-center">
