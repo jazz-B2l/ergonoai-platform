@@ -169,3 +169,55 @@ export const assessmentQuestions: AssessmentQuestion[] = []
 export const employeeWellbeingHistory: WellbeingTrendPoint[] = []
 export const organizationWellbeingTrend: WellbeingTrendPoint[] = []
 export const departmentScores: DepartmentScore[] = []
+
+// ─── Authentication & Authorization Types ───
+
+export type UserStatus = 'active' | 'suspended' | 'pending' | 'deleted' | 'invited'
+
+export interface UserProfile {
+  id: string
+  email: string
+  first_name: string
+  last_name: string
+  avatar_url?: string
+  status: UserStatus
+  created_at: string
+  updated_at: string
+}
+
+export interface Company {
+  id: string
+  name: string
+  logo_url?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface CompanyMember {
+  id: string
+  user_id: string
+  company_id: string
+  role: Role // using existing Role type
+  joined_at: string
+}
+
+export interface AppPermission {
+  id: string
+  name: string
+  description: string
+}
+
+export interface RolePermissions {
+  role: Role
+  permissions: AppPermission[]
+}
+
+// Global Auth State
+export interface AuthState {
+  user: UserProfile | null
+  activeCompany: Company | null
+  role: Role | null
+  permissions: AppPermission[]
+  isAuthenticated: boolean
+  isLoading: boolean
+}
