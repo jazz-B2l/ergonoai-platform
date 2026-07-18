@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Sora, Geist_Mono } from 'next/font/google'
 import { AppProvider } from '@/lib/app-context'
+import { AppProviders } from '@/components/providers/AppProviders'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
@@ -24,7 +25,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="bg-background">
       <body className={`${inter.variable} ${sora.variable} ${geistMono.variable} font-sans antialiased`}>
-        <AppProvider>{children}</AppProvider>
+        <AppProviders>
+          <AppProvider>{children}</AppProvider>
+        </AppProviders>
       </body>
     </html>
   )
