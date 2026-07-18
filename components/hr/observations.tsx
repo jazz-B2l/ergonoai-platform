@@ -49,19 +49,33 @@ export function HRObservations() {
         .select('id, profiles!organization_members_profile_id_fkey(first_name, last_name)')
       
       const memberNameMap = new Map(
-        (membersList || []).map(m => [
-          m.id, 
-          m.profiles ? `${m.profiles.first_name || ''} ${m.profiles.last_name || ''}`.trim() : 'Staff Member'
-        ])
+        (membersList || []).map(m => {
+          const profile = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles as any
+          return [
+            m.id,
+            profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : 'Staff Member'
+          ]
+        })
       )
 
-      // 2. Fetch hazards & categories
+      // 2. Fetch hazards & categories for this organization only
+      const { data: categories } = await supabase
+        .from('hazard_categories')
+        .select('id')
+        .eq('organization_id', currentOrgId)
+
+      const categoryIds = (categories || []).map(c => c.id)
+
       const { data: hazards } = await supabase
         .from('hazards')
         .select('id, name, hazard_categories(name)')
+        .in('category_id', categoryIds)
 
       const hazardNameMap = new Map((hazards || []).map(h => [h.id, h.name]))
-      const hazardCatMap = new Map((hazards || []).map(h => [h.id, h.hazard_categories?.name || 'Safety']))
+      const hazardCatMap = new Map((hazards || []).map(h => {
+        const cat = Array.isArray(h.hazard_categories) ? h.hazard_categories[0] : h.hazard_categories as any
+        return [h.id, cat?.name || 'Safety']
+      }))
 
       // 3. Fetch sites
       const { data: sites } = await supabase
@@ -135,10 +149,25 @@ export function HRObservations() {
 
       const deptId = depts && depts.length > 0 ? depts[0].id : null
 
-      // 2. Fetch first seeded hazard
+      // 2. Fetch categories for this organization
+      const { data: categories } = await supabase
+        .from('hazard_categories')
+        .select('id')
+        .eq('organization_id', orgId)
+
+      if (!categories || categories.length === 0) {
+        alert('Please visit the "Hazard Checklist" page first to seed the standard safety categories and hazards!')
+        setReporting(false)
+        return
+      }
+
+      const categoryIds = categories.map(c => c.id)
+
+      // 3. Fetch first seeded hazard for this organization
       const { data: hazards } = await supabase
         .from('hazards')
         .select('id')
+        .in('category_id', categoryIds)
         .limit(1)
 
       if (!hazards || hazards.length === 0) {
@@ -149,7 +178,7 @@ export function HRObservations() {
 
       const hazardId = hazards[0].id
 
-      // 3. Insert mock hazard occurrence
+      // 4. Insert mock hazard occurrence
       const { error } = await supabase
         .from('hazard_occurrences')
         .insert({

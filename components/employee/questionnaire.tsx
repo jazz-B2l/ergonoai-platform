@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useApp } from '@/lib/app-context'
+import { translations } from '@/lib/translations'
 import type { Question } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
@@ -29,16 +30,19 @@ function RegionBadge({ region }: { region: string }) {
 // ─── Answer widgets ───────────────────────────────────────────────────────────
 
 function YesNoWidget({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const { language } = useApp()
+  const opts = language === 'ar' ? ['نعم', 'لا'] : ['Yes', 'No']
+  const values = ['Yes', 'No']
   return (
     <div className="flex gap-2 mt-2">
-      {(['Yes', 'No'] as const).map(opt => (
+      {opts.map((opt, i) => (
         <button
           key={opt}
           type="button"
-          onClick={() => onChange(opt)}
+          onClick={() => onChange(values[i])}
           className={cn(
             'flex-1 py-2.5 rounded-lg text-sm font-semibold border transition-all',
-            value === opt
+            value === values[i]
               ? 'bg-brand text-brand-foreground border-brand shadow-sm'
               : 'bg-muted border-border text-muted-foreground hover:border-brand/50 hover:text-foreground'
           )}
@@ -306,12 +310,128 @@ function QuestionCard({ question, index }: { question: Question; index: number }
   )
 }
 
+// ─── Question & Option Translators ──────────────────────────────────────────
+
+function translateQuestionText(code: string, text: string, category: string, lang: 'en' | 'ar'): string {
+  if (lang !== 'ar') return text;
+
+  const bodyRegionMapAr: Record<string, string> = {
+    neck: 'العنق',
+    shoulders: 'الكتفين',
+    upper_back: 'أعلى الظهر',
+    'upper back': 'أعلى الظهر',
+    elbows: 'المرفقين',
+    wrists_hands: 'المعصمين / اليدين',
+    'wrists / hands': 'المعصمين / اليدين',
+    lower_back: 'أسفل الظهر',
+    'lower back': 'أسفل الظهر',
+    hips_thighs: 'الوركين / الفخذين',
+    'hips / thighs': 'الوركين / الفخذين',
+    knees: 'الركبتين',
+    ankles_feet: 'الكاحلين / القدمين',
+    'ankles / feet': 'الكاحلين / القدمين',
+  };
+
+  const region = bodyRegionMapAr[category.toLowerCase()] || category;
+
+  if (code.startsWith('nmq_sum_')) {
+    return `خلال الـ 12 شهراً الماضية، هل عانيت من أوجاع، آلام، أو انزعاج في ${region}؟`;
+  }
+
+  if (code.startsWith('nmq_det_1_')) return `هل سبق لك أن عانيت من أوجاع، آلام، أو انزعاج في ${region}؟`;
+  if (code.startsWith('nmq_det_2_')) return `هل سبق لك أن أصبت في ${region} نتيجة حادث؟`;
+  if (code.startsWith('nmq_det_3_')) return `هل اضطررت يوماً إلى تغيير وظيفتك أو مهام عملك بسبب مشاكل في ${region}؟`;
+  if (code.startsWith('nmq_det_4_')) return `خلال الـ 12 شهراً الماضية، هل عانيت من مشاكل في ${region}؟`;
+  if (code.startsWith('nmq_det_5_')) return `ما هي المدة الإجمالية التي عانيت فيها من مشاكل في ${region} خلال الـ 12 شهراً الماضية؟`;
+  if (code.startsWith('nmq_det_6a_')) return `بسبب مشاكل في ${region} خلال الـ 12 شهراً الماضية، هل اضطررت إلى تقليل نشاط عملك أو أنشطتك المنزلية المعتادة؟`;
+  if (code.startsWith('nmq_det_6b_')) return `بسبب مشاكل في ${region} خلال الـ 12 شهراً الماضية، هل اضطررت إلى تقليل أنشطتك الترفيهية؟`;
+  if (code.startsWith('nmq_det_7_')) return `خلال الـ 12 شهراً الماضية، ما هي المدة التي منعتك فيها المشاكل في ${region} من أداء أنشطتك المعتادة (العمل أو المنزل)؟`;
+  if (code.startsWith('nmq_det_8_')) return `خلال الـ 12 شهراً الماضية، هل استشرت طبيباً، معالجاً طبيعياً، أو أخصائي رعاية صحية آخر بسبب مشاكل في ${region}؟`;
+  if (code.startsWith('nmq_det_9_')) return `هل عانيت من مشكلة في ${region} في أي وقت خلال الـ 7 أيام الماضية؟`;
+
+  const isoMap: Record<string, string> = {
+    iso_1: 'كيف تقيم الراحة الحرارية العامة في مكان عملك؟',
+    iso_2: 'هل تشعر عادة بالراحة الحرارية أثناء العمل؟',
+    iso_3: 'كم مرة تشعر بالحر الشديد أثناء عملك؟',
+    iso_4: 'كم مرة تشعر بالبرد الشديد أثناء عملك؟',
+    iso_5: 'هل تظل درجة الحرارة مريحة طوال فترة عملك؟',
+    iso_6: 'هل تتغير درجة حرارة مكان العمل بشكل متكرر خلال اليوم؟',
+    iso_7: 'كيف تشعر حالياً؟ (الإحساس الحراري)',
+    iso_8: 'هل درجة حرارة الهواء مريحة لعملك؟',
+    iso_9: 'هل مكان العمل عادة حار جداً؟',
+    iso_10: 'هل مكان العمل عادة بارد جداً؟',
+    iso_11: 'هل تغيرات درجة الحرارة تشتت انتباهك أثناء العمل؟',
+    iso_12: 'هل تشعر بتيارات هوائية غير مرغوب فيها أثناء العمل؟',
+    iso_13: 'هل الهواء المنبعث من المراوح أو مكيفات الهواء يسبب لك الإزعاج؟',
+    iso_14: 'هل تشعر بالبرد بسبب حركة الهواء؟',
+    iso_15: 'هل يصطدم تدفق الهواء بوجهك أو رقبتك بشكل متكرر؟',
+    iso_16: 'هل يزعج تدفق الهواء تركيزك؟',
+    iso_17: 'هل الهواء جاف جداً؟',
+    iso_18: 'هل الهواء رطب جداً؟',
+    iso_19: 'هل الرطوبة تسبب لك عدم الراحة؟',
+    iso_20: 'هل تشعر بحرارة مفرطة من النوافذ؟',
+    iso_21: 'هل تشعر بحرارة مفرطة من الآلات أو المعدات؟',
+    iso_22: 'هل النوافذ أو الجدران الباردة تسبب لك عدم الراحة؟',
+    iso_23: 'هل الأسقف أو الجدران الساخنة تسبب لك عدم الراحة؟',
+    iso_24: 'هل قدماك أبرد من الجزء العلوي من جسمك؟',
+    iso_25: 'هل رأسك أدفأ من قدميك؟',
+    iso_26: 'هل تلاحظ فروقاً كبيرة في درجات الحرارة بين مستوى الأرض والرأس؟',
+    iso_27: 'هل الأرضية باردة جداً؟',
+    iso_28: 'هل الأرضية دافئة جداً؟',
+    iso_29: 'هل تجعل درجة حرارة الأرضية الوقوف أو المشي غير مريح؟',
+    iso_30: 'هل ملابس العمل المعتادة مناسبة لدرجة حرارة مكان العمل؟',
+    iso_31: 'هل تحتاج إلى ملابس إضافية لأن مكان العمل بارد جداً؟',
+    iso_32: 'هل تخلع بعض الملابس لأن مكان العمل حار جداً؟',
+    iso_33: 'هل يجعلك نشاطك البدني تشعر بالحرارة المفرطة؟',
+    iso_34: 'هل يتطلب عملك حركة متكررة تؤثر على راحتك الحرارية؟',
+    iso_35: 'هل تتناسب درجة حرارة مكان العمل مع المجهود البدني المطلوب لوظيفتك؟',
+    iso_36: 'هل البيئة الحرارية تقلل من تركيزك؟',
+    iso_37: 'هل الانزعاج الحراري يقلل من إنتاجيتك؟',
+    iso_38: 'هل احتجت يوماً إلى التوقف عن العمل بسبب الانزعاج الحراري؟',
+    iso_39: 'بشكل عام، ما مدى رضاك عن البيئة الحرارية في مكان عملك؟',
+    iso_40: 'ما هي التحسينات التي من شأنها تحسين راحتك الحرارية بشكل أفضل؟',
+  };
+
+  return isoMap[code] || text;
+}
+
+function translateOptionText(text: string, value: string, lang: 'en' | 'ar'): string {
+  if (lang !== 'ar') return text;
+
+  const optMap: Record<string, string> = {
+    'Yes': 'نعم',
+    'No': 'لا',
+    '0 days': '0 يوم',
+    '1–7 days': '1-7 أيام',
+    '1-7 days': '1-7 أيام',
+    '8–30 days': '8-30 يوم',
+    '8-30 days': '8-30 يوم',
+    'More than 30 days': 'أكثر من 30 يوم',
+    'More than 30 days (not daily)': 'أكثر من 30 يوم (ليس يومياً)',
+    'Every day (daily)': 'كل يوم (يومياً)',
+    'Never': 'أبداً',
+    'Rarely': 'نادراً',
+    'Sometimes': 'أحياناً',
+    'Often': 'غالباً',
+    'Always': 'دائماً',
+    'Very Cold (-3)': 'بارد جداً (-3)',
+    'Cold (-2)': 'بارد (-2)',
+    'Slightly Cool (-1)': 'مائل للبرودة (-1)',
+    'Neutral (0)': 'معتدل (0)',
+    'Slightly Warm (+1)': 'مائل للدفء (+1)',
+    'Warm (+2)': 'دافئ (+2)',
+    'Very Hot (+3)': 'حار جداً (-3)',
+  };
+
+  return optMap[text] || optMap[value] || text;
+}
+
 // ─── Section label ────────────────────────────────────────────────────────────
 
-function sectionLabel(q: Question): string {
-  if (q.section === 'NMQ_summary') return 'NMQ — Summary'
-  if (q.section === 'NMQ_detail') return 'NMQ — Detailed'
-  return 'ISO 7730 — Thermal Comfort'
+function sectionLabel(q: Question, lang: 'en' | 'ar'): string {
+  if (q.section === 'NMQ_summary') return lang === 'ar' ? 'استبيان الشمال الأوروبي (NMQ) — ملخص' : 'NMQ — Summary'
+  if (q.section === 'NMQ_detail') return lang === 'ar' ? 'استبيان الشمال الأوروبي (NMQ) — تفصيلي' : 'NMQ — Detailed'
+  return lang === 'ar' ? 'معيار ISO 7730 — الراحة الحرارية' : 'ISO 7730 — Thermal Comfort'
 }
 
 // ─── Build pages of 4 ────────────────────────────────────────────────────────
@@ -328,7 +448,8 @@ function buildPages(questions: Question[]): Question[][] {
 
 export function EmployeeQuestionnaire() {
   const router = useRouter()
-  const { questionAnswers, personalDataSubmitted, loadingProfile } = useApp()
+  const { language, setLanguage, questionAnswers, personalDataSubmitted, loadingProfile } = useApp()
+  const t = translations[language].employee
   const [questions, setQuestions] = useState<Question[]>([])
   const [loadingQuestions, setLoadingQuestions] = useState(true)
 
@@ -361,15 +482,15 @@ export function EmployeeQuestionnaire() {
 
         if (questionsData) {
           const bodyRegionMap: Record<string, string> = {
-            neck: 'Neck',
-            shoulders: 'Shoulders',
-            upper_back: 'Upper Back',
-            elbows: 'Elbows',
-            wrists_hands: 'Wrists / Hands',
-            lower_back: 'Lower Back',
-            hips_thighs: 'Hips / Thighs',
-            knees: 'Knees',
-            ankles_feet: 'Ankles / Feet',
+            neck: language === 'ar' ? 'العنق' : 'Neck',
+            shoulders: language === 'ar' ? 'الكتفين' : 'Shoulders',
+            upper_back: language === 'ar' ? 'أعلى الظهر' : 'Upper Back',
+            elbows: language === 'ar' ? 'المرفقين' : 'Elbows',
+            wrists_hands: language === 'ar' ? 'المعصمين / اليدين' : 'Wrists / Hands',
+            lower_back: language === 'ar' ? 'أسفل الظهر' : 'Lower Back',
+            hips_thighs: language === 'ar' ? 'الوركين / الفخذين' : 'Hips / Thighs',
+            knees: language === 'ar' ? 'الركبتين' : 'Knees',
+            ankles_feet: language === 'ar' ? 'الكاحلين / القدمين' : 'Ankles / Feet',
           }
 
           const mapped: Question[] = questionsData.map(q => {
@@ -383,11 +504,11 @@ export function EmployeeQuestionnaire() {
               scaleMin = 1
               scaleMax = 5
               if (code === 'iso_1') {
-                scaleLowLabel = 'Very poor'
-                scaleHighLabel = 'Excellent'
+                scaleLowLabel = language === 'ar' ? 'سيء جداً' : 'Very poor'
+                scaleHighLabel = language === 'ar' ? 'ممتاز' : 'Excellent'
               } else if (code === 'iso_39') {
-                scaleLowLabel = 'Very dissatisfied'
-                scaleHighLabel = 'Very satisfied'
+                scaleLowLabel = language === 'ar' ? 'غير راضٍ تماماً' : 'Very dissatisfied'
+                scaleHighLabel = language === 'ar' ? 'راضٍ تماماً' : 'Very satisfied'
               }
             }
 
@@ -396,16 +517,18 @@ export function EmployeeQuestionnaire() {
                   .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
                   .map(o => ({
                     value: o.id,
-                    label: o.option_text,
+                    label: translateOptionText(o.option_text, o.option_value || '', language),
                     optionValue: o.option_value
                   }))
               : undefined
 
+            const displayQuestion = translateQuestionText(code, q.question_text, q.category || '', language)
+
             return {
               id: q.id,
               section,
-              bodyRegion: bodyRegionMap[q.category || ''] || undefined,
-              text: q.question_text,
+              bodyRegion: (bodyRegionMap[q.category || ''] || undefined) as Question['bodyRegion'],
+              text: displayQuestion,
               answerType: q.question_type as any,
               options,
               scaleMin,
@@ -490,17 +613,17 @@ export function EmployeeQuestionnaire() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col" dir={language === 'ar' ? 'rtl' : 'ltr'}>
 
       {/* Sticky header */}
       <header className="sticky top-0 z-20 bg-card border-b border-border px-6 py-3">
         <div className="max-w-5xl mx-auto flex items-center gap-4">
           <button
             onClick={handleBack}
-            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors shrink-0"
+            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors shrink-0 cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4" />
-            Back
+            {t.back}
           </button>
 
           <div className="flex-1 flex flex-col gap-1">
@@ -512,18 +635,25 @@ export function EmployeeQuestionnaire() {
             </div>
             <div className="flex justify-between">
               <span className="text-xs text-muted-foreground">
-                {sectionLabel(firstQuestion)}
+                {sectionLabel(firstQuestion, language)}
               </span>
               <span className="text-xs text-muted-foreground">
-                Page {pageIndex + 1} of {totalPages}
+                {t.page} {pageIndex + 1} {t.of} {totalPages}
                 {answeredOnPage < currentPage.length && (
                   <span className="ml-1.5 text-warning font-medium">
-                    ({answeredOnPage}/{currentPage.length} answered)
+                    ({answeredOnPage}/{currentPage.length} {t.answered})
                   </span>
                 )}
               </span>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-border hover:bg-muted transition-colors cursor-pointer text-foreground"
+          >
+            {language === 'en' ? 'العربية' : 'English'}
+          </button>
           <ThemeToggle />
         </div>
       </header>
@@ -553,37 +683,37 @@ export function EmployeeQuestionnaire() {
             <button
               onClick={handleBack}
               disabled={animating}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-muted-foreground border border-border hover:bg-muted hover:text-foreground transition-colors disabled:opacity-40"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-muted-foreground border border-border hover:bg-muted hover:text-foreground transition-colors disabled:opacity-40 cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
-              Previous
+              {t.previous}
             </button>
 
             {/* Add note — per-page note for context, lives between nav buttons */}
             <button
               onClick={() => setOpenNoteForPage(prev => prev === pageIndex ? null : pageIndex)}
               className={cn(
-                'flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-colors',
+                'flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-colors cursor-pointer',
                 openNoteForPage === pageIndex
                   ? 'bg-amber-50 border-amber-300/60 text-amber-700'
                   : 'bg-muted border-border text-muted-foreground hover:text-amber-700 hover:border-amber-300/60 hover:bg-amber-50'
               )}
             >
               <StickyNote className="w-3.5 h-3.5" />
-              Add note
+              {t.addNote}
             </button>
 
             <button
               onClick={handleNext}
               disabled={animating || answeredOnPage < currentPage.length}
               className={cn(
-                'flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors disabled:opacity-40',
+                'flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors disabled:opacity-40 cursor-pointer',
                 pageIndex === totalPages - 1
                   ? 'bg-success text-white hover:bg-success/90'
                   : 'bg-brand text-brand-foreground hover:bg-brand/90'
               )}
             >
-              {pageIndex === totalPages - 1 ? 'Review Answers' : 'Next'}
+              {pageIndex === totalPages - 1 ? t.reviewAnswers : t.next}
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -591,23 +721,23 @@ export function EmployeeQuestionnaire() {
           {/* Page-level note panel (below nav) */}
           {openNoteForPage === pageIndex && (
             <div className="mt-3 bg-amber-50 border border-amber-300/60 rounded-xl p-4">
-              <p className="text-xs text-amber-700 font-medium mb-2 flex items-center gap-1.5">
+              <p className="text-xs text-amber-700 font-medium mb-2 flex items-center gap-1.5 font-sora">
                 <StickyNote className="w-3.5 h-3.5" />
-                Click any question&apos;s &quot;Add note&quot; link for a question-specific note
+                {language === 'ar' ? 'انقر فوق رابط "إضافة ملاحظة" الخاص بكل سؤال للحصول على ملاحظة خاصة بالسؤال' : 'Click any question\'s "Add note" link for a question-specific note'}
               </p>
               <div className="grid grid-cols-2 gap-2">
                 {currentPage.map((q, i) => (
                   <div key={q.id} className="text-xs text-amber-800 bg-white/60 rounded-lg px-3 py-2 border border-amber-200">
-                    <span className="font-semibold">Q{pageIndex * 4 + i + 1}:</span> {q.text.slice(0, 70)}{q.text.length > 70 ? '…' : ''}
+                    <span className="font-semibold">{language === 'ar' ? 'س' : 'Q'}{pageIndex * 4 + i + 1}:</span> {q.text.slice(0, 70)}{q.text.length > 70 ? '…' : ''}
                   </div>
                 ))}
               </div>
               <button
                 onClick={() => setOpenNoteForPage(null)}
-                className="mt-3 flex items-center gap-1 text-xs text-amber-600 hover:text-amber-800 transition-colors"
+                className="mt-3 flex items-center gap-1 text-xs text-amber-600 hover:text-amber-800 transition-colors cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
-                Close
+                {t.close}
               </button>
             </div>
           )}
