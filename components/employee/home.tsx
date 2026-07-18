@@ -272,6 +272,7 @@ export function EmployeeHome() {
     questionAnswers,
     setQuestionAnswers,
     setQuestionNotes,
+    language,
   } = useApp()
 
   const [noteModalOpen, setNoteModalOpen] = useState(false)
@@ -314,6 +315,26 @@ export function EmployeeHome() {
       setQuestionNotes({})
     }
     router.push('/employee/questionnaire')
+  }
+
+
+  const t = {
+    activeCampaignTitle: 'Active Assessment Campaign',
+    activeCampaignDesc: 'Your HR team has launched a new ergonomics assessment. Please complete it at your earliest convenience:',
+    privacyGuaranteed: 'Privacy guaranteed',
+    privacyGuaranteedDesc: 'Your responses are anonymised — only aggregated results are visible to HR.',
+    requiredStep: 'Required step',
+    requiredStepDesc: 'This assessment helps your organisation improve workplace wellbeing.',
+    resumeBtn: 'Resume Assessment',
+    startAssessmentNow: 'Start Assessment Now',
+    welcomeGreeting: 'Welcome back,',
+    writeANote: 'Write a Note',
+    noActiveCampaigns: 'No active assessment campaigns at the moment. Check back later.',
+    pastAssessments: 'Past Assessments',
+    noAssessmentsYet: 'No assessments submitted yet',
+    startFirstAssessment: 'Your completed assessments will appear here once you submit one.',
+    notesSent: 'Notes Sent',
+    sentAnonymously: 'Sent anonymously',
   }
 
   const displayName = personalData?.fullName || "Mohamed Ali"
@@ -374,9 +395,9 @@ export function EmployeeHome() {
               <div className="w-16 h-16 rounded-2xl bg-brand/20 border border-brand/30 flex items-center justify-center mb-6">
                 <Brain className="w-8 h-8 text-brand animate-pulse" />
               </div>
-              <h2 className="text-2xl font-bold text-foreground mb-3">Ergonomic Assessment Required</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-3">{t.activeCampaignTitle}</h2>
               <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-                An active wellbeing and safety assessment campaign has been launched by your HR Manager:
+                {t.activeCampaignDesc}
                 <strong className="block mt-2 text-foreground text-base">"{activeAssessment.title}"</strong>
               </p>
               
@@ -384,22 +405,22 @@ export function EmployeeHome() {
                 <div className="flex items-start gap-2.5 text-xs text-muted-foreground">
                   <span className="w-1.5 h-1.5 rounded-full bg-brand mt-1.5 shrink-0" />
                   <div>
-                    <strong className="text-foreground">Privacy Guaranteed:</strong> Individual answers are aggregated and kept completely anonymous.
+                    <strong className="text-foreground">{t.privacyGuaranteed}:</strong> {t.privacyGuaranteedDesc}
                   </div>
                 </div>
                 <div className="flex items-start gap-2.5 text-xs text-muted-foreground">
                   <span className="w-1.5 h-1.5 rounded-full bg-brand mt-1.5 shrink-0" />
                   <div>
-                    <strong className="text-foreground">Required Step:</strong> Under company OSH guidelines, you must complete this assessment to access the feedback portal.
+                    <strong className="text-foreground">{t.requiredStep}:</strong> {t.requiredStepDesc}
                   </div>
                 </div>
               </div>
 
               <button
                 onClick={handleStartAssessment}
-                className="w-full py-3.5 rounded-xl bg-brand text-brand-foreground font-semibold hover:bg-brand/90 transition-all flex items-center justify-center gap-2 shadow-lg"
+                className="w-full py-3.5 rounded-xl bg-brand text-brand-foreground font-semibold hover:bg-brand/90 transition-all flex items-center justify-center gap-2 shadow-lg cursor-pointer"
               >
-                {hasInProgress ? 'Resume Assessment' : 'Start Assessment Now'} →
+                {hasInProgress ? t.resumeBtn : t.startAssessmentNow} →
               </button>
             </div>
           ) : (
@@ -407,7 +428,7 @@ export function EmployeeHome() {
               {/* Welcome */}
               <div className="mb-8 flex items-start justify-between gap-4">
                 <div>
-                  <h1 className="text-2xl font-semibold text-foreground">Welcome back, {displayFirstName}</h1>
+                  <h1 className="text-2xl font-semibold text-foreground">{t.welcomeGreeting} {displayFirstName}</h1>
                   <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
                     {displayPosition}
                   </p>
@@ -415,10 +436,10 @@ export function EmployeeHome() {
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => setNoteModalOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium border border-amber-500/30 text-amber-400 bg-amber-500/5 hover:bg-amber-500/10 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium border border-amber-500/30 text-amber-400 bg-amber-500/5 hover:bg-amber-500/10 transition-colors cursor-pointer"
                   >
                     <StickyNote className="w-4 h-4" />
-                    Write a note
+                    {t.writeANote}
                   </button>
                 </div>
               </div>
@@ -426,7 +447,7 @@ export function EmployeeHome() {
               {/* Campaign notice if no campaign is active */}
               {!activeAssessment && (
                 <div className="mb-8 p-4 rounded-xl bg-muted/40 border border-border text-center text-xs text-muted-foreground">
-                  No active assessment campaigns currently required. We'll notify you here when the next cycle begins!
+                  {t.noActiveCampaigns}
                 </div>
               )}
 
@@ -434,16 +455,16 @@ export function EmployeeHome() {
               <section className="mb-8">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-sm font-semibold text-foreground uppercase tracking-widest text-muted-foreground">
-                    Past Assessments
+                    {t.pastAssessments}
                   </h2>
-                  <span className="text-xs text-muted-foreground">{submittedForms.length} total</span>
+                  <span className="text-xs text-muted-foreground">{submittedForms.length} {language === 'ar' ? 'إجمالي' : 'total'}</span>
                 </div>
 
                 {submittedForms.length === 0 ? (
                   <div className="bg-card border border-border rounded-xl p-10 text-center">
                     <FileText className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-sm font-medium text-foreground">No assessments yet</p>
-                    <p className="text-xs text-muted-foreground mt-1">Start your first assessment above.</p>
+                    <p className="text-sm font-medium text-foreground">{t.noAssessmentsYet}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{t.startFirstAssessment}</p>
                   </div>
                 ) : (
                   <div className="flex flex-col gap-3">
@@ -463,9 +484,9 @@ export function EmployeeHome() {
                 <section>
                   <div className="flex items-center justify-between mb-3">
                     <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">
-                      Notes Sent
+                      {t.notesSent}
                     </h2>
-                    <span className="text-xs text-muted-foreground">{standaloneNotes.length} total</span>
+                    <span className="text-xs text-muted-foreground">{standaloneNotes.length} {language === 'ar' ? 'إجمالي' : 'total'}</span>
                   </div>
                   <div className="flex flex-col gap-2">
                     {standaloneNotes.map(note => (
@@ -474,7 +495,7 @@ export function EmployeeHome() {
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-foreground leading-relaxed">{note.text}</p>
                           <p className="text-xs text-muted-foreground mt-1.5">
-                            {formatDate(note.submittedAt)} at {formatTime(note.submittedAt)} · Sent anonymously
+                            {formatDate(note.submittedAt)} {language === 'ar' ? 'في' : 'at'} {formatTime(note.submittedAt)} · {t.sentAnonymously}
                           </p>
                         </div>
                       </div>
