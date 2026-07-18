@@ -7,7 +7,7 @@ export default async function EmployeeLayout({ children }: { children: React.Rea
   // 1. Verify Authentication
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) {
-    redirect('/login/employee')
+    redirect('/login')
   }
 
   // 2. Verify Member Record
@@ -21,7 +21,7 @@ export default async function EmployeeLayout({ children }: { children: React.Rea
 
   if (memberError || !member) {
     // If no active member record, deny access
-    redirect('/login/employee')
+    redirect('/login')
   }
 
   return (
