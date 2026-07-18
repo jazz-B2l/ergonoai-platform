@@ -3,12 +3,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { Save, User, Phone, Mail, ArrowLeft, Loader2, Check, Building2, MapPin, Share2, Camera, Link2, UploadCloud, Search, Key, Plus, Trash2, Copy } from 'lucide-react'
+import { Save, User, Phone, Mail, ArrowLeft, Loader2, Check, Building2, MapPin, Share2, Camera, Link2, UploadCloud, Search, Key, Plus, Trash2, Copy, Eye, EyeOff } from 'lucide-react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { WILAYAS } from '@/lib/constants'
 import { useApp } from '@/lib/app-context'
 import { translations } from '@/lib/translations'
+import { authService } from '@/lib/auth/service'
 
 // Dynamically import MapPicker with SSR disabled to prevent Leaflet window errors
 const MapPicker = dynamic(() => import('@/components/map-picker'), {
@@ -79,6 +80,19 @@ export default function OrgProfilePage() {
   const [generatingCode, setGeneratingCode] = useState(false)
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null)
 
+  // Password Change State
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmNewPassword, setConfirmNewPassword] = useState('')
+  const [updatingPassword, setUpdatingPassword] = useState(false)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
+  const [passwordSuccess, setPasswordSuccess] = useState(false)
+
+  // Password Visibility States
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
   async function handleLocationSearch() {
     if (!searchQuery.trim()) return
     setSearchingLocation(true)
@@ -98,6 +112,39 @@ export default function OrgProfilePage() {
       setSearchError('Failed to search location. Please check your network.')
     } finally {
       setSearchingLocation(false)
+    }
+  }
+
+  async function handlePasswordChange(e: React.FormEvent) {
+    e.preventDefault()
+    setUpdatingPassword(true)
+    setPasswordError(null)
+    setPasswordSuccess(false)
+
+    try {
+      if (!currentPassword || !newPassword || !confirmNewPassword) {
+        throw new Error(language === 'ar' ? 'يرجى ملء جميع حقول كلمة المرور' : 'Please fill in all password fields')
+      }
+
+      if (newPassword !== confirmNewPassword) {
+        throw new Error(language === 'ar' ? 'كلمات المرور الجديدة غير متطابقة' : 'New passwords do not match')
+      }
+      
+      await authService.updatePassword({
+        currentPassword,
+        newPassword,
+        confirmNewPassword
+      })
+      
+      setPasswordSuccess(true)
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmNewPassword('')
+    } catch (err: any) {
+      console.error('Error updating password:', err)
+      setPasswordError(err.message || 'Failed to update password')
+    } finally {
+      setUpdatingPassword(false)
     }
   }
 
@@ -778,6 +825,90 @@ export default function OrgProfilePage() {
                       className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
                     />
                   </div>
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-slate-100 mt-6">
+                <h3 className="text-base font-bold text-slate-900 mb-4 border-b border-slate-100 pb-2">{t.securityPassword}</h3>
+                
+                {passwordError && (
+                  <div className="mb-4 bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-600 font-medium">
+                    {passwordError}
+                  </div>
+                )}
+                
+                {passwordSuccess && (
+                  <div className="mb-4 bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-sm text-emerald-600 font-medium">
+                    {t.passwordUpdated}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <label htmlFor="currentPassword" className="block text-sm font-medium text-slate-700 mb-1.5">{t.currentPassword}</label>
+                    <div className="relative">
+                      <input
+                        id="currentPassword" type={showCurrentPassword ? 'text' : 'password'} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full bg-white border border-slate-200 rounded-xl pl-4 pr-10 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                      >
+                        {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="newPassword" className="block text-sm font-medium text-slate-700 mb-1.5">{t.newPassword}</label>
+                    <div className="relative">
+                      <input
+                        id="newPassword" type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full bg-white border border-slate-200 rounded-xl pl-4 pr-10 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                      >
+                        {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="confirmNewPassword" className="block text-sm font-medium text-slate-700 mb-1.5">{t.confirmNewPassword}</label>
+                    <div className="relative">
+                      <input
+                        id="confirmNewPassword" type={showConfirmPassword ? 'text' : 'password'} value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full bg-white border border-slate-200 rounded-xl pl-4 pr-10 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                      >
+                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handlePasswordChange}
+                    disabled={updatingPassword}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-teal-600 text-white text-sm font-semibold hover:bg-teal-700 transition-all cursor-pointer disabled:opacity-50 shadow-sm"
+                  >
+                    {updatingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    {updatingPassword ? t.updating : t.updatePasswordBtn}
+                  </button>
                 </div>
               </div>
 
