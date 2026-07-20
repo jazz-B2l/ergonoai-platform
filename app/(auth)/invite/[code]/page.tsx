@@ -106,7 +106,7 @@ export default function InvitePage() {
           Join {inviteData?.companyName}
         </h2>
         <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
-          You've been invited to join ErgonoAI. Create your account to accept the invitation.
+          You&apos;ve been invited to join ErgonoAI. Create your account to accept the invitation.
         </p>
       </div>
 

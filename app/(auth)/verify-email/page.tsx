@@ -72,7 +72,7 @@ export default function VerifyEmailPage() {
         Check your email
       </h2>
       <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">
-        We've sent a verification code to <span className="font-medium text-zinc-900 dark:text-zinc-200">{email || 'your email'}</span>.
+        We&apos;ve sent a verification code to <span className="font-medium text-zinc-900 dark:text-zinc-200">{email || 'your email'}</span>.
         Please enter the 6-digit code below to confirm your account.
       </p>
 

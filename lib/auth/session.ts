@@ -70,7 +70,7 @@ class SessionService {
     
     if (error) throw error
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line
     return (data || [])
       .map((item: any) => item.organizations)
       .filter(Boolean) as Company[]

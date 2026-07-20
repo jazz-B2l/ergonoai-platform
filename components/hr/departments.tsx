@@ -345,7 +345,7 @@ export function HRDepartments() {
           <div className="space-y-2">
             <h1 className="text-2xl font-bold tracking-tight font-sora text-foreground">No departments configured</h1>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Create your organization's first workspace space (e.g. Office HQ, Assembly Floor) to start tracking observations and surveys.
+              Create your organization&apos;s first workspace space (e.g. Office HQ, Assembly Floor) to start tracking observations and surveys.
             </p>
           </div>
           <button

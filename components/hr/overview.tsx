@@ -154,8 +154,11 @@ export function HROverview() {
       ;(assignments || []).forEach(a => {
         assignmentMemberMap.set(a.id, a.member_id)
         const deptId = memberDeptMap.get(a.member_id)
-        if (deptId && deptMap.has(deptId)) {
-          deptMap.get(deptId).assigned += 1
+        if (deptId) {
+          const target = deptMap.get(deptId)
+          if (target) {
+            target.assigned += 1
+          }
         }
       })
 
@@ -163,12 +166,15 @@ export function HROverview() {
         const memberId = assignmentMemberMap.get(r.assignment_id)
         if (memberId) {
           const deptId = memberDeptMap.get(memberId)
-          if (deptId && deptMap.has(deptId)) {
-            if (r.completion_percentage === 100) {
-              deptMap.get(deptId).completed += 1
-            }
-            if (r.ai_risk_score !== null) {
-              deptMap.get(deptId).scores.push(Number(r.ai_risk_score))
+          if (deptId) {
+            const target = deptMap.get(deptId)
+            if (target) {
+              if (r.completion_percentage === 100) {
+                target.completed += 1
+              }
+              if (r.ai_risk_score !== null) {
+                target.scores.push(Number(r.ai_risk_score))
+              }
             }
           }
         }

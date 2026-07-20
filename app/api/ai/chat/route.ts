@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAiService, checkRateLimit } from '@/lib/ai/service';
 import { AI_CONSTANTS } from '@/lib/ai/constants';
+import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized', message: 'User authentication required' },
+        { status: 401 }
+      );
+    }
+
     // 1. Rate Limiting Check
     const ip = request.headers.get('x-forwarded-for') || 'anonymous_ip';
     const rateLimit = checkRateLimit(ip);
@@ -26,10 +37,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { conversationId, organizationId, userId, message } = body;
 
+    const activeUserId = userId || user.id;
+
     if (!organizationId) {
       return NextResponse.json({ error: 'Validation Error', message: 'Missing organizationId' }, { status: 400 });
     }
-    if (!userId) {
+    if (!activeUserId) {
       return NextResponse.json({ error: 'Validation Error', message: 'Missing userId' }, { status: 400 });
     }
     if (!message || typeof message !== 'string' || !message.trim()) {
@@ -41,7 +54,7 @@ export async function POST(request: NextRequest) {
     const result = await aiService.chat(
       conversationId || null,
       organizationId,
-      userId,
+      activeUserId,
       message
     );
 

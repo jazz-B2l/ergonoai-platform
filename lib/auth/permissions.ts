@@ -10,7 +10,7 @@ export function cannot(state: AuthState, permissionName: string): boolean {
   return !can(state, permissionName)
 }
 
-export function hasRole(state: AuthState, role: Role | 'admin' | 'safety_officer' | 'manager'): boolean {
+export function hasRole(state: AuthState, role: Role): boolean {
   if (!state.isAuthenticated || !state.role) return false
   return state.role === role
 }
@@ -28,8 +28,7 @@ export function hasAllPermissions(state: AuthState, permissionNames: string[]): 
 }
 
 export function isAdmin(state: AuthState): boolean {
-  // Assuming 'admin' or 'super_admin' might be added later
-  return state.role === 'admin' || (state.role as any) === 'super_admin'
+  return state.role === 'admin'
 }
 
 export function isHR(state: AuthState): boolean {
@@ -37,11 +36,11 @@ export function isHR(state: AuthState): boolean {
 }
 
 export function isManager(state: AuthState): boolean {
-  return (state.role as any) === 'manager'
+  return state.role === 'manager'
 }
 
 export function isSafetyOfficer(state: AuthState): boolean {
-  return (state.role as any) === 'safety_officer'
+  return state.role === 'safety_officer'
 }
 
 export function isEmployee(state: AuthState): boolean {

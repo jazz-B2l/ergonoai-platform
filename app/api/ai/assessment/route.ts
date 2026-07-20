@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAiService, checkRateLimit } from '@/lib/ai/service';
 import { AI_CONSTANTS } from '@/lib/ai/constants';
+import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized', message: 'User authentication required' },
+        { status: 401 }
+      );
+    }
+
     // 1. Rate Limiting Check
     const ip = request.headers.get('x-forwarded-for') || 'anonymous_ip';
     const rateLimit = checkRateLimit(ip);

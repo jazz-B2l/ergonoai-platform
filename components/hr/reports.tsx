@@ -481,7 +481,7 @@ export function HRReports() {
             <FileText className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
             <p className="text-sm font-semibold text-foreground">No reports generated yet</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Click the "Generate Executive Report" button above to compile your first organization assessment summary.
+              Click the &quot;Generate Executive Report&quot; button above to compile your first organization assessment summary.
             </p>
           </div>
         ) : (

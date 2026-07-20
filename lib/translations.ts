@@ -241,6 +241,8 @@ export const translations = {
         'AI recommendations engine',
         'Exportable compliance reports'
       ],
+      privacyTitle: 'Privacy by design.',
+      privacyDesc: 'Individual responses are never visible to HR or Safety Officers. Only anonymized aggregates are shared.',
     },
     signup: {
       createAccount: 'Create your account',
@@ -741,6 +743,8 @@ export const translations = {
         'محرك توصيات الذكاء الاصطناعي',
         'تقارير امتثال قابلة للتصدير'
       ],
+      privacyTitle: 'الخصوصية بالتصميم.',
+      privacyDesc: 'لا تظهر الإجابات الفردية للموظفين لإدارة الموارد البشرية أو مسؤولي السلامة. يتم مشاركة البيانات المجمعة المجهولة فقط.',
     },
     signup: {
       createAccount: 'أنشئ حسابك',

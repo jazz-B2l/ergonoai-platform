@@ -398,7 +398,7 @@ export function EmployeeHome() {
               <h2 className="text-2xl font-bold text-foreground mb-3">{t.activeCampaignTitle}</h2>
               <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
                 {t.activeCampaignDesc}
-                <strong className="block mt-2 text-foreground text-base">"{activeAssessment.title}"</strong>
+                <strong className="block mt-2 text-foreground text-base">&quot;{activeAssessment.title}&quot;</strong>
               </p>
               
               <div className="w-full bg-muted/50 border border-border rounded-xl p-4 mb-8 text-left space-y-3">

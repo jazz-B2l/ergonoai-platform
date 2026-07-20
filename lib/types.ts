@@ -1,4 +1,4 @@
-export type Role = 'hr' | 'employee'
+export type Role = 'hr' | 'employee' | 'admin' | 'safety_officer' | 'manager'
 
 export type HazardCategory =
   | 'Physical'

@@ -11,6 +11,10 @@ const PUBLIC_ROUTES = [
   '/role-select',
 ]
 
+const PUBLIC_API_ROUTES = [
+  '/api/ai/health',
+]
+
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request: {
@@ -18,9 +22,16 @@ export async function middleware(request: NextRequest) {
     },
   })
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return supabaseResponse
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {
@@ -36,25 +47,35 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data: { session } } = await supabase.auth.getSession()
+  // Validate authenticated user securely with getUser() instead of getSession()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const pathname = request.nextUrl.pathname
 
   const isPublicRoute = PUBLIC_ROUTES.some(route => {
     if (route === '/') {
-      return request.nextUrl.pathname === '/'
+      return pathname === '/'
     }
-    return request.nextUrl.pathname.startsWith(route)
+    return pathname.startsWith(route)
   })
 
-  if (!session && !isPublicRoute && !request.nextUrl.pathname.startsWith('/api/auth')) {
+  const isPublicApiRoute = PUBLIC_API_ROUTES.some(route => pathname.startsWith(route))
+
+  if (pathname.startsWith('/api/')) {
+    if (!user && !isPublicApiRoute) {
+      return NextResponse.json(
+        { error: 'Unauthorized', message: 'Authentication required for API endpoints' },
+        { status: 401 }
+      )
+    }
+    return supabaseResponse
+  }
+
+  if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
-
-
-
-  // We are relying ONLY on session for middleware auth.
-  // Account status and RBAC should be handled by route guards and data fetchers to keep middleware fast.
 
   return supabaseResponse
 }
