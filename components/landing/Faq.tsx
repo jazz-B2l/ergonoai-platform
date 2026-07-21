@@ -45,18 +45,18 @@ export function Faq() {
   ]
 
   return (
-    <section className="py-28 bg-[#030712] relative overflow-hidden isolate border-b border-slate-800/80">
+    <section className="py-28 bg-white dark:bg-[#030712] relative overflow-hidden isolate border-b border-slate-200 dark:border-slate-800/80 transition-colors duration-300">
       <div className="max-w-4xl mx-auto px-6 relative z-10">
         
         {/* Header */}
         <ScrollReveal className="text-center mb-16">
-          <span className="text-xs font-bold font-mono tracking-widest uppercase text-teal-400 bg-teal-500/10 px-3.5 py-1.5 rounded-full border border-teal-500/20 mb-4 inline-block">
+          <span className="text-xs font-bold font-mono tracking-widest uppercase text-teal-600 dark:text-teal-400 bg-teal-500/10 px-3.5 py-1.5 rounded-full border border-teal-500/20 mb-4 inline-block">
             {isAr ? 'الأسئلة الشائعة والمعرفية' : 'Knowledge Base & Technical FAQ'}
           </span>
-          <h2 className="font-sora text-3xl md:text-5xl font-bold text-white tracking-tight mt-2">
+          <h2 className="font-sora text-3xl md:text-5xl font-bold text-slate-900 dark:text-white tracking-tight mt-2">
             {isAr ? 'الأسئلة الشائعة حول المنصة والامتثال' : 'Frequently Asked Questions'}
           </h2>
-          <p className="text-slate-400 text-sm md:text-base mt-4 leading-relaxed">
+          <p className="text-slate-600 dark:text-slate-400 text-sm md:text-base mt-4 leading-relaxed">
             {isAr
               ? 'كل ما تحتاج معرفته عن طريقة عمل المنصة، معايير الأمان، والامتثال للسلامة المهنية.'
               : 'Everything you need to know about ErgonoAI deployment, standards integration, and privacy guarantees.'}
@@ -72,19 +72,19 @@ export function Faq() {
                 <div 
                   className={`rounded-2xl border transition-all overflow-hidden ${
                     isOpen 
-                      ? 'bg-slate-900/90 border-teal-500/40 shadow-lg' 
-                      : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
+                      ? 'bg-slate-100 dark:bg-slate-900/90 border-teal-500/40 shadow-lg' 
+                      : 'bg-slate-50 border-slate-200 dark:bg-slate-950/60 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                   }`}
                 >
                   <button
                     onClick={() => setOpenIdx(isOpen ? null : idx)}
                     className="w-full text-start px-6 py-5 flex justify-between items-center gap-4 focus:outline-none cursor-pointer"
                   >
-                    <span className="font-sora font-semibold text-white text-sm md:text-base flex items-center gap-3">
-                      <HelpCircle className="w-4 h-4 text-teal-400 shrink-0" />
+                    <span className="font-sora font-semibold text-slate-900 dark:text-white text-sm md:text-base flex items-center gap-3">
+                      <HelpCircle className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
                       {faq.q}
                     </span>
-                    <ChevronDown className={`w-5 h-5 text-teal-400 shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-5 h-5 text-teal-600 dark:text-teal-400 shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   <div 
@@ -93,7 +93,7 @@ export function Faq() {
                     }`}
                   >
                     <div className="overflow-hidden">
-                      <div className="px-6 pb-6 pt-1 text-xs md:text-sm text-slate-300 leading-relaxed font-sans border-t border-slate-800/80 mt-2">
+                      <div className="px-6 pb-6 pt-1 text-xs md:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-sans border-t border-slate-200 dark:border-slate-800/80 mt-2">
                         {faq.a}
                       </div>
                     </div>

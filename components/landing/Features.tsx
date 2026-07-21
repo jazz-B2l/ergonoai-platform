@@ -87,18 +87,18 @@ export function Features() {
   const MainIcon = active.icon
 
   return (
-    <section id="features" className="py-28 bg-[#030712] relative overflow-hidden isolate border-b border-slate-800/80">
+    <section id="features" className="py-28 bg-slate-100 dark:bg-[#030712] relative overflow-hidden isolate border-b border-slate-200 dark:border-slate-800/80 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         
         {/* Header */}
         <ScrollReveal className="text-center max-w-3xl mx-auto mb-16">
-          <span className="text-xs font-bold font-mono tracking-widest uppercase text-cyan-400 bg-cyan-500/10 px-3.5 py-1.5 rounded-full border border-cyan-500/20 mb-4 inline-block">
+          <span className="text-xs font-bold font-mono tracking-widest uppercase text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-3.5 py-1.5 rounded-full border border-cyan-500/20 mb-4 inline-block">
             {isAr ? 'بنية المنصة ووظائفها' : 'Complete Platform Architecture'}
           </span>
-          <h2 className="font-sora text-3xl md:text-5xl font-bold text-white tracking-tight mt-2">
+          <h2 className="font-sora text-3xl md:text-5xl font-bold text-slate-900 dark:text-white tracking-tight mt-2">
             {isAr ? 'وحدات العمل الرئيسية في ErgonoAI' : 'Core Operational Platform Modules'}
           </h2>
-          <p className="text-slate-400 text-sm md:text-base mt-4 leading-relaxed">
+          <p className="text-slate-600 dark:text-slate-400 text-sm md:text-base mt-4 leading-relaxed">
             {isAr
               ? 'تتكامل وحدات المنصة الأربعة لتمنحك دمجاً شاملاً بين التقييمات، تحليلات الذكاء الاصطناعي، وإدارة المخاطر.'
               : 'Four integrated engines powering your complete ergonomics and occupational safety lifecycle.'}
@@ -118,24 +118,24 @@ export function Features() {
                   onFocus={() => setActiveTab(idx)}
                   className={`p-5 rounded-2xl border text-start transition-all cursor-pointer flex flex-col justify-between gap-4 relative overflow-hidden w-full ${
                     isSelected
-                      ? 'bg-slate-900 border-teal-500/50 shadow-[0_0_25px_rgba(20,184,166,0.25)] scale-[1.02]'
-                      : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700 hover:bg-slate-900/40'
+                      ? 'bg-white dark:bg-slate-900 border-teal-500/50 shadow-md dark:shadow-[0_0_25px_rgba(20,184,166,0.25)] scale-[1.02]'
+                      : 'bg-slate-200/70 text-slate-700 border-slate-300 dark:bg-slate-950/60 dark:border-slate-800 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-700 hover:bg-slate-300/60 dark:hover:bg-slate-900/40'
                   }`}
                 >
                   <div className="flex items-center justify-between w-full">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${
-                      isSelected ? 'bg-teal-500/20 border-teal-500/40 text-teal-300' : 'bg-slate-900 border-slate-800 text-slate-400'
+                      isSelected ? 'bg-teal-500/20 border-teal-500/40 text-teal-600 dark:text-teal-300' : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400'
                     }`}>
                       <Icon className="w-5 h-5" />
                     </div>
                     <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
-                      isSelected ? 'bg-teal-500/20 text-teal-300 border border-teal-500/30' : 'bg-slate-900 text-slate-500'
+                      isSelected ? 'bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-500/30' : 'bg-slate-300 dark:bg-slate-900 text-slate-600 dark:text-slate-500'
                     }`}>
                       {m.badge}
                     </span>
                   </div>
                   <div>
-                    <h4 className={`font-sora text-sm font-bold ${isSelected ? 'text-white' : 'text-slate-300'}`}>
+                    <h4 className={`font-sora text-sm font-bold ${isSelected ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}>
                       {m.title}
                     </h4>
                   </div>
@@ -147,7 +147,7 @@ export function Features() {
 
         {/* Active Module Showcase Card */}
         <ScrollReveal delay={0.1} distance={30}>
-          <SpotlightCard className="bg-slate-900/90 rounded-3xl border border-slate-800 p-8 md:p-12 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+          <SpotlightCard className="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 p-8 md:p-12 backdrop-blur-xl shadow-2xl relative overflow-hidden">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
@@ -166,46 +166,46 @@ export function Features() {
                 />
 
                 <div className="lg:col-span-7 space-y-6">
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-300 text-xs font-mono font-semibold">
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-700 dark:text-teal-300 text-xs font-mono font-semibold">
                     <MainIcon className="w-4 h-4" />
                     {active.subtitle}
                   </div>
 
-                  <h3 className="font-sora text-2xl md:text-4xl font-bold text-white leading-tight">
+                  <h3 className="font-sora text-2xl md:text-4xl font-bold text-slate-900 dark:text-white leading-tight">
                     {active.title}
                   </h3>
 
-                  <p className="text-slate-300 text-sm md:text-base leading-relaxed">
+                  <p className="text-slate-600 dark:text-slate-300 text-sm md:text-base leading-relaxed">
                     {active.desc}
                   </p>
 
                   <div className="space-y-3 pt-2">
                     {active.points.map((pt, idx) => (
-                      <div key={idx} className="flex items-center gap-3 text-sm text-slate-200">
-                        <CheckCircle className="w-4 h-4 text-teal-400 shrink-0" />
+                      <div key={idx} className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-200">
+                        <CheckCircle className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
                         <span>{pt}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="lg:col-span-5 bg-[#0b1329] rounded-2xl p-6 border border-slate-800/90 relative space-y-6 shadow-inner">
-                  <div className="text-xs font-mono text-slate-400 uppercase tracking-wider border-b border-slate-800 pb-3 flex items-center justify-between">
+                <div className="lg:col-span-5 bg-slate-50 dark:bg-[#0b1329] rounded-2xl p-6 border border-slate-200 dark:border-slate-800/90 relative space-y-6 shadow-inner">
+                  <div className="text-xs font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-3 flex items-center justify-between">
                     <span>{isAr ? 'المواصفات الفنية' : 'Module Specifications'}</span>
-                    <span className="text-teal-400 font-bold">{active.badge}</span>
+                    <span className="text-teal-600 dark:text-teal-400 font-bold">{active.badge}</span>
                   </div>
 
                   <div className="grid grid-cols-1 gap-4">
                     {active.metrics.map((m, idx) => (
-                      <div key={idx} className="bg-slate-950/70 p-4 rounded-xl border border-slate-800/80 flex items-center justify-between">
-                        <span className="text-xs text-slate-400 font-sans">{m.label}</span>
-                        <span className="text-sm font-bold font-mono text-teal-300">{m.val}</span>
+                      <div key={idx} className="bg-white dark:bg-slate-950/70 p-4 rounded-xl border border-slate-200 dark:border-slate-800/80 flex items-center justify-between shadow-sm">
+                        <span className="text-xs text-slate-600 dark:text-slate-400 font-sans">{m.label}</span>
+                        <span className="text-sm font-bold font-mono text-teal-600 dark:text-teal-300">{m.val}</span>
                       </div>
                     ))}
                   </div>
 
-                  <div className="pt-2 border-t border-slate-800">
-                    <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
+                  <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-sans">
                       {isAr
                         ? 'تعمل هذه الوحدة بشكل متكامل مع باقي مكونات المنصة لتوفير دفق بيانات مستمر يضمن أقصى درجات الأمان والامتثال.'
                         : 'Operating in tight synchrony with the rest of the platform to deliver high-fidelity safety analytics.'}

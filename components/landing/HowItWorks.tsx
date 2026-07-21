@@ -49,18 +49,18 @@ export function HowItWorks() {
   ]
 
   return (
-    <section className="py-28 bg-[#020617] relative overflow-hidden isolate border-b border-slate-800/80">
+    <section className="py-28 bg-white dark:bg-[#020617] relative overflow-hidden isolate border-b border-slate-200 dark:border-slate-800/80 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         
         {/* Header */}
         <ScrollReveal className="text-center max-w-3xl mx-auto mb-20">
-          <span className="text-xs font-bold font-mono tracking-widest uppercase text-emerald-400 bg-emerald-500/10 px-3.5 py-1.5 rounded-full border border-emerald-500/20 mb-4 inline-block">
+          <span className="text-xs font-bold font-mono tracking-widest uppercase text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3.5 py-1.5 rounded-full border border-emerald-500/20 mb-4 inline-block">
             {isAr ? 'خطوات العمل البسيطة' : 'Seamless Operational Workflow'}
           </span>
-          <h2 className="font-sora text-3xl md:text-5xl font-bold text-white tracking-tight mt-2">
+          <h2 className="font-sora text-3xl md:text-5xl font-bold text-slate-900 dark:text-white tracking-tight mt-2">
             {isAr ? 'كيف تعمل منصة ErgonoAI؟' : 'How ErgonoAI Transforms Workplace Safety'}
           </h2>
-          <p className="text-slate-400 text-sm md:text-base mt-4 leading-relaxed">
+          <p className="text-slate-600 dark:text-slate-400 text-sm md:text-base mt-4 leading-relaxed">
             {isAr
               ? 'منظومة عمل متكاملة تبدأ من إطلاق التقييم وتمر بتحليل الذكاء الاصطناعي حتى الوصول لبيئة عمل آمنة وممتثلة.'
               : 'From initial organization onboarding to audit-ready compliance in 4 intuitive steps.'}
@@ -73,31 +73,31 @@ export function HowItWorks() {
             const Icon = step.icon
             return (
               <StaggerItem key={idx}>
-                <SpotlightCard className="bg-slate-900/70 rounded-2xl p-6 border border-slate-800 relative space-y-4 hover:border-teal-500/40 hover:bg-slate-900 transition-all flex flex-col justify-between group shadow-lg h-full">
+                <SpotlightCard className="bg-slate-50 dark:bg-slate-900/70 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 relative space-y-4 hover:border-teal-500/40 hover:bg-white dark:hover:bg-slate-900 transition-all flex flex-col justify-between group shadow-lg h-full">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="font-geist-mono text-2xl font-bold text-teal-400 opacity-80 group-hover:opacity-100 transition-opacity">
+                      <span className="font-geist-mono text-2xl font-bold text-teal-600 dark:text-teal-400 opacity-80 group-hover:opacity-100 transition-opacity">
                         {step.num}
                       </span>
-                      <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-300">
+                      <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-600 dark:text-teal-300">
                         <Icon className="w-5 h-5" />
                       </div>
                     </div>
 
-                    <span className="inline-block text-[10px] font-mono font-bold uppercase text-slate-400 bg-slate-950 px-2.5 py-1 rounded-md border border-slate-800">
+                    <span className="inline-block text-[10px] font-mono font-bold uppercase text-slate-600 dark:text-slate-400 bg-slate-200 dark:bg-slate-950 px-2.5 py-1 rounded-md border border-slate-300 dark:border-slate-800">
                       {step.actor}
                     </span>
 
-                    <h3 className="font-sora text-base font-bold text-white group-hover:text-teal-300 transition-colors">
+                    <h3 className="font-sora text-base font-bold text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-300 transition-colors">
                       {step.title}
                     </h3>
 
-                    <p className="text-xs text-slate-400 leading-relaxed font-sans">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-sans">
                       {step.desc}
                     </p>
                   </div>
 
-                  <div className="pt-3 border-t border-slate-800/80 flex items-center gap-1.5 text-[11px] text-teal-400/80 font-mono mt-4">
+                  <div className="pt-3 border-t border-slate-200 dark:border-slate-800/80 flex items-center gap-1.5 text-[11px] text-teal-600 dark:text-teal-400/80 font-mono mt-4">
                     <span className="w-1.5 h-1.5 rounded-full bg-teal-400"></span>
                     <span>Step {idx + 1} of 4</span>
                   </div>
