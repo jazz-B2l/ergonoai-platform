@@ -15,7 +15,7 @@ const PUBLIC_API_ROUTES = [
   '/api/ai/health',
 ]
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request: {
       headers: request.headers,
