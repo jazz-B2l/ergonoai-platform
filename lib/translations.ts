@@ -32,7 +32,10 @@ export const translations = {
       companyHealth: 'Company Health',
       riskReduced: 'Risk reduced 21% ↓',
       isoCompliant: 'ISO 7730 Compliant',
-      aiReady: 'AI Recommendation Ready'
+      aiReady: 'AI Recommendation Ready',
+      iso7730Explanation: 'ISO 7730 is the international ergonomics standard for evaluating thermal comfort and workplace environmental stress (PMV/PPD index). ErgonoAI integrates ISO 7730 criteria to prevent physical discomfort and posture fatigue in real time.',
+      companyHealthExplanation: 'The Company Health Index is ErgonoAI\'s real-time aggregate safety score. It tracks organization-wide MSD risk reduction, active posture improvements, and department compliance rates.',
+      hoverForDetails: 'Hover for details'
     },
     standards: {
       title: 'Supporting Global Ergonomic Standards'
@@ -537,7 +540,10 @@ export const translations = {
       companyHealth: 'صحة الشركة',
       riskReduced: 'انخفضت المخاطر بنسبة ٢١٪ ↓',
       isoCompliant: 'متوافق مع مواصفات ISO 7730',
-      aiReady: 'توصيات الذكاء الاصطناعي جاهزة'
+      aiReady: 'توصيات الذكاء الاصطناعي جاهزة',
+      iso7730Explanation: 'معيار ISO 7730 هو المعيار الدولي للهندسة البشرية لتقييم الراحة الحرارية والإجهاد البيئي في مكان العمل (مؤشر PMV/PPD). يدمج إرجونو أيه آي معايير ISO 7730 لمنع الإجهاد البدني وإرهاق الجلسة في الوقت الفعلي.',
+      companyHealthExplanation: 'مؤشر صحة الشركة هو نتيجة السلامة المجمعة والتراكمية في الوقت الفعلي. يتابع انخفاض مخاطر الجهاز العضلي الهيكلي، تحسينات وضعية الجلوس، ومعدلات امتثال الأقسام عبر المؤسسة.',
+      hoverForDetails: 'حرك المؤشر للتفاصيل'
     },
     standards: {
       title: 'دعم المعايير العالمية لبيئة العمل وصحة الموظفين'
