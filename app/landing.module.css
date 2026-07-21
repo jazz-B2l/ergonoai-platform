@@ -104,7 +104,8 @@
   --card-z: 50px;
   transform: translateZ(var(--card-z));
   animation: float 6s infinite ease-in-out;
-  z-index: 10;
+  z-index: 30;
+  will-change: transform;
 }
 
 .floatingCard2 {
@@ -114,7 +115,17 @@
   --card-z: 120px;
   transform: translateZ(var(--card-z));
   animation: float 8s infinite ease-in-out reverse;
-  z-index: 20;
+  z-index: 30;
+  will-change: transform;
+}
+
+.floatingCard1:hover,
+.floatingCard2:hover {
+  animation-play-state: paused;
+  z-index: 100;
+  box-shadow: 0 25px 50px -12px rgba(20, 184, 166, 0.4), 0 0 0 1px rgba(20, 184, 166, 0.5);
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(20px);
 }
 
 @keyframes float {
@@ -124,7 +135,8 @@
 }
 
 .glassCard {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
