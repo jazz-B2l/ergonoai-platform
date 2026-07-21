@@ -21,11 +21,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const supabase = createClient()
 
   const refreshSession = async () => {
-    setIsLoading(true)
-    const { data: { session }, error } = await supabase.auth.getSession()
+    const { data: { session: newSession }, error } = await supabase.auth.getSession()
     if (!error) {
-      setSession(session)
-      setUser(session?.user || null)
+      setSession(newSession)
+      setUser(prevUser => {
+        const newUser = newSession?.user || null
+        return prevUser?.id === newUser?.id ? prevUser : newUser
+      })
     }
     setIsLoading(false)
   }
@@ -38,9 +40,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     initialize()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session)
-        setUser(session?.user || null)
+      (event, newSession) => {
+        setSession(newSession)
+        setUser(prevUser => {
+          const newUser = newSession?.user || null
+          return prevUser?.id === newUser?.id ? prevUser : newUser
+        })
         setIsLoading(false)
 
         if (event === 'SIGNED_OUT') {

@@ -27,12 +27,12 @@ export function Navbar() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
           </div>
-          <span className={`font-sora font-semibold text-xl ${scrolled ? 'text-slate-900 dark:text-white' : 'text-white'}`}>ErgonoAI</span>
+          <span className="font-sora font-semibold text-xl text-slate-900 dark:text-white">ErgonoAI</span>
         </Link>
         
         <nav className="hidden md:flex items-center gap-8">
-          <Link href="#features" className={`text-sm font-medium transition-colors hover:text-teal-500 ${scrolled ? 'text-slate-600 dark:text-slate-300' : 'text-slate-300'}`}>{t.features}</Link>
-          <Link href="#ai-spotlight" className={`text-sm font-medium transition-colors hover:text-teal-500 ${scrolled ? 'text-slate-600 dark:text-slate-300' : 'text-slate-300'}`}>{t.ai}</Link>
+          <Link href="#features" className="text-sm font-medium transition-colors hover:text-teal-500 text-slate-700 dark:text-slate-300">{t.features}</Link>
+          <Link href="#ai-spotlight" className="text-sm font-medium transition-colors hover:text-teal-500 text-slate-700 dark:text-slate-300">{t.ai}</Link>
         </nav>
 
         <div className="flex items-center gap-4">
@@ -45,13 +45,13 @@ export function Navbar() {
             className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
               scrolled
                 ? 'border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white'
-                : 'border-white/10 text-white hover:bg-white/10'
+                : 'border-slate-300 dark:border-white/10 text-slate-700 dark:text-white hover:bg-slate-200/60 dark:hover:bg-white/10'
             }`}
           >
             {language === 'en' ? 'العربية' : 'English'}
           </button>
 
-          <Link href="/login" className={`text-sm font-medium transition-colors hover:text-teal-500 ${scrolled ? 'text-slate-600 dark:text-slate-300' : 'text-white'}`}>{t.login}</Link>
+          <Link href="/login" className="text-sm font-medium transition-colors hover:text-teal-500 text-slate-700 dark:text-white">{t.login}</Link>
           <Link href="/role-select" className="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-full text-sm font-medium transition-colors shadow-lg shadow-teal-500/25">
             {t.getStarted}
           </Link>

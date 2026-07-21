@@ -30,7 +30,7 @@ export function PermissionProvider({ children }: { children: ReactNode }) {
   const { user, isLoading: sessionLoading } = sessionCtx
   const { activeCompany, isLoading: companyLoading } = companyCtx
 
-  const refreshPermissions = async () => {
+  const refreshPermissions = async (showLoading = true) => {
     if (!user || !activeCompany) {
       setRole(null)
       setPermissions([])
@@ -38,7 +38,7 @@ export function PermissionProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    setIsLoading(true)
+    if (showLoading) setIsLoading(true)
     try {
       const userRole = await sessionService.fetchRole(user.id, activeCompany.id)
       setRole(userRole)
@@ -60,12 +60,12 @@ export function PermissionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!sessionLoading && !companyLoading) {
-      refreshPermissions()
+      refreshPermissions(!role)
     } else {
       setIsLoading(true)
     }
   // We explicitly want to refresh when activeCompany changes (company switching)
-  }, [user, activeCompany, sessionLoading, companyLoading])
+  }, [user?.id, activeCompany?.id, sessionLoading, companyLoading])
 
   return (
     <PermissionContext.Provider value={{ role, permissions, isLoading, refreshPermissions }}>

@@ -31,13 +31,37 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      rememberMe: false,
+    },
   })
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedEmail = localStorage.getItem('remembered_email')
+      const remember = localStorage.getItem('remember_me') === 'true'
+      if (savedEmail && remember) {
+        setValue('email', savedEmail)
+        setValue('rememberMe', true)
+      }
+    }
+  }, [setValue])
 
   const onSubmit = async (data: LoginInput) => {
     setError(null)
+    if (data.rememberMe) {
+      localStorage.setItem('remembered_email', data.email)
+      localStorage.setItem('remember_me', 'true')
+    } else {
+      localStorage.removeItem('remembered_email')
+      localStorage.removeItem('remember_me')
+    }
     try {
       await authService.login(data)
       await refreshSession()
@@ -160,6 +184,7 @@ export default function LoginPage() {
           <input
             id="rememberMe"
             type="checkbox"
+            {...register('rememberMe')}
             className="h-4 w-4 rounded border-zinc-300 text-teal-600 focus:ring-teal-500 accent-teal-600 dark:border-zinc-700 dark:bg-zinc-800 cursor-pointer"
           />
           <Label htmlFor="rememberMe" className="text-sm font-medium text-zinc-600 dark:text-zinc-400 cursor-pointer select-none">

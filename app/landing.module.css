@@ -5,7 +5,15 @@
   inset: 0;
   overflow: hidden;
   z-index: -1;
-  background-color: #020617; /* Slate 950 / Dark Navy */
+  background-color: #f8fafc;
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(15, 118, 110, 0.12), transparent),
+    radial-gradient(ellipse 60% 60% at 80% 120%, rgba(20, 184, 166, 0.08), transparent);
+  transition: background-color 0.3s ease;
+}
+
+:global(.dark) .heroBackground {
+  background-color: #020617;
   background-image: 
     radial-gradient(ellipse 80% 50% at 50% -20%, rgba(15, 118, 110, 0.3), transparent),
     radial-gradient(ellipse 60% 60% at 80% 120%, rgba(20, 184, 166, 0.15), transparent);
@@ -16,10 +24,16 @@
   inset: 0;
   background-size: 50px 50px;
   background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    linear-gradient(to right, rgba(15, 23, 42, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.05) 1px, transparent 1px);
   mask-image: linear-gradient(to bottom, black 20%, transparent 80%);
   animation: gridMove 20s linear infinite;
+}
+
+:global(.dark) .animatedGrid {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
 }
 
 @keyframes gridMove {

@@ -28,7 +28,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
   const { user, isLoading: sessionLoading } = sessionCtx
 
-  const refreshCompany = async () => {
+  const refreshCompany = async (showLoading = true) => {
     if (!user) {
       setActiveCompany(null)
       setCompanies([])
@@ -36,16 +36,19 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    setIsLoading(true)
+    if (showLoading) setIsLoading(true)
     try {
       const userCompanies = await sessionService.fetchCompanies(user.id)
       setCompanies(userCompanies)
       
       // Keep existing active company if it's still in the list, otherwise use the first one
       if (userCompanies.length > 0) {
-        if (!activeCompany || !userCompanies.find(c => c.id === activeCompany.id)) {
-          setActiveCompany(userCompanies[0])
-        }
+        setActiveCompany(prev => {
+          if (prev && userCompanies.some(c => c.id === prev.id)) {
+            return userCompanies.find(c => c.id === prev.id) || prev
+          }
+          return userCompanies[0]
+        })
       } else {
         setActiveCompany(null)
       }
@@ -70,11 +73,11 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!sessionLoading) {
-      refreshCompany()
+      refreshCompany(companies.length === 0)
     } else {
       setIsLoading(true)
     }
-  }, [user, sessionLoading])
+  }, [user?.id, sessionLoading])
 
   return (
     <CompanyContext.Provider value={{ activeCompany, companies, isLoading, switchCompany, refreshCompany }}>

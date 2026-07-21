@@ -29,6 +29,7 @@ import { useApp } from '@/lib/app-context'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { translations } from '@/lib/translations'
+import { AssessmentCampaignModal } from '@/components/hr/AssessmentCampaignModal'
 
 function ScoreRing({ score }: { score: number }) {
   if (score === 0) {
@@ -308,64 +309,41 @@ export function HROverview() {
 
   function renderCampaignModal() {
     return (
-      <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-card border border-border rounded-xl shadow-lg p-6 relative font-sans">
-          <h3 className="text-lg font-semibold text-foreground mb-2">Launch New Assessment Campaign</h3>
-          <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-            Launch a new ergonomic assessment cycle. All employees will be required to fill this out upon entering the employee space.
-          </p>
-          <div className="mb-4">
-            <label className="block text-xs font-medium text-muted-foreground mb-1.5">Assessment Campaign Title</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-input border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition-colors"
-            />
-          </div>
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={() => setModalOpen(false)}
-              className="px-4 py-2 rounded-lg text-sm font-medium border border-border text-foreground hover:bg-muted transition-colors cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={async () => {
-                if (title.trim() && orgId) {
-                  try {
-                    const { data: campaign, error } = await supabase
-                      .from('assessment_campaigns')
-                      .insert({
-                        organization_id: orgId,
-                        title: title.trim(),
-                        status: 'ACTIVE',
-                        template_id: '06493e5b-b9f8-494a-ac6a-1f878d16dd1c' // Default template
-                      })
-                      .select()
-                      .single()
+      <AssessmentCampaignModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        departments={deptsList}
+        onLaunch={async ({ title: campaignTitle, startDate, endDate, config }) => {
+          if (!orgId) return
+          try {
+            const { data: campaign, error } = await supabase
+              .from('assessment_campaigns')
+              .insert({
+                organization_id: orgId,
+                title: campaignTitle.trim(),
+                status: 'ACTIVE',
+                start_date: startDate || new Date().toISOString().split('T')[0],
+                end_date: endDate || null,
+                template_id: '06493e5b-b9f8-494a-ac6a-1f878d16dd1c',
+                config: config
+              })
+              .select()
+              .single()
 
-                    if (!error && campaign) {
-                      setActiveAssessment({
-                        id: campaign.id,
-                        title: campaign.title,
-                        createdAt: campaign.created_at,
-                      })
-                      await calculateStats(orgId, selectedCampaignId)
-                    }
-                  } catch (e) {
-                    console.error('Failed to create campaign:', e)
-                  }
-                  setModalOpen(false)
-                }
-              }}
-              className="px-4 py-2 rounded-lg bg-brand text-brand-foreground text-sm font-semibold hover:bg-brand/90 transition-colors cursor-pointer"
-            >
-              Launch Campaign
-            </button>
-          </div>
-        </div>
-      </div>
+            if (!error && campaign) {
+              setActiveAssessment({
+                id: campaign.id,
+                title: campaign.title,
+                createdAt: campaign.created_at,
+                config: config
+              })
+              await calculateStats(orgId, selectedCampaignId)
+            }
+          } catch (e) {
+            console.error('Failed to create campaign:', e)
+          }
+        }}
+      />
     )
   }
 

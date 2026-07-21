@@ -9,15 +9,16 @@ import { supabase } from '@/lib/supabase'
 import { WILAYAS } from '@/lib/constants'
 
 import { translations } from '@/lib/translations'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 const InputLabel = ({ htmlFor, children }: { htmlFor: string, children: React.ReactNode }) => (
-  <label htmlFor={htmlFor} className="block text-sm font-semibold text-slate-700 mb-1">{children}</label>
+  <label htmlFor={htmlFor} className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{children}</label>
 )
 
 const Input = (props: React.InputHTMLAttributes<HTMLInputElement>) => (
   <input
     {...props}
-    className="block w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+    className="block w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
   />
 )
 
@@ -317,57 +318,68 @@ function SignupContent() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-teal-500/5 via-slate-50 to-slate-50 z-0"></div>
+    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-white flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden transition-colors duration-300">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-teal-500/5 via-slate-50 to-slate-50 dark:via-zinc-950 dark:to-zinc-950 z-0"></div>
       
+      {/* Floating ThemeToggle & Language */}
+      <div className="absolute top-6 right-6 flex items-center gap-3 z-20">
+        <ThemeToggle />
+        <button
+          onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
+          className="text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-all cursor-pointer"
+        >
+          {language === 'en' ? 'العربية' : 'English'}
+        </button>
+      </div>
+
       <div className="sm:mx-auto sm:w-full sm:max-w-2xl relative z-10">
         <Link href="/" className="flex items-center justify-center gap-2 mb-6">
           <div className="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center">
             <Brain className="w-5 h-5 text-white" />
           </div>
-          <span className="font-sora font-semibold text-2xl tracking-tight text-slate-900">ErgonoAI</span>
+          <span className="font-sora font-semibold text-2xl tracking-tight text-slate-900 dark:text-white">ErgonoAI</span>
         </Link>
-        <h2 className="text-center text-3xl font-extrabold font-sora tracking-tight text-slate-900">
+        <h2 className="text-center text-3xl font-extrabold font-sora tracking-tight text-slate-900 dark:text-white">
           {t.createAccount}
         </h2>
-        <p className="mt-2 text-center text-sm text-slate-500 font-medium">
+        <p className="mt-2 text-center text-sm text-slate-500 dark:text-slate-400 font-medium">
           {t.alreadyHaveAccount}{' '}
-          <Link href="/login" className="font-semibold text-teal-600 hover:text-teal-700">
+          <Link href="/login" className="font-semibold text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300">
             {tc.login}
           </Link>
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-2xl relative z-10">
-        <div className="bg-white py-8 px-4 sm:px-10 border border-slate-200 shadow-xl rounded-2xl">
+        <div className="bg-white dark:bg-zinc-900 py-8 px-4 sm:px-10 border border-slate-200 dark:border-zinc-800 shadow-xl rounded-2xl">
           
           {success ? (
             <div className="text-center py-8 space-y-4">
-              <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200">
+              <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-200 dark:border-emerald-800">
                 <Check className="w-6 h-6 animate-pulse" />
               </div>
-              <h3 className="text-xl font-bold font-sora text-slate-900">{t.accountCreated}</h3>
-              <p className="text-slate-500 text-sm font-medium">{t.redirecting}</p>
+              <h3 className="text-xl font-bold font-sora text-slate-900 dark:text-white">{t.accountCreated}</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t.redirecting}</p>
               <div className="flex justify-center pt-4">
-                <Loader2 className="w-6 h-6 animate-spin text-teal-600" />
+                <Loader2 className="w-6 h-6 animate-spin text-teal-600 dark:text-teal-400" />
               </div>
             </div>
           ) : (
             <form className="space-y-6" onSubmit={handleSubmit}>
               
               {/* Role Indicator & Switch Button */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-50 dark:bg-zinc-800/50 p-4 rounded-xl border border-slate-200 dark:border-zinc-700/60 mb-6">
                 <div>
-                  <h4 className="text-sm font-bold text-slate-900 font-sora">
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white font-sora">
                     {role === 'hr' ? t.orgReg : t.empReg}
                   </h4>
-                  <p className="text-xs text-slate-500 mt-0.5 font-medium">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
                     {role === 'hr' ? t.orgRegDesc : t.empRegDesc}
                   </p>
                 </div>
                 <Link
                   href={role === 'hr' ? '/signup?role=employee' : '/signup?role=hr'}
-                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-teal-600 text-xs font-semibold transition-all shadow-sm cursor-pointer hover:border-slate-300"
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-800 text-teal-600 dark:text-teal-400 text-xs font-semibold transition-all shadow-sm cursor-pointer hover:border-slate-300 dark:hover:border-zinc-600"
                 >
                   {role === 'hr' ? (
                     <>

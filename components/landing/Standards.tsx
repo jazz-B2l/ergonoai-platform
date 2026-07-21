@@ -84,19 +84,19 @@ export function Standards() {
   const IconComponent = current.icon
 
   return (
-    <section className="py-28 bg-[#030712] border-y border-slate-800/80 relative overflow-hidden isolate">
-      <div className="absolute inset-0 bg-gradient-to-b from-teal-950/20 via-transparent to-slate-950/40 pointer-events-none"></div>
+    <section className="py-28 bg-slate-100 dark:bg-[#030712] border-y border-slate-200 dark:border-slate-800/80 relative overflow-hidden isolate transition-colors duration-300">
+      <div className="absolute inset-0 bg-gradient-to-b from-teal-500/5 dark:from-teal-950/20 via-transparent to-slate-200/40 dark:to-slate-950/40 pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         
         <ScrollReveal className="text-center max-w-3xl mx-auto mb-14">
-          <span className="text-xs font-bold font-mono tracking-widest uppercase text-teal-400 bg-teal-500/10 px-3.5 py-1.5 rounded-full border border-teal-500/20 mb-4 inline-block">
+          <span className="text-xs font-bold font-mono tracking-widest uppercase text-teal-600 dark:text-teal-400 bg-teal-500/10 px-3.5 py-1.5 rounded-full border border-teal-500/20 mb-4 inline-block">
             {isAr ? 'معايير الهندسة البشرية العالمية' : 'Built on Globally Validated Frameworks'}
           </span>
-          <h2 className="font-sora text-3xl md:text-5xl font-bold text-white tracking-tight mt-2">
+          <h2 className="font-sora text-3xl md:text-5xl font-bold text-slate-900 dark:text-white tracking-tight mt-2">
             {isAr ? 'المعايير الدولية المدعومة في المنصة' : 'Engineered Around Global Ergonomic Standards'}
           </h2>
-          <p className="text-sm md:text-base text-slate-400 mt-4 leading-relaxed">
+          <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 mt-4 leading-relaxed">
             {isAr
               ? 'تدمج إرجونو أيه آي خوارزميات القياس الدولية المعتمدة لتحويل استبيانات وتصرفات الموظفين إلى تحليلات علمية دقيقة.'
               : 'ErgonoAI replaces subjective guessing with internationally accredited ergonomic assessment methodologies automated by Groq AI.'}
@@ -115,11 +115,11 @@ export function Standards() {
                   onFocus={() => setActiveStandard(s.id)}
                   className={`px-5 py-3 rounded-xl font-mono text-xs font-bold transition-all cursor-pointer flex items-center gap-2 border ${
                     active
-                      ? 'bg-teal-500/20 text-teal-300 border-teal-500/50 shadow-[0_0_20px_rgba(20,184,166,0.3)] scale-105'
-                      : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:text-white hover:bg-slate-800/80 hover:scale-102'
+                      ? 'bg-teal-500/20 text-teal-700 dark:text-teal-300 border-teal-500/50 shadow-[0_0_20px_rgba(20,184,166,0.3)] scale-105'
+                      : 'bg-slate-200/80 text-slate-700 dark:bg-slate-900/60 dark:text-slate-400 border-slate-300 dark:border-slate-800 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300/80 dark:hover:bg-slate-800/80 hover:scale-102'
                   }`}
                 >
-                  <span className={`w-2 h-2 rounded-full ${active ? 'bg-teal-400 animate-pulse' : 'bg-slate-600'}`} />
+                  <span className={`w-2 h-2 rounded-full ${active ? 'bg-teal-500 dark:bg-teal-400 animate-pulse' : 'bg-slate-400 dark:bg-slate-600'}`} />
                   {s.badge}
                 </button>
               </StaggerItem>
@@ -129,7 +129,7 @@ export function Standards() {
 
         {/* Selected Standard Feature Detail Card */}
         <ScrollReveal delay={0.2} distance={30}>
-          <SpotlightCard className="bg-slate-900/80 rounded-3xl border border-slate-800 p-8 md:p-12 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+          <SpotlightCard className="bg-white dark:bg-slate-900/80 rounded-3xl border border-slate-200 dark:border-slate-800 p-8 md:p-12 backdrop-blur-xl shadow-2xl relative overflow-hidden">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeStandard}
@@ -148,22 +148,22 @@ export function Standards() {
                 />
 
                 <div className="md:col-span-7 space-y-6">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-teal-500/10 border border-teal-500/20 text-teal-400 text-xs font-mono font-semibold">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-teal-500/10 border border-teal-500/20 text-teal-600 dark:text-teal-400 text-xs font-mono font-semibold">
                     <IconComponent className="w-4 h-4" />
                     {current.sub}
                   </div>
-                  <h3 className="font-sora text-2xl md:text-4xl font-bold text-white leading-tight">
+                  <h3 className="font-sora text-2xl md:text-4xl font-bold text-slate-900 dark:text-white leading-tight">
                     {current.title}
                   </h3>
-                  <p className="text-slate-300 text-sm md:text-base leading-relaxed">
+                  <p className="text-slate-600 dark:text-slate-300 text-sm md:text-base leading-relaxed">
                     {current.desc}
                   </p>
 
                   <div className="space-y-3 pt-2">
                     {current.features.map((f, idx) => (
-                      <div key={idx} className="flex items-center gap-3 text-sm text-slate-200">
+                      <div key={idx} className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-200">
                         <div className="w-5 h-5 rounded-full bg-teal-500/20 border border-teal-500/40 flex items-center justify-center shrink-0">
-                          <ChevronRight className={`w-3 h-3 text-teal-400 ${isAr ? 'rotate-180' : ''}`} />
+                          <ChevronRight className={`w-3 h-3 text-teal-600 dark:text-teal-400 ${isAr ? 'rotate-180' : ''}`} />
                         </div>
                         <span>{f}</span>
                       </div>
@@ -171,13 +171,13 @@ export function Standards() {
                   </div>
                 </div>
 
-                <div className="md:col-span-5 bg-[#0b1329] rounded-2xl p-6 border border-slate-800/90 relative space-y-4 shadow-inner">
-                  <div className="flex justify-between items-center text-xs font-mono border-b border-slate-800 pb-3">
-                    <span className="text-slate-400">Standard Code</span>
-                    <span className="text-teal-400 font-bold">{current.badge}</span>
+                <div className="md:col-span-5 bg-slate-50 dark:bg-[#0b1329] rounded-2xl p-6 border border-slate-200 dark:border-slate-800/90 relative space-y-4 shadow-inner">
+                  <div className="flex justify-between items-center text-xs font-mono border-b border-slate-200 dark:border-slate-800 pb-3">
+                    <span className="text-slate-500 dark:text-slate-400">Standard Code</span>
+                    <span className="text-teal-600 dark:text-teal-400 font-bold">{current.badge}</span>
                   </div>
-                  <div className="flex justify-between items-center text-xs font-mono border-b border-slate-800 pb-3">
-                    <span className="text-slate-400">Automation Method</span>
+                  <div className="flex justify-between items-center text-xs font-mono border-b border-slate-200 dark:border-slate-800 pb-3">
+                    <span className="text-slate-500 dark:text-slate-400">Automation Method</span>
                     <span className="text-emerald-400 font-bold">Groq AI Real-Time</span>
                   </div>
                   <div className="flex justify-between items-center text-xs font-mono border-b border-slate-800 pb-3">

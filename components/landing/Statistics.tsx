@@ -31,8 +31,8 @@ export function Statistics() {
   }, [])
 
   return (
-    <section ref={ref} className="py-20 bg-[#020617] border-b border-slate-800/80 relative overflow-hidden isolate">
-      <div className="absolute inset-0 bg-gradient-to-r from-teal-950/20 via-transparent to-cyan-950/20 pointer-events-none"></div>
+    <section ref={ref} className="py-20 bg-slate-100 dark:bg-[#020617] border-b border-slate-200 dark:border-slate-800/80 relative overflow-hidden isolate transition-colors duration-300">
+      <div className="absolute inset-0 bg-gradient-to-r from-teal-500/5 dark:from-teal-950/20 via-transparent to-cyan-500/5 dark:to-cyan-950/20 pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <StaggerContainer className="grid grid-cols-2 lg:grid-cols-4 gap-6">
@@ -40,15 +40,15 @@ export function Statistics() {
             const Icon = stat.icon
             return (
               <StaggerItem key={i}>
-                <SpotlightCard className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 text-center relative space-y-2 hover:border-teal-500/30 transition-all shadow-xl h-full">
-                  <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 mx-auto mb-3">
+                <SpotlightCard className="p-6 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-center relative space-y-2 hover:border-teal-500/30 transition-all shadow-xl h-full">
+                  <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-600 dark:text-teal-400 mx-auto mb-3">
                     <Icon className="w-5 h-5" />
                   </div>
-                  <div className="font-geist-mono text-4xl md:text-5xl font-bold text-white tracking-tight">
+                  <div className="font-geist-mono text-4xl md:text-5xl font-bold text-slate-900 dark:text-white tracking-tight">
                     <Counter target={stat.target} visible={visible} />
-                    <span className="text-teal-400">{stat.suffix}</span>
+                    <span className="text-teal-600 dark:text-teal-400">{stat.suffix}</span>
                   </div>
-                  <p className="text-xs md:text-sm text-slate-400 font-medium font-sans pt-1">
+                  <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 font-medium font-sans pt-1">
                     {stat.label}
                   </p>
                 </SpotlightCard>

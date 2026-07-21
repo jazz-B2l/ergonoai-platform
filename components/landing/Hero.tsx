@@ -67,10 +67,10 @@ export function Hero() {
           initial={{ opacity: 0, y: 30, filter: 'blur(8px)' }}
           animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="font-sora text-5xl md:text-7xl font-bold text-white tracking-tight leading-[1.1] mb-8"
+          className="font-sora text-5xl md:text-7xl font-bold text-slate-900 dark:text-white tracking-tight leading-[1.1] mb-8"
         >
           {t.titleLine1}<br/>
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-cyan-300">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-cyan-500 dark:from-teal-400 dark:to-cyan-300">
             {t.titleLine2}
           </span>
         </motion.h1>
@@ -79,7 +79,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 25, filter: 'blur(6px)' }}
           animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
           transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-          className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed"
+          className="text-lg md:text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed"
         >
           {t.subtitle}
         </motion.p>
@@ -93,7 +93,7 @@ export function Hero() {
           <Link href="/role-select" className="w-full sm:w-auto text-center bg-teal-500 hover:bg-teal-400 text-slate-950 px-8 py-4 rounded-full text-base font-semibold transition-all shadow-[0_0_40px_rgba(20,184,166,0.4)] hover:scale-105">
             {tc.startFreeTrial}
           </Link>
-          <button className="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white backdrop-blur-md px-8 py-4 rounded-full text-base font-semibold transition-all border border-white/10 hover:scale-105">
+          <button className="w-full sm:w-auto bg-slate-200/80 hover:bg-slate-300/80 dark:bg-white/10 dark:hover:bg-white/20 text-slate-900 dark:text-white backdrop-blur-md px-8 py-4 rounded-full text-base font-semibold transition-all border border-slate-300 dark:border-white/10 hover:scale-105">
             {tc.watchDemo}
           </button>
         </motion.div>
@@ -102,12 +102,12 @@ export function Hero() {
       {/* 3D Dashboard Mockup */}
       <div className="relative z-20 w-full max-w-[1400px] mx-auto px-6 mt-32 mb-40">
         <div className={styles.dashboardWrapper}>
-          <div className={`${styles.dashboardElement} bg-[#0f172a] rounded-2xl border border-slate-700 overflow-hidden`}>
+          <div className={`${styles.dashboardElement} bg-white dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-xl`}>
             {/* Mockup Header */}
-            <div className="h-12 border-b border-slate-800 flex items-center px-4 gap-2 bg-[#1e293b]">
-              <div className="w-3 h-3 rounded-full bg-slate-600"></div>
-              <div className="w-3 h-3 rounded-full bg-slate-600"></div>
-              <div className="w-3 h-3 rounded-full bg-slate-600"></div>
+            <div className="h-12 border-b border-slate-200 dark:border-slate-800 flex items-center px-4 gap-2 bg-slate-100 dark:bg-[#1e293b]">
+              <div className="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-600"></div>
+              <div className="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-600"></div>
+              <div className="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-600"></div>
             </div>
             {/* Real App Screenshot */}
             <div className="relative w-full" style={{ paddingBottom: '48.83%' }}>
@@ -123,37 +123,37 @@ export function Hero() {
 
           {/* Dynamic Expandable Floating Card 1: Company Health */}
           <div 
-            className={`${styles.floatingCard1} ${styles.glassCard} p-4 sm:p-5 rounded-2xl shadow-2xl flex flex-col gap-2 group cursor-pointer transition-all duration-400 w-64 sm:w-72 hover:w-96 sm:hover:w-[420px] border border-white/10 hover:border-teal-400/50 hover:scale-105`}
+            className={`${styles.floatingCard1} ${styles.glassCard} p-4 sm:p-5 rounded-2xl shadow-2xl flex flex-col gap-2 group cursor-pointer transition-all duration-400 w-64 sm:w-72 hover:w-96 sm:hover:w-[420px] bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 hover:border-teal-400/50 hover:scale-105`}
             style={language === 'ar' ? { left: 'auto', right: '-5%' } : undefined}
           >
              <div className="flex items-center justify-between gap-3 shrink-0">
                <div className="flex items-center gap-3 min-w-0">
                  <div className="w-12 h-12 rounded-xl bg-teal-500/20 flex items-center justify-center shrink-0 border border-teal-500/30 group-hover:scale-110 transition-transform duration-300">
-                   <span className="text-teal-400 font-bold text-xl font-geist-mono">87%</span>
+                   <span className="text-teal-600 dark:text-teal-400 font-bold text-xl font-geist-mono">87%</span>
                  </div>
                  <div className="min-w-0">
-                   <p className="text-sm sm:text-base font-semibold text-white group-hover:text-teal-300 transition-colors truncate">{t.companyHealth}</p>
-                   <p className="text-xs sm:text-sm text-teal-400 font-medium whitespace-nowrap">{t.riskReduced}</p>
+                   <p className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-300 transition-colors truncate">{t.companyHealth}</p>
+                   <p className="text-xs sm:text-sm text-teal-600 dark:text-teal-400 font-medium whitespace-nowrap">{t.riskReduced}</p>
                  </div>
                </div>
-               <Sparkles className="w-5 h-5 text-teal-400/60 group-hover:text-teal-300 group-hover:rotate-12 transition-all duration-300 shrink-0" />
+               <Sparkles className="w-5 h-5 text-teal-600/60 dark:text-teal-400/60 group-hover:text-teal-600 dark:group-hover:text-teal-300 group-hover:rotate-12 transition-all duration-300 shrink-0" />
              </div>
 
              {/* Smooth Grid Expansion on Hover */}
              <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-[grid-template-rows] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
                <div className="overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">
-                 <div className="pt-3.5 mt-1 border-t border-white/10 text-xs sm:text-sm text-slate-200 leading-relaxed font-sans space-y-2">
-                   <div className="flex items-center gap-1.5 text-xs uppercase font-bold tracking-wider text-teal-400 font-mono">
+                 <div className="pt-3.5 mt-1 border-t border-slate-200 dark:border-white/10 text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed font-sans space-y-2">
+                   <div className="flex items-center gap-1.5 text-xs uppercase font-bold tracking-wider text-teal-600 dark:text-teal-400 font-mono">
                      <TrendingUp className="w-3.5 h-3.5 shrink-0" /> Ergonomic Safety Index
                    </div>
-                   <p className="text-slate-200 leading-relaxed font-normal">{t.companyHealthExplanation}</p>
+                   <p className="text-slate-700 dark:text-slate-200 leading-relaxed font-normal">{t.companyHealthExplanation}</p>
                  </div>
                </div>
              </div>
 
              {/* Hint when collapsed */}
              <div className="grid grid-rows-[1fr] group-hover:grid-rows-[0fr] transition-[grid-template-rows] duration-300">
-               <span className="overflow-hidden text-[11px] text-slate-400/80 flex items-center gap-1 font-mono pt-1">
+               <span className="overflow-hidden text-[11px] text-slate-500 dark:text-slate-400/80 flex items-center gap-1 font-mono pt-1">
                  <span>✨ {t.hoverForDetails}</span>
                </span>
              </div>
@@ -161,35 +161,35 @@ export function Hero() {
 
           {/* Dynamic Expandable Floating Card 2: ISO 7730 */}
           <div 
-            className={`${styles.floatingCard2} ${styles.glassCard} p-4 sm:p-5 rounded-2xl shadow-2xl flex flex-col gap-2 group cursor-pointer transition-all duration-400 w-64 sm:w-72 hover:w-96 sm:hover:w-[420px] border border-white/10 hover:border-emerald-400/50 hover:scale-105`}
+            className={`${styles.floatingCard2} ${styles.glassCard} p-4 sm:p-5 rounded-2xl shadow-2xl flex flex-col gap-2 group cursor-pointer transition-all duration-400 w-64 sm:w-72 hover:w-96 sm:hover:w-[420px] bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 hover:border-emerald-400/50 hover:scale-105`}
             style={language === 'ar' ? { right: 'auto', left: '-5%' } : undefined}
           >
              <div className="flex items-center justify-between gap-3 shrink-0">
                <div className="min-w-0">
                  <div className="flex items-center gap-2 mb-1">
                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></div>
-                   <p className="text-sm sm:text-base font-semibold text-white group-hover:text-emerald-300 transition-colors truncate">{t.isoCompliant}</p>
+                   <p className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-300 transition-colors truncate">{t.isoCompliant}</p>
                  </div>
-                 <p className="text-xs sm:text-sm text-slate-300 whitespace-nowrap">{t.aiReady}</p>
+                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 whitespace-nowrap">{t.aiReady}</p>
                </div>
-               <Info className="w-5 h-5 text-emerald-400/60 group-hover:text-emerald-300 group-hover:rotate-12 transition-all duration-300 shrink-0" />
+               <Info className="w-5 h-5 text-emerald-600/60 dark:text-emerald-400/60 group-hover:text-emerald-600 dark:group-hover:text-emerald-300 group-hover:rotate-12 transition-all duration-300 shrink-0" />
              </div>
 
              {/* Smooth Grid Expansion on Hover */}
              <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-[grid-template-rows] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
                <div className="overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">
-                 <div className="pt-3.5 mt-1 border-t border-white/10 text-xs sm:text-sm text-slate-200 leading-relaxed font-sans space-y-2">
-                   <div className="flex items-center gap-1.5 text-xs uppercase font-bold tracking-wider text-emerald-400 font-mono">
+                 <div className="pt-3.5 mt-1 border-t border-slate-200 dark:border-white/10 text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed font-sans space-y-2">
+                   <div className="flex items-center gap-1.5 text-xs uppercase font-bold tracking-wider text-emerald-600 dark:text-emerald-400 font-mono">
                      <ShieldCheck className="w-3.5 h-3.5 shrink-0" /> ISO 7730 Thermal & Comfort Standard
                    </div>
-                   <p className="text-slate-200 leading-relaxed font-normal">{t.iso7730Explanation}</p>
+                   <p className="text-slate-700 dark:text-slate-200 leading-relaxed font-normal">{t.iso7730Explanation}</p>
                  </div>
                </div>
              </div>
 
              {/* Hint when collapsed */}
              <div className="grid grid-rows-[1fr] group-hover:grid-rows-[0fr] transition-[grid-template-rows] duration-300">
-               <span className="overflow-hidden text-[11px] text-slate-400/80 flex items-center gap-1 font-mono pt-1">
+               <span className="overflow-hidden text-[11px] text-slate-500 dark:text-slate-400/80 flex items-center gap-1 font-mono pt-1">
                  <span>ℹ️ {t.hoverForDetails}</span>
                </span>
              </div>
