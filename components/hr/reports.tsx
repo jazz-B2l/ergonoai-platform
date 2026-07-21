@@ -1,7 +1,5 @@
-'use client'
-
 import { useState, useEffect } from 'react'
-import { FileText, Download, Clock, Shield, TrendingUp, Sparkles, Loader2, Printer } from 'lucide-react'
+import { FileText, Download, Clock, Shield, TrendingUp, Sparkles, Loader2, Printer, AlertTriangle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
@@ -10,6 +8,7 @@ export function HRReports() {
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
   const [orgId, setOrgId] = useState<string | null>(null)
+  const [readinessNotice, setReadinessNotice] = useState<string | null>(null)
 
   async function fetchReports() {
     try {
@@ -25,13 +24,51 @@ export function HRReports() {
         .maybeSingle()
 
       if (!member) return
-      setOrgId(member.organization_id)
+      const currentOrgId = member.organization_id
+      setOrgId(currentOrgId)
+
+      // Fetch assessment campaign readiness status
+      const { data: campaigns } = await supabase
+        .from('assessment_campaigns')
+        .select('id')
+        .eq('organization_id', currentOrgId)
+
+      if (!campaigns || campaigns.length === 0) {
+        setReadinessNotice('No assessment campaign created yet. You must create an assessment campaign and collect employee responses before generating an executive report.')
+      } else {
+        const campaignIds = campaigns.map(c => c.id)
+        const { data: assignments } = await supabase
+          .from('assessment_assignments')
+          .select('id')
+          .in('campaign_id', campaignIds)
+
+        const assignmentIds = (assignments || []).map(a => a.id)
+        if (assignmentIds.length === 0) {
+          setReadinessNotice('No employee assessment assignments found. Employees must be assigned to an assessment campaign first.')
+        } else {
+          const { data: responses } = await supabase
+            .from('assessment_responses')
+            .select('id')
+            .in('assignment_id', assignmentIds)
+
+          const totalResponses = responses?.length || 0
+          const totalAssignments = assignmentIds.length
+
+          if (totalResponses === 0) {
+            setReadinessNotice('No completed employee assessments found. Employees must finish answering their assessments before generating an executive report.')
+          } else if (totalResponses < totalAssignments) {
+            setReadinessNotice(`Assessment campaign is still in progress (${totalResponses} of ${totalAssignments} employees completed). All assigned employees must finish answering their assessments before generating an executive report.`)
+          } else {
+            setReadinessNotice(null)
+          }
+        }
+      }
 
       // Fetch generated reports
       const { data: reportsData } = await supabase
         .from('generated_reports')
         .select('*')
-        .eq('organization_id', member.organization_id)
+        .eq('organization_id', currentOrgId)
         .order('created_at', { ascending: false })
 
       if (reportsData) {
@@ -62,6 +99,10 @@ export function HRReports() {
 
   async function handleGenerateReport() {
     if (!orgId) return
+    if (readinessNotice) {
+      alert(`Cannot Generate Report:\n\n${readinessNotice}`)
+      return
+    }
     setGenerating(true)
     try {
       const res = await fetch('/api/ai/report', {
@@ -73,7 +114,7 @@ export function HRReports() {
         await fetchReports()
       } else {
         const errData = await res.json()
-        alert(`Failed to generate report: ${errData.message || 'Unknown error'}`)
+        alert(`Cannot Generate Report: ${errData.message || 'Unknown error'}`)
       }
     } catch (err) {
       console.error(err)
@@ -435,6 +476,16 @@ export function HRReports() {
           )}
         </button>
       </div>
+
+      {readinessNotice && (
+        <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 font-sans text-xs">
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-500" />
+          <div>
+            <strong className="font-semibold block mb-0.5">Report Generation Pending</strong>
+            {readinessNotice}
+          </div>
+        </div>
+      )}
 
       {/* Info banner */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-sans">

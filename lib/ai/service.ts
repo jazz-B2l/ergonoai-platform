@@ -528,45 +528,56 @@ export class AiService {
 
       const campaignIds = (campaigns || []).map(c => c.id);
 
-      let totalAssessments = 0;
+      if (campaignIds.length === 0) {
+        throw new Error('No assessment campaign found. You must create an assessment campaign before generating an executive report.');
+      }
+
+      // Fetch all assignments
+      const { data: assignments } = await supabase
+        .from('assessment_assignments')
+        .select('id')
+        .in('campaign_id', campaignIds);
+
+      const assignmentIds = (assignments || []).map(a => a.id);
+
+      if (assignmentIds.length === 0) {
+        throw new Error('No employee assessment assignments found. Employees must be assigned to an assessment campaign first.');
+      }
+
+      // Fetch responses
+      const { data: responses } = await supabase
+        .from('assessment_responses')
+        .select('id')
+        .in('assignment_id', assignmentIds);
+
+      const totalAssessments = responses?.length || 0;
+      const totalAssignments = assignmentIds.length;
+
+      if (totalAssessments === 0) {
+        throw new Error('No completed employee assessments found. Employees must finish answering their assessments before generating an executive report.');
+      }
+
+      if (totalAssessments < totalAssignments) {
+        throw new Error(`Assessment campaign is still in progress (${totalAssessments} of ${totalAssignments} employees completed). All assigned employees must finish answering their assessments before generating an executive report.`);
+      }
+
+      const responseIds = (responses || []).map(r => r.id);
       let recentFindings: string[] = [];
-      let responseIds: string[] = [];
 
-      if (campaignIds.length > 0) {
-        // Fetch all assignments
-        const { data: assignments } = await supabase
-          .from('assessment_assignments')
-          .select('id')
-          .in('campaign_id', campaignIds);
+      if (responseIds.length > 0) {
+        // Fetch recent assessment analyses
+        const { data: analyses } = await supabase
+          .from('assessment_ai_analysis')
+          .select('summary, recommendations')
+          .in('response_id', responseIds)
+          .order('generated_at', { ascending: false })
+          .limit(10);
 
-        const assignmentIds = (assignments || []).map(a => a.id);
-
-        if (assignmentIds.length > 0) {
-          // Fetch responses
-          const { data: responses } = await supabase
-            .from('assessment_responses')
-            .select('id')
-            .in('assignment_id', assignmentIds);
-
-          totalAssessments = responses?.length || 0;
-          responseIds = (responses || []).map(r => r.id);
-
-          if (responseIds.length > 0) {
-            // Fetch recent assessment analyses
-            const { data: analyses } = await supabase
-              .from('assessment_ai_analysis')
-              .select('summary, recommendations')
-              .in('response_id', responseIds)
-              .order('generated_at', { ascending: false })
-              .limit(10);
-
-            if (analyses) {
-              recentFindings = analyses.map(a => {
-                const recs = typeof a.recommendations === 'string' ? JSON.parse(a.recommendations) : (a.recommendations || []);
-                return `${a.summary} Recommendations: ${recs.slice(0, 2).join(', ')}`;
-              });
-            }
-          }
+        if (analyses) {
+          recentFindings = analyses.map(a => {
+            const recs = typeof a.recommendations === 'string' ? JSON.parse(a.recommendations) : (a.recommendations || []);
+            return `${a.summary} Recommendations: ${recs.slice(0, 2).join(', ')}`;
+          });
         }
       }
 
