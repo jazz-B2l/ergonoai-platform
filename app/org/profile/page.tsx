@@ -432,41 +432,41 @@ export default function OrgProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center h-full bg-slate-50">
-        <Loader2 className="w-8 h-8 animate-spin text-teal-600" />
+      <div className="flex-1 flex items-center justify-center h-full bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-brand" />
       </div>
     )
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-slate-50 text-slate-900 pb-20">
+    <div className="h-full overflow-y-auto bg-background text-foreground pb-20">
       <input type="file" ref={logoInputRef} accept="image/*" className="hidden" onChange={(e) => handleFileChange(e, 'logo')} />
       <input type="file" ref={bannerInputRef} accept="image/*" className="hidden" onChange={(e) => handleFileChange(e, 'banner')} />
 
       <form onSubmit={handleSave} className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
-        <div className="flex items-center justify-between border-b border-slate-200 pb-5">
+        <div className="flex items-center justify-between border-b border-border pb-5">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t.pageTitle}</h1>
-            <p className="text-sm text-slate-500 mt-1">{t.pageSubtitle}</p>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">{t.pageTitle}</h1>
+            <p className="text-sm text-muted-foreground mt-1">{t.pageSubtitle}</p>
           </div>
 
           <div className="flex items-center gap-3">
             <Link
               href="/org"
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold transition-all shadow-sm"
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-border bg-card hover:bg-muted/50 text-foreground text-sm font-semibold transition-all shadow-sm"
             >
               <ArrowLeft className="w-4 h-4" /> {t.backToDashboard}
             </Link>
             {success && (
-              <span className="flex items-center gap-1.5 text-sm text-emerald-600 font-medium bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 animate-in fade-in duration-200">
+              <span className="flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-400 font-medium bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20 animate-in fade-in duration-200">
                 <Check className="w-4 h-4" /> {t.changesSaved}
               </span>
             )}
             <button
               type="submit"
               disabled={saving}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-teal-600 text-white text-sm font-semibold hover:bg-teal-700 transition-all cursor-pointer disabled:opacity-50 shadow-sm"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-brand text-brand-foreground text-sm font-semibold hover:bg-brand/90 transition-all cursor-pointer disabled:opacity-50 shadow-sm"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               {saving ? t.saving : t.saveChanges}
@@ -475,20 +475,20 @@ export default function OrgProfilePage() {
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-600 font-medium">
+          <div className="bg-danger/10 border border-danger/20 rounded-xl p-4 text-sm text-danger font-medium">
             {error}
           </div>
         )}
 
         {/* Header Banner & Logo Section */}
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm relative">
+        <div className="bg-card text-card-foreground rounded-2xl border border-border overflow-hidden shadow-sm relative">
           <div 
-            className="h-48 w-full relative bg-cover bg-center group overflow-hidden bg-slate-100 border-b border-slate-200 flex items-center justify-center cursor-pointer transition-all hover:bg-slate-200"
+            className="h-48 w-full relative bg-cover bg-center group overflow-hidden bg-muted/40 border-b border-border flex items-center justify-center cursor-pointer transition-all hover:bg-muted/60"
             style={{ backgroundImage: orgBanner ? `url(${orgBanner})` : 'none' }}
             onClick={() => bannerInputRef.current?.click()}
           >
             {!orgBanner && (
-              <div className="flex flex-col items-center gap-2 text-slate-400">
+              <div className="flex flex-col items-center gap-2 text-muted-foreground">
                 <UploadCloud className="w-8 h-8" />
                 <span className="text-sm font-medium">{t.clickToUploadBanner}</span>
               </div>
@@ -504,12 +504,12 @@ export default function OrgProfilePage() {
           <div className="px-6 pb-6 pt-12 relative flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div 
               onClick={() => logoInputRef.current?.click()}
-              className="w-24 h-24 rounded-2xl border-4 border-white bg-white absolute -top-12 left-6 overflow-hidden group/logo cursor-pointer shadow-md transition-all duration-300 hover:border-slate-100 flex items-center justify-center"
+              className="w-24 h-24 rounded-2xl border-4 border-card bg-card absolute -top-12 left-6 overflow-hidden group/logo cursor-pointer shadow-md transition-all duration-300 hover:border-border flex items-center justify-center"
             >
               {orgLogo ? (
                 <img src={orgLogo} alt="Logo" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400 flex-col gap-1">
+                <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground flex-col gap-1">
                   <Camera className="w-6 h-6" />
                   <span className="text-[10px] font-medium">{t.logoLabel}</span>
                 </div>
@@ -522,8 +522,8 @@ export default function OrgProfilePage() {
             </div>
 
             <div className="ml-0 md:ml-28">
-              <h2 className="text-xl font-bold tracking-tight text-slate-900">{orgName || t.yourOrg}</h2>
-              <p className="text-sm text-slate-500 mt-1 max-w-xl truncate">{orgDescription || t.noDescription}</p>
+              <h2 className="text-xl font-bold tracking-tight text-foreground">{orgName || t.yourOrg}</h2>
+              <p className="text-sm text-muted-foreground mt-1 max-w-xl truncate">{orgDescription || t.noDescription}</p>
             </div>
             
             <div className="flex gap-2 text-xs">
@@ -533,7 +533,7 @@ export default function OrgProfilePage() {
                   const url = prompt(t.enterLogoUrl, orgLogo)
                   if (url !== null) setOrgLogo(url)
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all cursor-pointer font-medium"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card border border-border text-foreground hover:bg-muted/50 transition-all cursor-pointer font-medium"
               >
                 <Link2 className="w-3.5 h-3.5" /> {t.logoUrlBtn}
               </button>
@@ -543,7 +543,7 @@ export default function OrgProfilePage() {
                   const url = prompt(t.enterBannerUrl, orgBanner)
                   if (url !== null) setOrgBanner(url)
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all cursor-pointer font-medium"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card border border-border text-foreground hover:bg-muted/50 transition-all cursor-pointer font-medium"
               >
                 <Link2 className="w-3.5 h-3.5" /> {t.bannerUrlBtn}
               </button>
@@ -552,7 +552,7 @@ export default function OrgProfilePage() {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex gap-2 border-b border-slate-200">
+        <div className="flex gap-2 border-b border-border">
           {[
             { id: 'profile', label: t.tabIdentity, icon: Building2 },
             { id: 'location', label: t.tabLocation, icon: MapPin },
@@ -568,8 +568,8 @@ export default function OrgProfilePage() {
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`flex items-center gap-2 py-3 px-4 text-sm font-semibold transition-all cursor-pointer border-b-2 ${
                   active 
-                    ? 'border-teal-600 text-teal-600' 
-                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                    ? 'border-brand text-brand font-bold' 
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -580,42 +580,42 @@ export default function OrgProfilePage() {
         </div>
 
         {/* Tab Contents */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <div className="bg-card text-card-foreground rounded-2xl border border-border p-6 shadow-sm">
           
           {activeTab === 'profile' && (
             <div className="space-y-6 animate-in fade-in duration-300">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
-                  <label htmlFor="orgName" className="block text-sm font-medium text-slate-700 mb-1.5">{t.orgName}</label>
+                  <label htmlFor="orgName" className="block text-sm font-medium text-foreground mb-1.5">{t.orgName}</label>
                   <input
                     id="orgName" type="text" required value={orgName} onChange={(e) => setOrgName(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground dark:bg-muted/20 focus:outline-none focus:ring-2 focus:ring-brand transition-all"
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label htmlFor="orgDesc" className="block text-sm font-medium text-slate-700 mb-1.5">{t.description}</label>
+                  <label htmlFor="orgDesc" className="block text-sm font-medium text-foreground mb-1.5">{t.description}</label>
                   <textarea
                     id="orgDesc" rows={4} value={orgDescription} onChange={(e) => setOrgDescription(e.target.value)}
                     placeholder={t.descPlaceholder}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all resize-none"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground dark:bg-muted/20 focus:outline-none focus:ring-2 focus:ring-brand transition-all resize-none"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="orgIndustry" className="block text-sm font-medium text-slate-700 mb-1.5">{t.industry}</label>
+                  <label htmlFor="orgIndustry" className="block text-sm font-medium text-foreground mb-1.5">{t.industry}</label>
                   <input
                     id="orgIndustry" type="text" value={orgIndustry} onChange={(e) => setOrgIndustry(e.target.value)}
                     placeholder={t.industryPlaceholder}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground dark:bg-muted/20 focus:outline-none focus:ring-2 focus:ring-brand transition-all"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="orgSize" className="block text-sm font-medium text-slate-700 mb-1.5">{t.orgSize}</label>
+                  <label htmlFor="orgSize" className="block text-sm font-medium text-foreground mb-1.5">{t.orgSize}</label>
                   <select
                     id="orgSize" value={orgSize} onChange={(e) => setOrgSize(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all appearance-none"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground dark:bg-muted/20 focus:outline-none focus:ring-2 focus:ring-brand transition-all appearance-none"
                   >
                     <option value="">{t.selectSize}</option>
                     <option value="1-10">1-10 employees</option>
@@ -627,11 +627,11 @@ export default function OrgProfilePage() {
                 </div>
 
                 <div>
-                  <label htmlFor="orgFounded" className="block text-sm font-medium text-slate-700 mb-1.5">{t.foundedYear}</label>
+                  <label htmlFor="orgFounded" className="block text-sm font-medium text-foreground mb-1.5">{t.foundedYear}</label>
                   <input
                     id="orgFounded" type="number" min="1800" max={new Date().getFullYear()} value={orgFounded} onChange={(e) => setOrgFounded(e.target.value)}
                     placeholder="e.g. 2018"
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground dark:bg-muted/20 focus:outline-none focus:ring-2 focus:ring-brand transition-all"
                   />
                 </div>
               </div>
@@ -642,34 +642,34 @@ export default function OrgProfilePage() {
             <div className="space-y-6 animate-in fade-in duration-300">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="orgEmail" className="block text-sm font-medium text-slate-700 mb-1.5">{t.contactEmail}</label>
+                  <label htmlFor="orgEmail" className="block text-sm font-medium text-foreground mb-1.5">{t.contactEmail}</label>
                   <input
                     id="orgEmail" type="email" value={orgEmail} onChange={(e) => setOrgEmail(e.target.value)}
                     placeholder="info@org.com"
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground dark:bg-muted/20 focus:outline-none focus:ring-2 focus:ring-brand transition-all"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="orgPhone" className="block text-sm font-medium text-slate-700 mb-1.5">{t.contactPhone}</label>
+                  <label htmlFor="orgPhone" className="block text-sm font-medium text-foreground mb-1.5">{t.contactPhone}</label>
                   <input
                     id="orgPhone" type="tel" value={orgPhone} onChange={(e) => setOrgPhone(e.target.value)}
                     placeholder="+213..."
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground dark:bg-muted/20 focus:outline-none focus:ring-2 focus:ring-brand transition-all"
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label htmlFor="orgWebsite" className="block text-sm font-medium text-slate-700 mb-1.5">{t.websiteUrl}</label>
+                  <label htmlFor="orgWebsite" className="block text-sm font-medium text-foreground mb-1.5">{t.websiteUrl}</label>
                   <input
                     id="orgWebsite" type="url" value={orgWebsite} onChange={(e) => setOrgWebsite(e.target.value)}
                     placeholder="https://your-org.com"
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground dark:bg-muted/20 focus:outline-none focus:ring-2 focus:ring-brand transition-all"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="orgWilaya" className="block text-sm font-medium text-slate-700 mb-1.5">{t.wilaya}</label>
+                  <label htmlFor="orgWilaya" className="block text-sm font-medium text-foreground mb-1.5">{t.wilaya}</label>
                   <select
                     id="orgWilaya"
                     required
@@ -685,7 +685,7 @@ export default function OrgProfilePage() {
                         setOrgLng(matched.longitude)
                       }
                     }}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all appearance-none"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground dark:bg-muted/20 focus:outline-none focus:ring-2 focus:ring-brand transition-all appearance-none"
                   >
                     <option value="">{t.selectWilaya}</option>
                     {WILAYAS.map((w) => (
@@ -697,17 +697,17 @@ export default function OrgProfilePage() {
                 </div>
 
                 <div>
-                  <label htmlFor="orgDistrict" className="block text-sm font-medium text-slate-700 mb-1.5">{t.district}</label>
+                  <label htmlFor="orgDistrict" className="block text-sm font-medium text-foreground mb-1.5">{t.district}</label>
                   <input
                     id="orgDistrict" type="text" required value={orgDistrict} onChange={(e) => setOrgDistrict(e.target.value)}
                     placeholder="e.g. Dar El Beïda"
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground dark:bg-muted/20 focus:outline-none focus:ring-2 focus:ring-brand transition-all"
                   />
                 </div>
 
                 {/* Map Picker Search bar */}
                 <div className="md:col-span-2 space-y-2">
-                  <label className="block text-sm font-medium text-slate-700">{t.coordPicker}</label>
+                  <label className="block text-sm font-medium text-foreground">{t.coordPicker}</label>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -720,24 +720,24 @@ export default function OrgProfilePage() {
                           handleLocationSearch()
                         }
                       }}
-                      className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                      className="flex-1 bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground dark:bg-muted/20 focus:outline-none focus:ring-2 focus:ring-brand transition-all"
                     />
                     <button
                       type="button"
                       onClick={handleLocationSearch}
                       disabled={searchingLocation}
-                      className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50 shrink-0"
+                      className="px-4 py-2.5 rounded-xl bg-brand hover:bg-brand/90 text-brand-foreground font-semibold text-sm transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50 shrink-0 shadow-sm"
                     >
                       {searchingLocation ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                       {t.findBtn}
                     </button>
                   </div>
-                  {searchError && <p className="text-xs text-red-500 font-medium">{searchError}</p>}
+                  {searchError && <p className="text-xs text-danger font-medium">{searchError}</p>}
                 </div>
 
                 {/* Leaflet Map Frame */}
                 <div className="md:col-span-2">
-                  <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                  <div className="rounded-2xl border border-border overflow-hidden shadow-sm">
                     <MapPicker
                       lat={orgLat}
                       lng={orgLng}
@@ -747,7 +747,7 @@ export default function OrgProfilePage() {
                       }}
                     />
                   </div>
-                  <div className="flex gap-4 mt-2.5 text-xs text-slate-500 font-mono">
+                  <div className="flex gap-4 mt-2.5 text-xs text-muted-foreground font-mono">
                     <span>{t.latitude}: {orgLat.toFixed(6)}</span>
                     <span>{t.longitude}: {orgLng.toFixed(6)}</span>
                   </div>
@@ -759,37 +759,37 @@ export default function OrgProfilePage() {
           {activeTab === 'admin' && (
             <div className="space-y-6 animate-in fade-in duration-300">
               <div>
-                <h3 className="text-base font-bold text-slate-900 mb-4 border-b border-slate-100 pb-2">{t.adminProfile}</h3>
+                <h3 className="text-base font-bold text-foreground mb-4 border-b border-border pb-2">{t.adminProfile}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="firstName" className="block text-sm font-medium text-slate-700 mb-1.5">{t.firstName}</label>
+                    <label htmlFor="firstName" className="block text-sm font-medium text-foreground mb-1.5">{t.firstName}</label>
                     <input
                       id="firstName" type="text" required value={firstName} onChange={(e) => setFirstName(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground dark:bg-muted/20 focus:outline-none focus:ring-2 focus:ring-brand transition-all"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="lastName" className="block text-sm font-medium text-slate-700 mb-1.5">{t.lastName}</label>
+                    <label htmlFor="lastName" className="block text-sm font-medium text-foreground mb-1.5">{t.lastName}</label>
                     <input
                       id="lastName" type="text" required value={lastName} onChange={(e) => setLastName(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground dark:bg-muted/20 focus:outline-none focus:ring-2 focus:ring-brand transition-all"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-slate-700 mb-1.5">{t.adminPhone}</label>
+                    <label htmlFor="phone" className="block text-sm font-medium text-foreground mb-1.5">{t.adminPhone}</label>
                     <input
                       id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground dark:bg-muted/20 focus:outline-none focus:ring-2 focus:ring-brand transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">{t.loginEmail}</label>
+                    <label className="block text-sm font-medium text-foreground mb-1.5">{t.loginEmail}</label>
                     <input
                       type="email" disabled value={email}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-500 cursor-not-allowed"
+                      className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-sm text-muted-foreground cursor-not-allowed opacity-80"
                     />
                   </div>
 
@@ -797,65 +797,65 @@ export default function OrgProfilePage() {
               </div>
 
               <div>
-                <h3 className="text-base font-bold text-slate-900 mb-4 border-b border-slate-100 pb-2">{t.socialMedia}</h3>
+                <h3 className="text-base font-bold text-foreground mb-4 border-b border-border pb-2">{t.socialMedia}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
-                    <label htmlFor="socialLinkedin" className="block text-sm font-medium text-slate-700 mb-1.5">LinkedIn</label>
+                    <label htmlFor="socialLinkedin" className="block text-sm font-medium text-foreground mb-1.5">LinkedIn</label>
                     <input
                       id="socialLinkedin" type="url" value={socialLinkedin} onChange={(e) => setSocialLinkedin(e.target.value)}
                       placeholder="https://linkedin.com/..."
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground dark:bg-muted/20 placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand transition-all"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="socialTwitter" className="block text-sm font-medium text-slate-700 mb-1.5">Twitter (X)</label>
+                    <label htmlFor="socialTwitter" className="block text-sm font-medium text-foreground mb-1.5">Twitter (X)</label>
                     <input
                       id="socialTwitter" type="url" value={socialTwitter} onChange={(e) => setSocialTwitter(e.target.value)}
                       placeholder="https://twitter.com/..."
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground dark:bg-muted/20 placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand transition-all"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="socialFacebook" className="block text-sm font-medium text-slate-700 mb-1.5">Facebook</label>
+                    <label htmlFor="socialFacebook" className="block text-sm font-medium text-foreground mb-1.5">Facebook</label>
                     <input
                       id="socialFacebook" type="url" value={socialFacebook} onChange={(e) => setSocialFacebook(e.target.value)}
                       placeholder="https://facebook.com/..."
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground dark:bg-muted/20 placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand transition-all"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-slate-100 mt-6">
-                <h3 className="text-base font-bold text-slate-900 mb-4 border-b border-slate-100 pb-2">{t.securityPassword}</h3>
+              <div className="pt-6 border-t border-border mt-6">
+                <h3 className="text-base font-bold text-foreground mb-4 border-b border-border pb-2">{t.securityPassword}</h3>
                 
                 {passwordError && (
-                  <div className="mb-4 bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-600 font-medium">
+                  <div className="mb-4 bg-danger/10 border border-danger/20 rounded-xl p-4 text-sm text-danger font-medium">
                     {passwordError}
                   </div>
                 )}
                 
                 {passwordSuccess && (
-                  <div className="mb-4 bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-sm text-emerald-600 font-medium">
+                  <div className="mb-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 text-sm text-emerald-600 dark:text-emerald-400 font-medium">
                     {t.passwordUpdated}
                   </div>
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
-                    <label htmlFor="currentPassword" className="block text-sm font-medium text-slate-700 mb-1.5">{t.currentPassword}</label>
+                    <label htmlFor="currentPassword" className="block text-sm font-medium text-foreground mb-1.5">{t.currentPassword}</label>
                     <div className="relative">
                       <input
                         id="currentPassword" type={showCurrentPassword ? 'text' : 'password'} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full bg-white border border-slate-200 rounded-xl pl-4 pr-10 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                        className="w-full bg-background border border-border rounded-xl pl-4 pr-10 py-2.5 text-sm text-foreground dark:bg-muted/20 placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand transition-all"
                       />
                       <button
                         type="button"
                         onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                       >
                         {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -863,17 +863,17 @@ export default function OrgProfilePage() {
                   </div>
 
                   <div>
-                    <label htmlFor="newPassword" className="block text-sm font-medium text-slate-700 mb-1.5">{t.newPassword}</label>
+                    <label htmlFor="newPassword" className="block text-sm font-medium text-foreground mb-1.5">{t.newPassword}</label>
                     <div className="relative">
                       <input
                         id="newPassword" type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full bg-white border border-slate-200 rounded-xl pl-4 pr-10 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                        className="w-full bg-background border border-border rounded-xl pl-4 pr-10 py-2.5 text-sm text-foreground dark:bg-muted/20 placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand transition-all"
                       />
                       <button
                         type="button"
                         onClick={() => setShowNewPassword(!showNewPassword)}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                       >
                         {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -881,17 +881,17 @@ export default function OrgProfilePage() {
                   </div>
 
                   <div>
-                    <label htmlFor="confirmNewPassword" className="block text-sm font-medium text-slate-700 mb-1.5">{t.confirmNewPassword}</label>
+                    <label htmlFor="confirmNewPassword" className="block text-sm font-medium text-foreground mb-1.5">{t.confirmNewPassword}</label>
                     <div className="relative">
                       <input
                         id="confirmNewPassword" type={showConfirmPassword ? 'text' : 'password'} value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full bg-white border border-slate-200 rounded-xl pl-4 pr-10 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                        className="w-full bg-background border border-border rounded-xl pl-4 pr-10 py-2.5 text-sm text-foreground dark:bg-muted/20 placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand transition-all"
                       />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                       >
                         {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -904,7 +904,7 @@ export default function OrgProfilePage() {
                     type="button"
                     onClick={handlePasswordChange}
                     disabled={updatingPassword}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-teal-600 text-white text-sm font-semibold hover:bg-teal-700 transition-all cursor-pointer disabled:opacity-50 shadow-sm"
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-brand text-brand-foreground text-sm font-semibold hover:bg-brand/90 transition-all cursor-pointer disabled:opacity-50 shadow-sm"
                   >
                     {updatingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     {updatingPassword ? t.updating : t.updatePasswordBtn}
@@ -919,15 +919,15 @@ export default function OrgProfilePage() {
             <div className="space-y-8 animate-in fade-in duration-300">
               
               <div>
-                <h3 className="text-base font-bold text-slate-900 mb-4 border-b border-slate-100 pb-2">{t.platformCustomization}</h3>
+                <h3 className="text-base font-bold text-foreground mb-4 border-b border-border pb-2">{t.platformCustomization}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="orgLanguage" className="block text-sm font-medium text-slate-700 mb-1.5">{t.preferredLanguage}</label>
+                    <label htmlFor="orgLanguage" className="block text-sm font-medium text-foreground mb-1.5">{t.preferredLanguage}</label>
                     <select
                       id="orgLanguage"
                       value={language}
                       onChange={(e) => setGlobalLanguage(e.target.value as 'en' | 'ar')}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all appearance-none"
+                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground dark:bg-muted/20 focus:outline-none focus:ring-2 focus:ring-brand transition-all appearance-none"
                     >
                       <option value="en">English (US)</option>
                       <option value="ar">Arabic (العربية)</option>
@@ -937,26 +937,26 @@ export default function OrgProfilePage() {
               </div>
 
               {/* Registration & Invite Codes Generator */}
-              <div className="pt-4 border-t border-slate-100 space-y-6">
+              <div className="pt-4 border-t border-border space-y-6">
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 mb-1 font-sora">{t.inviteSystem}</h3>
-                  <p className="text-xs text-slate-500">{t.inviteSystemDesc}</p>
+                  <h3 className="text-base font-bold text-foreground mb-1 font-sora">{t.inviteSystem}</h3>
+                  <p className="text-xs text-muted-foreground">{t.inviteSystemDesc}</p>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                   
                   {/* Generate form */}
-                  <div className="lg:col-span-1 bg-slate-50 rounded-2xl border border-slate-200/60 p-5 space-y-4">
-                    <h4 className="text-xs font-semibold uppercase text-slate-500 tracking-wider">{t.generateCode}</h4>
+                  <div className="lg:col-span-1 bg-muted/30 rounded-2xl border border-border p-5 space-y-4">
+                    <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">{t.generateCode}</h4>
                     
                     <div className="space-y-3">
                       <div>
-                        <label htmlFor="inviteRole" className="block text-xs font-semibold text-slate-600 mb-1">{t.targetRole}</label>
+                        <label htmlFor="inviteRole" className="block text-xs font-semibold text-foreground mb-1">{t.targetRole}</label>
                         <select
                           id="inviteRole"
                           value={selectedRole}
                           onChange={(e) => setSelectedRole(e.target.value)}
-                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 appearance-none"
+                          className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground dark:bg-muted/20 focus:outline-none focus:ring-2 focus:ring-brand appearance-none"
                         >
                           {roles.map(r => (
                             <option key={r.id} value={r.id}>{r.name}</option>
@@ -964,15 +964,13 @@ export default function OrgProfilePage() {
                         </select>
                       </div>
 
-
-
                       <div>
-                        <label htmlFor="inviteSite" className="block text-xs font-semibold text-slate-600 mb-1">{t.targetSite}</label>
+                        <label htmlFor="inviteSite" className="block text-xs font-semibold text-foreground mb-1">{t.targetSite}</label>
                         <select
                           id="inviteSite"
                           value={selectedSite}
                           onChange={(e) => setSelectedSite(e.target.value)}
-                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 appearance-none"
+                          className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground dark:bg-muted/20 focus:outline-none focus:ring-2 focus:ring-brand appearance-none"
                         >
                           <option value="">{t.allSites}</option>
                           {sites.map(s => (
@@ -982,7 +980,7 @@ export default function OrgProfilePage() {
                       </div>
 
                       <div>
-                        <label htmlFor="inviteMaxUses" className="block text-xs font-semibold text-slate-600 mb-1">{t.maxUses}</label>
+                        <label htmlFor="inviteMaxUses" className="block text-xs font-semibold text-foreground mb-1">{t.maxUses}</label>
                         <input
                           id="inviteMaxUses"
                           type="number"
@@ -990,19 +988,19 @@ export default function OrgProfilePage() {
                           max="1000"
                           value={maxUses}
                           onChange={(e) => setMaxUses(parseInt(e.target.value) || 10)}
-                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground dark:bg-muted/20 focus:outline-none focus:ring-2 focus:ring-brand"
                         />
                       </div>
 
                       <div>
-                        <label htmlFor="inviteExpiry" className="block text-xs font-semibold text-slate-600 mb-1">{t.expiryDate}</label>
+                        <label htmlFor="inviteExpiry" className="block text-xs font-semibold text-foreground mb-1">{t.expiryDate}</label>
                         <input
                           id="inviteExpiry"
                           type="date"
                           value={expiryDate}
                           min={new Date().toISOString().split('T')[0]}
                           onChange={(e) => setExpiryDate(e.target.value)}
-                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground dark:bg-muted/20 focus:outline-none focus:ring-2 focus:ring-brand"
                         />
                       </div>
 
@@ -1010,7 +1008,7 @@ export default function OrgProfilePage() {
                         type="button"
                         onClick={handleGenerateInvite}
                         disabled={generatingCode}
-                        className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-teal-600 text-white text-xs font-semibold hover:bg-teal-700 transition-all shadow cursor-pointer disabled:opacity-50"
+                        className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-brand text-brand-foreground text-xs font-semibold hover:bg-brand/90 transition-all shadow cursor-pointer disabled:opacity-50"
                       >
                         {generatingCode ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
                         {t.generateBtn}
@@ -1020,52 +1018,52 @@ export default function OrgProfilePage() {
 
                   {/* Codes List */}
                   <div className="lg:col-span-2 space-y-3">
-                    <h4 className="text-xs font-semibold uppercase text-slate-500 tracking-wider">{t.activeCodes}</h4>
+                    <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">{t.activeCodes}</h4>
                     
                     {inviteCodes.length === 0 ? (
-                      <div className="text-center py-10 bg-slate-50 border border-dashed border-slate-200 rounded-2xl text-slate-400">
+                      <div className="text-center py-10 bg-muted/20 border border-dashed border-border rounded-2xl text-muted-foreground">
                         <Key className="w-6 h-6 mx-auto mb-1.5 opacity-50" />
                         <p className="text-xs">{t.noCodesYet}</p>
                       </div>
                     ) : (
-                      <div className="bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-5 space-y-3 max-h-[480px] overflow-y-auto">
+                      <div className="bg-muted/20 border border-dashed border-border rounded-2xl p-5 space-y-3 max-h-[480px] overflow-y-auto">
                         {inviteCodes.map((code) => {
                           const isExpired = code.expires_at && new Date(code.expires_at) < new Date()
                           const isMaxed = code.used_count >= code.max_uses
 
                           return (
-                            <div key={code.id} className="flex items-center justify-between p-3.5 bg-white border border-slate-100 rounded-xl shadow-sm animate-in fade-in duration-150">
+                            <div key={code.id} className="flex items-center justify-between p-3.5 bg-card border border-border rounded-xl shadow-sm animate-in fade-in duration-150">
                               <div className="space-y-1">
                                 <div className="flex items-center gap-2">
-                                  <span className="font-mono font-bold text-xs text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 flex items-center gap-1.5">
+                                  <span className="font-mono font-bold text-xs text-foreground bg-muted px-2 py-0.5 rounded border border-border flex items-center gap-1.5">
                                     {code.code}
                                     <button
                                       type="button"
                                       onClick={() => copyToClipboard(code.code, code.id)}
-                                      className="text-slate-400 hover:text-slate-600 transition-colors p-0.5"
-                                title={t.copyCode}
+                                      className="text-muted-foreground hover:text-foreground transition-colors p-0.5"
+                                      title={t.copyCode}
                                     >
                                       {copiedCodeId === code.id ? (
-                                        <Check className="w-3 h-3 text-emerald-600" />
+                                        <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                                       ) : (
                                         <Copy className="w-3 h-3" />
                                       )}
                                     </button>
                                   </span>
-                                  <span className="text-[10px] font-semibold text-teal-600 bg-teal-50 px-2 py-0.5 rounded border border-teal-100">
+                                  <span className="text-[10px] font-semibold text-brand bg-brand/10 px-2 py-0.5 rounded border border-brand/20">
                                     {roles.find(r => r.id === code.role_id)?.name || 'User'}
                                   </span>
                                 </div>
-                                <div className="text-[10px] text-slate-500 flex flex-wrap items-center gap-x-2 gap-y-1">
-                                  <span>{t.dept}: <strong className="text-slate-700">{depts.find(d => d.id === code.department_id)?.name || t.all}</strong></span>
+                                <div className="text-[10px] text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1">
+                                  <span>{t.dept}: <strong className="text-foreground">{depts.find(d => d.id === code.department_id)?.name || t.all}</strong></span>
                                   <span>•</span>
-                                  <span>{t.site}: <strong className="text-slate-700">{sites.find(s => s.id === code.site_id)?.name || t.all}</strong></span>
+                                  <span>{t.site}: <strong className="text-foreground">{sites.find(s => s.id === code.site_id)?.name || t.all}</strong></span>
                                   <span>•</span>
-                                  <span>{t.uses}: <strong className={isMaxed ? 'text-red-500 font-bold' : 'text-slate-700'}>{code.used_count}/{code.max_uses}</strong></span>
+                                  <span>{t.uses}: <strong className={isMaxed ? 'text-danger font-bold' : 'text-foreground'}>{code.used_count}/{code.max_uses}</strong></span>
                                   {code.expires_at && (
                                     <>
                                       <span>•</span>
-                                      <span className={isExpired ? 'text-red-500 font-semibold' : ''}>
+                                      <span className={isExpired ? 'text-danger font-semibold' : ''}>
                                         {t.expires}: {new Date(code.expires_at).toLocaleDateString()}
                                       </span>
                                     </>
@@ -1076,7 +1074,7 @@ export default function OrgProfilePage() {
                               <button
                                 type="button"
                                 onClick={() => handleDeleteInvite(code.id)}
-                                className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer border border-transparent hover:border-red-100 shrink-0 ml-4"
+                                className="p-2 rounded-xl text-muted-foreground hover:text-danger hover:bg-danger/10 transition-colors cursor-pointer border border-transparent hover:border-danger/20 shrink-0 ml-4"
                                 title={t.revokeCode}
                               >
                                 <Trash2 className="w-4 h-4" />

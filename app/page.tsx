@@ -7,13 +7,12 @@ import { HowItWorks } from '@/components/landing/HowItWorks'
 import { AiSpotlight } from '@/components/landing/AiSpotlight'
 import { DashboardPreview } from '@/components/landing/DashboardPreview'
 import { Statistics } from '@/components/landing/Statistics'
-import { Pricing } from '@/components/landing/Pricing'
 import { Faq } from '@/components/landing/Faq'
 import { Footer } from '@/components/landing/Footer'
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-background text-foreground transition-colors duration-300">
+    <main className="min-h-screen bg-[#020617] text-slate-100 transition-colors duration-300 font-sans isolate overflow-hidden">
       <Navbar />
       <Hero />
       <Standards />
@@ -23,7 +22,6 @@ export default function Home() {
       <AiSpotlight />
       <DashboardPreview />
       <Statistics />
-      <Pricing />
       <Faq />
       <Footer />
     </main>
