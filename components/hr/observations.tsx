@@ -47,6 +47,7 @@ export function HRObservations() {
       const { data: membersList } = await supabase
         .from('organization_members')
         .select('id, profiles!organization_members_profile_id_fkey(first_name, last_name)')
+        .eq('organization_id', currentOrgId)
       
       const memberNameMap = new Map(
         (membersList || []).map(m => {

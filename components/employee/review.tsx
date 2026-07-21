@@ -453,7 +453,7 @@ export function EmployeeReview() {
       // 1. Get active organization member row
       const { data: member } = await supabase
         .from('organization_members')
-        .select('id')
+        .select('id, organization_id')
         .eq('profile_id', user.id)
         .eq('is_active', true)
         .maybeSingle()
@@ -476,16 +476,23 @@ export function EmployeeReview() {
       let finalAssignmentId = assignment?.id
 
       if (!finalAssignmentId) {
-        // Look up active campaign to match dynamically
-        let { data: activeCampaign } = await supabase
-          .from('assessment_campaigns')
-          .select('id')
-          .eq('status', 'ACTIVE')
-          .limit(1)
-          .maybeSingle()
+        // Look up active campaign specifically for this organization
+        let activeCampaign = null
 
-        // Auto-create active campaign if none exists
-        if (!activeCampaign) {
+        if (member.organization_id) {
+          const { data: camp } = await supabase
+            .from('assessment_campaigns')
+            .select('id')
+            .eq('organization_id', member.organization_id)
+            .eq('status', 'ACTIVE')
+            .limit(1)
+            .maybeSingle()
+
+          activeCampaign = camp
+        }
+
+        // Auto-create active campaign for this organization if none exists
+        if (!activeCampaign && member.organization_id) {
           const { data: template } = await supabase
             .from('assessment_templates')
             .select('id')
@@ -493,29 +500,21 @@ export function EmployeeReview() {
             .maybeSingle()
 
           if (template) {
-            const { data: memberOrg } = await supabase
-              .from('organization_members')
-              .select('organization_id')
-              .eq('id', member.id)
-              .single()
+            const { data: newCampaign, error: campCreateErr } = await supabase
+              .from('assessment_campaigns')
+              .insert({
+                organization_id: member.organization_id,
+                template_id: template.id,
+                title: 'Default Assessment Campaign',
+                status: 'ACTIVE'
+              })
+              .select('id')
+              .maybeSingle()
 
-            if (memberOrg?.organization_id) {
-              const { data: newCampaign, error: campCreateErr } = await supabase
-                .from('assessment_campaigns')
-                .insert({
-                  organization_id: memberOrg.organization_id,
-                  template_id: template.id,
-                  title: 'Default Assessment Campaign',
-                  status: 'ACTIVE'
-                })
-                .select('id')
-                .maybeSingle()
-
-              if (campCreateErr) {
-                console.error('Error auto-creating default campaign:', campCreateErr)
-              }
-              activeCampaign = newCampaign
+            if (campCreateErr) {
+              console.error('Error auto-creating default campaign:', campCreateErr)
             }
+            activeCampaign = newCampaign
           }
         }
 
