@@ -24,14 +24,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const { user, isLoading: sessionLoading } = sessionCtx
 
-  const refreshProfile = async () => {
+  const refreshProfile = async (showLoading = true) => {
     if (!user) {
       setProfile(null)
       setIsLoading(false)
       return
     }
 
-    setIsLoading(true)
+    if (showLoading) setIsLoading(true)
     try {
       const data = await sessionService.fetchProfile(user.id)
       setProfile(data)
@@ -45,11 +45,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!sessionLoading) {
-      refreshProfile()
+      refreshProfile(!profile)
     } else {
       setIsLoading(true)
     }
-  }, [user, sessionLoading])
+  }, [user?.id, sessionLoading])
 
   return (
     <UserContext.Provider value={{ profile, isLoading, refreshProfile }}>

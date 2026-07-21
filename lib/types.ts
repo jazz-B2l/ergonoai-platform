@@ -134,10 +134,32 @@ export interface Question {
   scaleHighLabel?: string
 }
 
+export type AssessmentSectionId = 'NMQ_summary' | 'NMQ_detail' | 'ISO7730' | 'workstation_setup' | 'psychosocial_habits'
+
+export interface AssessmentSectionOption {
+  id: AssessmentSectionId
+  title: string
+  description: string
+  category: 'musculoskeletal' | 'environment' | 'ergonomics' | 'habits'
+  enabled: boolean
+}
+
+export interface CampaignConfig {
+  templateId: string
+  allowPause: boolean
+  pauseDurationDays: number
+  anonymousMode: boolean
+  reminderFrequency: 'daily' | 'weekly' | 'none'
+  targetDepartments: string[]
+  sectionsOrder: AssessmentSectionId[]
+  activeSections: AssessmentSectionId[]
+}
+
 export interface ActiveAssessment {
   id: string
   title: string
   createdAt: string
+  config?: CampaignConfig
 }
 
 export interface SubmittedForm {

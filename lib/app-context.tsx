@@ -80,8 +80,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let active = true
 
+    const loadedUserIdRef = { current: '' }
+
     const checkProfile = async (userId: string) => {
       try {
+        loadedUserIdRef.current = userId
         const { data: member, error: memberError } = await supabase
           .from('organization_members')
           .select('id')
@@ -149,9 +152,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
-        setLoadingProfile(true)
-        await checkProfile(session.user.id)
+        if (loadedUserIdRef.current !== session.user.id) {
+          setLoadingProfile(true)
+          await checkProfile(session.user.id)
+        }
       } else if (event === 'SIGNED_OUT') {
+        loadedUserIdRef.current = ''
         setPersonalData(null)
         setPersonalDataSubmitted(false)
         setLoadingProfile(false)
@@ -177,17 +183,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
   // Theme support state and persistence
-  const [theme, setTheme] = useState<'light' | 'dark'>('light')
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null
-    if (savedTheme) {
-      setTheme(savedTheme)
-    } else {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      setTheme(prefersDark ? 'dark' : 'light')
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null
+      if (savedTheme === 'light' || savedTheme === 'dark') return savedTheme
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
     }
-  }, [])
+    return 'light'
+  })
 
   useEffect(() => {
     const root = window.document.documentElement
