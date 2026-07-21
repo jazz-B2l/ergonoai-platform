@@ -18,7 +18,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
-import { Loader2, AlertCircle, CheckCircle2, Shield, Mail, Key } from 'lucide-react'
+import { ThemeToggle } from '@/components/theme-toggle'
+import Link from 'next/link'
+import { Loader2, AlertCircle, CheckCircle2, Shield, Mail, Key, ArrowLeft } from 'lucide-react'
 
 function SecuritySettingsContent() {
   const { user } = useAuth()
@@ -61,7 +63,7 @@ function SecuritySettingsContent() {
     try {
       await authService.updateEmail(data)
       auditLogger.logClient({ event: 'email_changed', userId: user?.id })
-      setEmailSuccess('Confirmation email sent to the new address. Please verify to complete the change.')
+      setEmailSuccess('Verification link sent to new email address.')
       emailForm.reset()
     } catch (err: any) {
       setEmailError(err.message || 'Failed to update email')
@@ -69,16 +71,28 @@ function SecuritySettingsContent() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
-          <Shield className="h-8 w-8 text-blue-600" />
-          Security Settings
-        </h1>
-        <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-          Manage your password, email address, and account security.
-        </p>
-      </div>
+    <div className="min-h-screen bg-background text-foreground py-10 px-4 sm:px-6 lg:px-8 space-y-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Site
+          </Link>
+          <ThemeToggle />
+        </div>
+
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Shield className="h-8 w-8 text-teal-600 dark:text-teal-400" />
+            Security Settings
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Manage your password, email address, and account security.
+          </p>
+        </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Email Update Card */}
@@ -217,6 +231,7 @@ function SecuritySettingsContent() {
         </Card>
       </div>
     </div>
+  </div>
   )
 }
 

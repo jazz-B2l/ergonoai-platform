@@ -9,10 +9,11 @@ import { DashboardPreview } from '@/components/landing/DashboardPreview'
 import { Statistics } from '@/components/landing/Statistics'
 import { Faq } from '@/components/landing/Faq'
 import { Footer } from '@/components/landing/Footer'
+import { ScrollToTop } from '@/components/landing/ScrollToTop'
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#020617] text-slate-100 transition-colors duration-300 font-sans isolate overflow-hidden">
+    <main className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 transition-colors duration-300 font-sans isolate overflow-hidden">
       <Navbar />
       <Hero />
       <Standards />
@@ -24,6 +25,7 @@ export default function Home() {
       <Statistics />
       <Faq />
       <Footer />
+      <ScrollToTop />
     </main>
   )
 }

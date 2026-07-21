@@ -4,14 +4,26 @@ import { ReactNode } from 'react'
 import { Hexagon } from 'lucide-react'
 import { useApp } from '@/lib/app-context'
 import { translations } from '@/lib/translations'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
-  const { language } = useApp()
+  const { language, setLanguage } = useApp()
   const t = translations[language].auth
 
   return (
-    <div className="flex min-h-screen" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-      <div className="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24 bg-white dark:bg-zinc-950">
+    <div className="flex min-h-screen bg-background text-foreground" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      <div className="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24 bg-white dark:bg-zinc-950 relative">
+        {/* Header theme & lang controls */}
+        <div className="absolute top-6 right-6 flex items-center gap-3 z-10">
+          <ThemeToggle />
+          <button
+            onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
+            className="text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 transition-all cursor-pointer"
+          >
+            {language === 'en' ? 'العربية' : 'English'}
+          </button>
+        </div>
+
         <div className="mx-auto w-full max-w-sm lg:w-96">
           <div className="flex items-center gap-2 mb-8">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600">
