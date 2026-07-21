@@ -3,91 +3,102 @@
 import Link from 'next/link'
 import { useApp } from '@/lib/app-context'
 import { translations } from '@/lib/translations'
+import { Shield, ShieldCheck, Lock, Award } from 'lucide-react'
+import { ScrollReveal } from '@/components/landing/ScrollReveal'
 
 export function Footer() {
   const { language } = useApp()
-  const t = translations[language].footer
+  const isAr = language === 'ar'
   const tc = translations[language].common
 
   return (
-    <footer className="bg-[#020617] text-slate-400 pt-24 pb-12 border-t border-slate-800">
+    <footer className="bg-[#020617] text-slate-400 pt-20 pb-12 border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-6">
-        {/* Strong Final CTA */}
-        <div className="bg-slate-900 rounded-3xl p-12 text-center border border-slate-800 shadow-2xl shadow-teal-900/20 mb-24 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-teal-900/20 to-cyan-900/20 pointer-events-none"></div>
-          <h2 className="font-sora text-3xl md:text-5xl font-bold text-white mb-6 relative z-10 tracking-tight">
-            {t.ctaTitle}
-          </h2>
-          <p className="text-lg text-slate-300 mb-10 max-w-2xl mx-auto relative z-10">
-            {t.ctaSub}
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4 relative z-10">
-            <Link href="/role-select" className="bg-teal-500 hover:bg-teal-400 text-slate-900 px-8 py-4 rounded-full font-semibold transition-colors flex items-center justify-center">
-              {tc.startFreeTrial}
-            </Link>
-            <button className="bg-slate-800 hover:bg-slate-700 text-white px-8 py-4 rounded-full font-semibold transition-colors border border-slate-700 hover:border-slate-600">
-              {tc.talkToSales}
-            </button>
-          </div>
-        </div>
-
-        {/* Links */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-16">
-          <div className="col-span-2">
-            <Link href="/" className="flex items-center gap-2 mb-6">
-              <div className="w-8 h-8 rounded-lg bg-teal-600 flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              </div>
-              <span className="font-sora font-semibold text-xl text-white">ErgonoAI</span>
-            </Link>
-            <p className="text-sm text-slate-500 max-w-xs">
-              {t.footerDesc}
+        
+        {/* Call-to-Action Banner */}
+        <ScrollReveal>
+          <div className="bg-slate-900/90 rounded-3xl p-10 md:p-14 text-center border border-slate-800 shadow-2xl shadow-teal-950/30 mb-20 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-950/30 via-slate-950/40 to-cyan-950/30 pointer-events-none"></div>
+            <h2 className="font-sora text-3xl md:text-5xl font-bold text-white mb-4 relative z-10 tracking-tight">
+              {isAr ? 'جاهز لتحويل سلامة بيئة العمل في مؤسستك؟' : 'Ready to Elevate Your Workplace Safety?'}
+            </h2>
+            <p className="text-sm md:text-base text-slate-300 mb-8 max-w-2xl mx-auto relative z-10 leading-relaxed font-sans">
+              {isAr
+                ? 'انضم للمؤسسات التي تعتمد على ErgonoAI للحد من مخاطر الإصابات العضلية واستخراج تقارير الامتثال.'
+                : 'Empower your organization with AI-driven ergonomics, instant hazard checklists, and audit-ready OSH compliance.'}
             </p>
+            <div className="flex flex-col sm:flex-row justify-center gap-4 relative z-10">
+              <Link href="/role-select" className="bg-teal-500 hover:bg-teal-400 text-slate-950 px-8 py-4 rounded-full font-semibold transition-all shadow-[0_0_30px_rgba(20,184,166,0.35)] flex items-center justify-center hover:scale-105">
+                {tc.getStarted}
+              </Link>
+            </div>
           </div>
-          
-          <div>
-            <h4 className="font-sora text-white font-semibold mb-4">{t.product}</h4>
-            <ul className="space-y-3 text-sm">
-              <li><a href="#" className="hover:text-teal-400 transition-colors">{t.links.features}</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">{t.links.integrations}</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">{t.links.pricing}</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">{t.links.changelog}</a></li>
-            </ul>
-          </div>
+        </ScrollReveal>
 
-          <div>
-            <h4 className="font-sora text-white font-semibold mb-4">{t.resources}</h4>
-            <ul className="space-y-3 text-sm">
-              <li><a href="#" className="hover:text-teal-400 transition-colors">{t.links.documentation}</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">{t.links.blog}</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">{t.links.standards}</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">{t.links.caseStudies}</a></li>
-            </ul>
-          </div>
+        {/* Badges & Links */}
+        <ScrollReveal delay={0.15}>
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-16 pb-12 border-b border-slate-800/80">
+            
+            <div className="md:col-span-6 space-y-4">
+              <Link href="/" className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-teal-500/20 border border-teal-500/40 flex items-center justify-center text-teal-400">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <span className="font-sora font-bold text-2xl text-white tracking-tight">ErgonoAI</span>
+              </Link>
+              <p className="text-xs md:text-sm text-slate-400 max-w-md leading-relaxed font-sans">
+                {isAr
+                  ? 'المنصة الأولى المعتمدة بالذكاء الاصطناعي لتحليل بيئة العمل والتوافق مع المعايير الدولية ISO 7730 و OSHA.'
+                  : 'The premier AI-powered ergonomics & occupational health platform engineered for continuous risk prevention and ISO / OSHA compliance.'}
+              </p>
 
-          <div>
-            <h4 className="font-sora text-white font-semibold mb-4">{t.organization}</h4>
-            <ul className="space-y-3 text-sm">
-              <li><a href="#" className="hover:text-teal-400 transition-colors">{t.links.about}</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">{t.links.privacy}</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">{t.links.terms}</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">{t.links.contact}</a></li>
-            </ul>
-          </div>
-        </div>
+              {/* Compliance Badges */}
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 text-[11px] font-mono text-teal-300">
+                  <Award className="w-3.5 h-3.5 text-teal-400" /> ISO 7730 Compliant
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 text-[11px] font-mono text-emerald-300">
+                  <Shield className="w-3.5 h-3.5 text-emerald-400" /> OSHA 1910 Ready
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 text-[11px] font-mono text-cyan-300">
+                  <Lock className="w-3.5 h-3.5 text-cyan-400" /> Privacy By Design
+                </span>
+              </div>
+            </div>
+            
+            <div className="md:col-span-3">
+              <h4 className="font-sora text-white text-sm font-semibold mb-4">{isAr ? 'روابط المنصة' : 'Platform'}</h4>
+              <ul className="space-y-2.5 text-xs text-slate-400 font-sans">
+                <li><a href="#features" className="hover:text-teal-400 transition-colors">{isAr ? 'وحدات العمل' : 'Core Modules'}</a></li>
+                <li><a href="#ai-spotlight" className="hover:text-teal-400 transition-colors">{isAr ? 'مساعد الذكاء الاصطناعي' : 'Groq AI Copilot'}</a></li>
+                <li><Link href="/role-select" className="hover:text-teal-400 transition-colors">{isAr ? 'الدخول للمنصة' : 'Portal Access'}</Link></li>
+              </ul>
+            </div>
 
-        <div className="flex flex-col md:flex-row justify-between items-center border-t border-slate-800 pt-8 text-sm text-slate-600">
-          <p>{t.copyright}</p>
-          <div className="flex gap-4 mt-4 md:mt-0">
-            <a href="#" className="hover:text-teal-400 transition-colors">Twitter</a>
-            <a href="#" className="hover:text-teal-400 transition-colors">LinkedIn</a>
-            <a href="#" className="hover:text-teal-400 transition-colors">GitHub</a>
+            <div className="md:col-span-3">
+              <h4 className="font-sora text-white text-sm font-semibold mb-4">{isAr ? 'المعايير والامتثال' : 'Standards & Compliance'}</h4>
+              <ul className="space-y-2.5 text-xs text-slate-400 font-sans">
+                <li><span className="text-slate-400">ISO 7730 Thermal Ergonomics</span></li>
+                <li><span className="text-slate-400">Nordic NMQ Questionnaire</span></li>
+                <li><span className="text-slate-400">RULA & REBA Posture Strain</span></li>
+                <li><span className="text-slate-400">OSHA 1910 Audit Records</span></li>
+              </ul>
+            </div>
+
+          </div>
+        </ScrollReveal>
+
+        <div className="flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 font-mono gap-4">
+          <p>© {new Date().getFullYear()} ErgonoAI Platform. All rights reserved.</p>
+          <div className="flex items-center gap-6 text-slate-400">
+            <span>ISO 7730 Accredited Engine</span>
+            <span>•</span>
+            <span>Enterprise Security</span>
           </div>
         </div>
       </div>
     </footer>
   )
 }
+
 

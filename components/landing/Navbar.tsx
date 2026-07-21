@@ -32,9 +32,7 @@ export function Navbar() {
         
         <nav className="hidden md:flex items-center gap-8">
           <Link href="#features" className={`text-sm font-medium transition-colors hover:text-teal-500 ${scrolled ? 'text-slate-600 dark:text-slate-300' : 'text-slate-300'}`}>{t.features}</Link>
-          <Link href="#solutions" className={`text-sm font-medium transition-colors hover:text-teal-500 ${scrolled ? 'text-slate-600 dark:text-slate-300' : 'text-slate-300'}`}>{t.solutions}</Link>
-          <Link href="#ai" className={`text-sm font-medium transition-colors hover:text-teal-500 ${scrolled ? 'text-slate-600 dark:text-slate-300' : 'text-slate-300'}`}>{t.ai}</Link>
-          <Link href="#pricing" className={`text-sm font-medium transition-colors hover:text-teal-500 ${scrolled ? 'text-slate-600 dark:text-slate-300' : 'text-slate-300'}`}>{t.pricing}</Link>
+          <Link href="#ai-spotlight" className={`text-sm font-medium transition-colors hover:text-teal-500 ${scrolled ? 'text-slate-600 dark:text-slate-300' : 'text-slate-300'}`}>{t.ai}</Link>
         </nav>
 
         <div className="flex items-center gap-4">

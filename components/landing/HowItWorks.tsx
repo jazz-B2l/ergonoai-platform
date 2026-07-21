@@ -2,37 +2,115 @@
 
 import { useApp } from '@/lib/app-context'
 import { translations } from '@/lib/translations'
+import { Building2, UserPlus, Sparkles, CheckCircle2 } from 'lucide-react'
+import { ScrollReveal, StaggerContainer, StaggerItem, SpotlightCard } from '@/components/landing/ScrollReveal'
 
 export function HowItWorks() {
   const { language } = useApp()
-  const t = translations[language].howItWorks
+  const isAr = language === 'ar'
+
+  const steps = [
+    {
+      num: '01',
+      title: isAr ? 'إنشاء حساب المؤسسة والأقسام' : '1. Setup Workspace & Departments',
+      actor: isAr ? 'مسؤول السلامة / HR' : 'HR & Safety Officer',
+      desc: isAr
+        ? 'تسجيل المؤسسة، إضافة الأقسام المختلفة (مثل التطوير، التصنيع، المكاتب)، وتحديد إعدادات حد الخصوصية.'
+        : 'Register your organization, configure departments (Engineering, Operations, Admin), and set privacy aggregation thresholds.',
+      icon: Building2
+    },
+    {
+      num: '02',
+      title: isAr ? 'دعوة الموظفين وإطلاق التقييم' : '2. Deploy Role-Based Assessment',
+      actor: isAr ? 'الموظفون' : 'Employees',
+      desc: isAr
+        ? 'يتلقى الموظفون رموز دعوة فريدة للدخول وإكمال تقييم بيئة العمل الذاتي بدون الحاجة لتنزيل أي تطبيق.'
+        : 'Employees access their role-specific questionnaire via secure invite codes on any device without installing apps.',
+      icon: UserPlus
+    },
+    {
+      num: '03',
+      title: isAr ? 'تحليل Groq AI والربط بالمعايير' : '3. AI Risk Scoring & Hazard Matching',
+      actor: isAr ? 'محرك الذكاء الاصطناعي' : 'Groq AI Engine',
+      desc: isAr
+        ? 'يقوم محرك الذكاء الاصطناعي بتحليل إجابات الوضعية فورا وحساب درجات خطورة ISO 7730 و RULA/REBA وتوليد قوائم التفقد.'
+        : 'Groq AI evaluates posture telemetry, maps 9 body discomfort zones, calculates RULA/REBA indices, and seeds hazard checklists.',
+      icon: Sparkles
+    },
+    {
+      num: '04',
+      title: isAr ? 'تطبيق التوصيات واستخراج التقارير' : '4. Actionable Mitigation & OSH Reporting',
+      actor: isAr ? 'لجنة الصحة والسلامة' : 'OSH Committee & Management',
+      desc: isAr
+        ? 'استلام توصيات تحسين بيئة العمل الفردية وتصدير تقارير الامتثال التنفيذية لضمان سلامة بيئة العمل.'
+        : 'Track hazard remediation velocity, distribute personalized employee posture tips, and export executive PDF reports.',
+      icon: CheckCircle2
+    }
+  ]
 
   return (
-    <section className="py-24 bg-slate-900 text-white relative isolate">
-      <div className="max-w-7xl mx-auto px-6">
-        <h2 className="font-sora text-3xl md:text-5xl font-bold text-center mb-16 tracking-tight">
-          {t.title}
-        </h2>
+    <section className="py-28 bg-[#020617] relative overflow-hidden isolate border-b border-slate-800/80">
+      <div className="max-w-7xl mx-auto px-6 relative z-10">
         
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center relative">
-          {/* Connecting Line */}
-          <div className="hidden md:block absolute top-12 left-[10%] right-[10%] h-0.5 bg-slate-800 -z-10"></div>
-          
-          {t.steps.map((step: any, idx: number) => (
-            <div key={idx} className="flex flex-row md:flex-col items-center md:text-center gap-6 md:gap-4 mb-8 md:mb-0 w-full md:w-1/5 px-2 z-10">
-              <div className="w-24 h-24 rounded-full bg-slate-800 border-4 border-slate-900 flex items-center justify-center flex-shrink-0 shadow-lg relative group">
-                <div className="absolute inset-0 rounded-full bg-teal-500 opacity-0 group-hover:opacity-20 transition-opacity"></div>
-                <span className="font-geist-mono text-3xl text-teal-400 font-bold">{step.num}</span>
-              </div>
-              <div>
-                <h4 className="font-sora text-xl font-semibold mb-2">{step.title}</h4>
-                <p className="text-sm text-slate-400 leading-relaxed">{step.desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+        {/* Header */}
+        <ScrollReveal className="text-center max-w-3xl mx-auto mb-20">
+          <span className="text-xs font-bold font-mono tracking-widest uppercase text-emerald-400 bg-emerald-500/10 px-3.5 py-1.5 rounded-full border border-emerald-500/20 mb-4 inline-block">
+            {isAr ? 'خطوات العمل البسيطة' : 'Seamless Operational Workflow'}
+          </span>
+          <h2 className="font-sora text-3xl md:text-5xl font-bold text-white tracking-tight mt-2">
+            {isAr ? 'كيف تعمل منصة ErgonoAI؟' : 'How ErgonoAI Transforms Workplace Safety'}
+          </h2>
+          <p className="text-slate-400 text-sm md:text-base mt-4 leading-relaxed">
+            {isAr
+              ? 'منظومة عمل متكاملة تبدأ من إطلاق التقييم وتمر بتحليل الذكاء الاصطناعي حتى الوصول لبيئة عمل آمنة وممتثلة.'
+              : 'From initial organization onboarding to audit-ready compliance in 4 intuitive steps.'}
+          </p>
+        </ScrollReveal>
+
+        {/* Timeline grid */}
+        <StaggerContainer className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+          {steps.map((step, idx) => {
+            const Icon = step.icon
+            return (
+              <StaggerItem key={idx}>
+                <SpotlightCard className="bg-slate-900/70 rounded-2xl p-6 border border-slate-800 relative space-y-4 hover:border-teal-500/40 hover:bg-slate-900 transition-all flex flex-col justify-between group shadow-lg h-full">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="font-geist-mono text-2xl font-bold text-teal-400 opacity-80 group-hover:opacity-100 transition-opacity">
+                        {step.num}
+                      </span>
+                      <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-300">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                    </div>
+
+                    <span className="inline-block text-[10px] font-mono font-bold uppercase text-slate-400 bg-slate-950 px-2.5 py-1 rounded-md border border-slate-800">
+                      {step.actor}
+                    </span>
+
+                    <h3 className="font-sora text-base font-bold text-white group-hover:text-teal-300 transition-colors">
+                      {step.title}
+                    </h3>
+
+                    <p className="text-xs text-slate-400 leading-relaxed font-sans">
+                      {step.desc}
+                    </p>
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-800/80 flex items-center gap-1.5 text-[11px] text-teal-400/80 font-mono mt-4">
+                    <span className="w-1.5 h-1.5 rounded-full bg-teal-400"></span>
+                    <span>Step {idx + 1} of 4</span>
+                  </div>
+                </SpotlightCard>
+              </StaggerItem>
+            )
+          })}
+        </StaggerContainer>
+
       </div>
     </section>
   )
 }
+
+
 
