@@ -137,66 +137,65 @@ export function HRObservations() {
     }
   }
 
-  async function handleReportTestHazard() {
-    if (!orgId) return
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [hazardTitle, setHazardTitle] = useState('')
+  const [hazardDesc, setHazardDesc] = useState('')
+  const [severity, setSeverity] = useState<'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'>('MEDIUM')
+
+  async function handleReportHazard(e: React.FormEvent) {
+    e.preventDefault()
+    if (!orgId || !hazardTitle.trim() || !hazardDesc.trim()) return
     setReporting(true)
     try {
-      // 1. Fetch departments
-      const { data: depts } = await supabase
-        .from('departments')
-        .select('id')
-        .eq('organization_id', orgId)
-        .limit(1)
-
-      const deptId = depts && depts.length > 0 ? depts[0].id : null
-
-      // 2. Fetch categories for this organization
-      const { data: categories } = await supabase
+      // 1. Fetch or create category
+      let { data: cat } = await supabase
         .from('hazard_categories')
         .select('id')
         .eq('organization_id', orgId)
-
-      if (!categories || categories.length === 0) {
-        alert('Please visit the "Hazard Checklist" page first to seed the standard safety categories and hazards!')
-        setReporting(false)
-        return
-      }
-
-      const categoryIds = categories.map(c => c.id)
-
-      // 3. Fetch first seeded hazard for this organization
-      const { data: hazards } = await supabase
-        .from('hazards')
-        .select('id')
-        .in('category_id', categoryIds)
         .limit(1)
+        .maybeSingle()
 
-      if (!hazards || hazards.length === 0) {
-        alert('Please visit the "Hazard Checklist" page first to seed the standard safety categories and hazards!')
-        setReporting(false)
-        return
+      if (!cat) {
+        const { data: newCat, error: catErr } = await supabase
+          .from('hazard_categories')
+          .insert({ organization_id: orgId, name: 'General Safety', description: 'General workplace hazard' })
+          .select('id')
+          .single()
+
+        if (catErr || !newCat) throw new Error('Failed to create hazard category.')
+        cat = newCat
       }
 
-      const hazardId = hazards[0].id
+      // 2. Insert hazard
+      const { data: newHazard, error: hErr } = await supabase
+        .from('hazards')
+        .insert({ category_id: cat.id, name: hazardTitle.trim(), default_risk_level: severity })
+        .select('id')
+        .single()
 
-      // 4. Insert mock hazard occurrence
-      const { error } = await supabase
+      if (hErr) throw hErr
+
+      // 3. Insert occurrence
+      const { error: oErr } = await supabase
         .from('hazard_occurrences')
         .insert({
           organization_id: orgId,
-          hazard_id: hazardId,
-          department_id: deptId,
+          hazard_id: newHazard.id,
           detected_by: 'EMPLOYEE',
           status: 'OPEN',
-          severity: 'HIGH',
-          description: 'Heavy power cords and network cables are trailing directly across the main walkway, presenting an active slipping and tripping hazard for staff.'
+          severity: severity,
+          description: hazardDesc.trim()
         })
 
-      if (error) throw error
+      if (oErr) throw oErr
+
+      setHazardTitle('')
+      setHazardDesc('')
+      setIsModalOpen(false)
       await fetchObservations()
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
-      alert('Failed to insert test hazard.')
+      alert(err.message || 'Failed to submit hazard report.')
     } finally {
       setReporting(false)
     }
@@ -222,23 +221,82 @@ export function HRObservations() {
           </p>
         </div>
         <button
-          onClick={handleReportTestHazard}
-          disabled={reporting || !orgId}
+          onClick={() => setIsModalOpen(true)}
+          disabled={!orgId}
           className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-brand text-brand-foreground text-xs font-bold hover:bg-brand/90 transition-colors disabled:opacity-50 cursor-pointer shadow-sm"
         >
-          {reporting ? (
-            <>
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              Reporting...
-            </>
-          ) : (
-            <>
-              <Plus className="w-3.5 h-3.5" />
-              Report Test Hazard
-            </>
-          )}
+          <Plus className="w-3.5 h-3.5" />
+          Report Hazard
         </button>
       </div>
+
+      {/* Modal for reporting real hazard */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-card border border-border rounded-xl p-6 shadow-2xl font-sans space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-foreground">Report New Hazard</h2>
+              <button onClick={() => setIsModalOpen(false)} className="text-muted-foreground hover:text-foreground">
+                ✕
+              </button>
+            </div>
+            <form onSubmit={handleReportHazard} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase text-muted-foreground mb-1">Hazard Title</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g., Trailing cables across walkway"
+                  value={hazardTitle}
+                  onChange={(e) => setHazardTitle(e.target.value)}
+                  className="w-full text-sm bg-muted border border-border rounded-lg px-3 py-2 text-foreground focus:ring-1 focus:ring-brand outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase text-muted-foreground mb-1">Severity Level</label>
+                <select
+                  value={severity}
+                  onChange={(e) => setSeverity(e.target.value as any)}
+                  className="w-full text-sm bg-muted border border-border rounded-lg px-3 py-2 text-foreground focus:ring-1 focus:ring-brand outline-none"
+                >
+                  <option value="LOW">Low</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="HIGH">High</option>
+                  <option value="CRITICAL">Critical</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase text-muted-foreground mb-1">Description / Location</label>
+                <textarea
+                  required
+                  rows={3}
+                  placeholder="Provide details about the safety observation..."
+                  value={hazardDesc}
+                  onChange={(e) => setHazardDesc(e.target.value)}
+                  className="w-full text-sm bg-muted border border-border rounded-lg px-3 py-2 text-foreground focus:ring-1 focus:ring-brand outline-none"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 text-xs font-semibold rounded-lg bg-muted text-muted-foreground hover:bg-muted/80"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={reporting}
+                  className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-brand text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
+                >
+                  {reporting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  Submit Observation
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Stats row */}
       <div className="flex items-center gap-3 flex-wrap font-sans">
@@ -361,11 +419,11 @@ export function HRObservations() {
           </div>
           <div className="pt-2">
             <button
-              onClick={handleReportTestHazard}
+              onClick={() => setIsModalOpen(true)}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-brand/10 border border-brand/20 text-brand text-xs font-semibold hover:bg-brand/15 transition-colors cursor-pointer"
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              Generate Sample Incident Report
+              <Plus className="w-3.5 h-3.5" />
+              Report Hazard Observation
             </button>
           </div>
         </div>

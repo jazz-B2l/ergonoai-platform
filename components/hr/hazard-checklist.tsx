@@ -126,67 +126,31 @@ export function HRHazardChecklist() {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null)
   const [orgId, setOrgId] = useState<string | null>(null)
 
-  async function seedHazardsIfEmpty(organizationId: string) {
-    // 1. Fetch categories
+  async function ensureCategoriesExist(organizationId: string) {
+    // Fetch categories
     const { data: existingCats } = await supabase
       .from('hazard_categories')
       .select('id, name')
       .eq('organization_id', organizationId)
 
-    let finalCatMap = new Map<string, string>()
-
     if (!existingCats || existingCats.length === 0) {
-      // Create categories
+      // Create standard categories
       const categoriesToInsert = CATEGORIES.map(cat => ({
         organization_id: organizationId,
         name: cat,
         description: categoryDescriptions[cat]
       }))
 
-      const { data: insertedCats } = await supabase
+      await supabase
         .from('hazard_categories')
         .insert(categoriesToInsert)
-        .select()
-
-      if (!insertedCats || insertedCats.length === 0) return
-      finalCatMap = new Map(insertedCats.map(c => [c.name, c.id]))
-    } else {
-      finalCatMap = new Map(existingCats.map(c => [c.name, c.id]))
     }
-
-    // 2. Check if hazards exist for these categories
-    const categoryIds = Array.from(finalCatMap.values())
-    const { data: existingHazards } = await supabase
-      .from('hazards')
-      .select('id')
-      .in('category_id', categoryIds)
-      .limit(1)
-
-    if (existingHazards && existingHazards.length > 0) return
-
-    // Seed hazards
-    const hazardsToInsert = [
-      { category_id: finalCatMap.get('Physical'), name: 'Inadequate office lighting or display screen glare', default_risk_level: 'MEDIUM' },
-      { category_id: finalCatMap.get('Physical'), name: 'Uncomfortable ambient temperature or strong drafts', default_risk_level: 'LOW' },
-      { category_id: finalCatMap.get('Physical'), name: 'Excessive machinery/background noise levels', default_risk_level: 'LOW' },
-      
-      { category_id: finalCatMap.get('Mechanical'), name: 'Workspace seating lacking lumbar or armrest adjustability', default_risk_level: 'HIGH' },
-      { category_id: finalCatMap.get('Mechanical'), name: 'Fixed-height desks causing wrist flexion or neck lean', default_risk_level: 'MEDIUM' },
-      
-      { category_id: finalCatMap.get('Fire'), name: 'Obstructed emergency exits or evacuation walkways', default_risk_level: 'CRITICAL' },
-      { category_id: finalCatMap.get('Fire'), name: 'Missing or expired hand fire extinguishers', default_risk_level: 'HIGH' },
-      
-      { category_id: finalCatMap.get('Negative/Passive'), name: 'Unmarked first-aid kit or depleted emergency supplies', default_risk_level: 'MEDIUM' },
-      { category_id: finalCatMap.get('Negative/Passive'), name: 'Cables trailing across walkways causing slip/trip hazard', default_risk_level: 'HIGH' },
-    ].filter(h => h.category_id !== undefined)
-
-    await supabase.from('hazards').insert(hazardsToInsert)
   }
 
   async function loadChecklistData(organizationId: string, campaignId: string | null) {
     try {
-      // Ensure base hazards are seeded
-      await seedHazardsIfEmpty(organizationId)
+      // Ensure standard categories exist
+      await ensureCategoriesExist(organizationId)
 
       // 1. Fetch categories
       const { data: categories } = await supabase
@@ -441,7 +405,8 @@ export function HRHazardChecklist() {
       <div className="space-y-3">
         {checklist.length === 0 ? (
           <div className="p-8 text-center border border-dashed border-border rounded-xl bg-muted/10 font-sans">
-            <p className="text-sm text-muted-foreground">Initializing safety audit checklist entries...</p>
+            <p className="text-sm text-muted-foreground font-medium">No hazards detected or reported yet.</p>
+            <p className="text-xs text-muted-foreground mt-1">Complete an ergonomic assessment campaign or submit a hazard observation to populate this checklist.</p>
           </div>
         ) : (
           (Object.entries(grouped) as [HazardCategoryName, any[]][]).map(([cat, items]) => (

@@ -632,11 +632,9 @@ export class AiService {
         };
       });
 
-      // Fallback/dummy values if findings are empty to keep reports readable
       if (recentFindings.length === 0) {
         recentFindings = [
-          'No recent individual assessment findings recorded yet. Data is compiled from department posture indicators.',
-          'Overall workplace environment trends indicate slight discomfort with screen setups and natural lighting configurations.'
+          'No individual assessment findings recorded yet for this organization.'
         ];
       }
 
