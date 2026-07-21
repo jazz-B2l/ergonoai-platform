@@ -13,7 +13,7 @@ import { Footer } from '@/components/landing/Footer'
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-background text-foreground transition-colors duration-300">
       <Navbar />
       <Hero />
       <Standards />
