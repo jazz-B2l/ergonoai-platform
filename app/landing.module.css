@@ -154,3 +154,68 @@
   border: 1px solid rgba(255, 255, 255, 0.12);
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* Dynamic text and icon contrast when cards are in small/collapsed size (not hovered) */
+.floatingCard1:not(:hover) .dynamicText,
+.floatingCard2:not(:hover) .dynamicText {
+  mix-blend-mode: difference;
+  color: #ffffff !important;
+}
+
+.floatingCard1:not(:hover) .dynamicIcon,
+.floatingCard2:not(:hover) .dynamicIcon {
+  mix-blend-mode: difference;
+  color: #ffffff !important;
+}
+
+/* Tablet adjustments (768px to 1200px) */
+@media (max-width: 1200px) and (min-width: 768px) {
+  .floatingCard1 {
+    left: 2%;
+    top: 15%;
+  }
+  .floatingCard2 {
+    right: 2%;
+    bottom: 15%;
+  }
+}
+
+/* Mobile adjustments (< 768px) */
+@media (max-width: 767px) {
+  .dashboardWrapper {
+    perspective: none !important;
+    transform-style: flat !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 1.5rem !important;
+    padding-top: 1rem;
+  }
+
+  .dashboardElement {
+    transform: none !important;
+    transition: none !important;
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  .floatingCard1,
+  .floatingCard2 {
+    position: relative !important;
+    top: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    transform: none !important;
+    animation: none !important;
+    z-index: 10 !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+  }
+
+  /* Keep background dark and clean on hover on mobile, no scaling */
+  .floatingCard1:hover,
+  .floatingCard2:hover {
+    transform: none !important;
+    box-shadow: 0 15px 30px -10px rgba(20, 184, 166, 0.25), 0 0 0 1px rgba(20, 184, 166, 0.3) !important;
+  }
+}
+

@@ -29,7 +29,7 @@ export function DashboardPreview() {
       <div className="max-w-6xl mx-auto px-6">
         <ScrollReveal delay={0.2} distance={40}>
           <SpotlightCard className="bg-white dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden shadow-teal-950/40">
-            <div className="flex h-[550px]">
+            <div className="flex flex-col md:flex-row h-auto md:h-[550px]">
               {/* Sidebar */}
               <div className="w-64 border-r border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-[#0B1120] p-5 hidden md:block space-y-6">
                 <div className="h-7 bg-teal-500/20 rounded-lg w-full border border-teal-500/30 flex items-center px-3 text-xs font-mono text-teal-700 dark:text-teal-300">

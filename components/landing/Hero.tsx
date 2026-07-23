@@ -67,7 +67,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 30, filter: 'blur(8px)' }}
           animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="font-sora text-5xl md:text-7xl font-bold text-slate-900 dark:text-white tracking-tight leading-[1.1] mb-8"
+          className="font-sora text-4xl sm:text-5xl md:text-7xl font-bold text-slate-900 dark:text-white tracking-tight leading-[1.1] mb-8"
         >
           {t.titleLine1}<br/>
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-cyan-500 dark:from-teal-400 dark:to-cyan-300">
@@ -100,8 +100,11 @@ export function Hero() {
       </div>
 
       {/* 3D Dashboard Mockup */}
-      <div className="relative z-20 w-full max-w-[1400px] mx-auto px-6 mt-32 mb-40">
-        <div className={styles.dashboardWrapper}>
+      <div className="relative z-20 w-full max-w-[1400px] mx-auto px-6 mt-16 md:mt-32 mb-20 md:mb-40">
+        <motion.div 
+          style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
+          className={styles.dashboardWrapper}
+        >
           <div className={`${styles.dashboardElement} bg-white dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-xl`}>
             {/* Mockup Header */}
             <div className="h-12 border-b border-slate-200 dark:border-slate-800 flex items-center px-4 gap-2 bg-slate-100 dark:bg-[#1e293b]">
@@ -123,7 +126,7 @@ export function Hero() {
 
           {/* Dynamic Expandable Floating Card 1: Company Health */}
           <div 
-            className={`${styles.floatingCard1} ${styles.glassCard} p-4 sm:p-5 rounded-2xl shadow-2xl flex flex-col gap-2 group cursor-pointer transition-all duration-400 w-64 sm:w-72 hover:w-96 sm:hover:w-[420px] bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 hover:border-teal-400/50 hover:scale-105`}
+            className={`${styles.floatingCard1} ${styles.glassCard} p-4 sm:p-5 rounded-2xl shadow-2xl flex flex-col gap-2 group cursor-pointer transition-all duration-400 w-full md:w-64 lg:w-72 hover:w-full md:hover:w-96 lg:hover:w-[420px] bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 hover:border-teal-400/50 hover:scale-105`}
             style={language === 'ar' ? { left: 'auto', right: '-5%' } : undefined}
           >
              <div className="flex items-center justify-between gap-3 shrink-0">
@@ -132,11 +135,11 @@ export function Hero() {
                    <span className="text-teal-600 dark:text-teal-400 font-bold text-xl font-geist-mono">87%</span>
                  </div>
                  <div className="min-w-0">
-                   <p className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-300 transition-colors truncate">{t.companyHealth}</p>
-                   <p className="text-xs sm:text-sm text-teal-600 dark:text-teal-400 font-medium whitespace-nowrap">{t.riskReduced}</p>
+                   <p className={`text-sm sm:text-base font-semibold text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-300 transition-colors truncate ${styles.dynamicText}`}>{t.companyHealth}</p>
+                   <p className={`text-xs sm:text-sm text-teal-600 dark:text-teal-400 font-medium whitespace-nowrap ${styles.dynamicText}`}>{t.riskReduced}</p>
                  </div>
                </div>
-               <Sparkles className="w-5 h-5 text-teal-600/60 dark:text-teal-400/60 group-hover:text-teal-600 dark:group-hover:text-teal-300 group-hover:rotate-12 transition-all duration-300 shrink-0" />
+               <Sparkles className={`w-5 h-5 text-teal-600/60 dark:text-teal-400/60 group-hover:text-teal-600 dark:group-hover:text-teal-300 group-hover:rotate-12 transition-all duration-300 shrink-0 ${styles.dynamicIcon}`} />
              </div>
 
              {/* Smooth Grid Expansion on Hover */}
@@ -153,7 +156,7 @@ export function Hero() {
 
              {/* Hint when collapsed */}
              <div className="grid grid-rows-[1fr] group-hover:grid-rows-[0fr] transition-[grid-template-rows] duration-300">
-               <span className="overflow-hidden text-[11px] text-slate-500 dark:text-slate-400/80 flex items-center gap-1 font-mono pt-1">
+               <span className={`overflow-hidden text-[11px] text-slate-500 dark:text-slate-400/80 flex items-center gap-1 font-mono pt-1 ${styles.dynamicText}`}>
                  <span>✨ {t.hoverForDetails}</span>
                </span>
              </div>
@@ -161,18 +164,18 @@ export function Hero() {
 
           {/* Dynamic Expandable Floating Card 2: ISO 7730 */}
           <div 
-            className={`${styles.floatingCard2} ${styles.glassCard} p-4 sm:p-5 rounded-2xl shadow-2xl flex flex-col gap-2 group cursor-pointer transition-all duration-400 w-64 sm:w-72 hover:w-96 sm:hover:w-[420px] bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 hover:border-emerald-400/50 hover:scale-105`}
+            className={`${styles.floatingCard2} ${styles.glassCard} p-4 sm:p-5 rounded-2xl shadow-2xl flex flex-col gap-2 group cursor-pointer transition-all duration-400 w-full md:w-64 lg:w-72 hover:w-full md:hover:w-96 lg:hover:w-[420px] bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 hover:border-emerald-400/50 hover:scale-105`}
             style={language === 'ar' ? { right: 'auto', left: '-5%' } : undefined}
           >
              <div className="flex items-center justify-between gap-3 shrink-0">
                <div className="min-w-0">
                  <div className="flex items-center gap-2 mb-1">
                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></div>
-                   <p className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-300 transition-colors truncate">{t.isoCompliant}</p>
+                   <p className={`text-sm sm:text-base font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-300 transition-colors truncate ${styles.dynamicText}`}>{t.isoCompliant}</p>
                  </div>
-                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 whitespace-nowrap">{t.aiReady}</p>
+                 <p className={`text-xs sm:text-sm text-slate-600 dark:text-slate-300 whitespace-nowrap ${styles.dynamicText}`}>{t.aiReady}</p>
                </div>
-               <Info className="w-5 h-5 text-emerald-600/60 dark:text-emerald-400/60 group-hover:text-emerald-600 dark:group-hover:text-emerald-300 group-hover:rotate-12 transition-all duration-300 shrink-0" />
+               <Info className={`w-5 h-5 text-emerald-600/60 dark:text-emerald-400/60 group-hover:text-emerald-600 dark:group-hover:text-emerald-300 group-hover:rotate-12 transition-all duration-300 shrink-0 ${styles.dynamicIcon}`} />
              </div>
 
              {/* Smooth Grid Expansion on Hover */}
@@ -189,14 +192,13 @@ export function Hero() {
 
              {/* Hint when collapsed */}
              <div className="grid grid-rows-[1fr] group-hover:grid-rows-[0fr] transition-[grid-template-rows] duration-300">
-               <span className="overflow-hidden text-[11px] text-slate-500 dark:text-slate-400/80 flex items-center gap-1 font-mono pt-1">
+               <span className={`overflow-hidden text-[11px] text-slate-500 dark:text-slate-400/80 flex items-center gap-1 font-mono pt-1 ${styles.dynamicText}`}>
                  <span>ℹ️ {t.hoverForDetails}</span>
                </span>
              </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   )
 }
-
