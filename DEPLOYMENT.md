@@ -1,6 +1,6 @@
 # ErgonoAI Production Deployment Guide (Vercel + Supabase)
 
-This document provides a comprehensive guide for deploying **ErgonoAI** to production on **Vercel** with **Supabase** and **Groq AI**.
+This document provides a comprehensive guide for deploying **ErgonoAI** to production on **Vercel** with **Supabase** and **Google Gemini AI**.
 
 ---
 
@@ -9,7 +9,7 @@ This document provides a comprehensive guide for deploying **ErgonoAI** to produ
 - **Framework**: Next.js 16 (App Router)
 - **Frontend / Hosting**: Vercel
 - **Database & Auth**: Supabase (PostgreSQL + RLS + Supabase Auth + Storage)
-- **AI Engine**: Groq API (`llama-3.3-70b-versatile` / `llama3-70b-8192`)
+- **AI Engine**: Google Gemini API (`gemini-2.5-pro` / `gemini-2.5-flash`)
 - **Styling**: Tailwind CSS v4
 
 ---
@@ -23,12 +23,13 @@ Configure these environment variables in your Vercel Project Settings (**Setting
 | `NEXT_PUBLIC_SUPABASE_URL` | All (Prod/Preview/Dev) | Your Supabase project URL | Public |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | All (Prod/Preview/Dev) | Your Supabase anon public API key | Public |
 | `SUPABASE_SERVICE_ROLE_KEY` | Production Only | Supabase Service Role Key (server-only) | Secret |
+| `GEMINI_API_KEY` | Production / Server | Google Gemini API key (`AIzaSy...`) | Secret |
 | `GROQ_API_KEY` | Production / Server | Groq AI API key (`gsk_...`) | Secret |
 | `NEXT_PUBLIC_APP_URL` | Production | Primary domain (e.g., `https://ergonoai.vercel.app`) | Public |
 | `NODE_ENV` | Production | Set to `production` | Public |
 
 > [!CAUTION]
-> Never expose `SUPABASE_SERVICE_ROLE_KEY` or `GROQ_API_KEY` to client components. Keep them restricted to server environments.
+> Never expose `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`, or `GROQ_API_KEY` to client components. Keep them restricted to server environments.
 
 ---
 
@@ -80,12 +81,11 @@ Ensure Row Level Security is enabled on all PostgreSQL tables in Supabase:
 
 ---
 
-## 5. Groq AI Integration Setup
+## 5. AI Integration Setup (Google Gemini & Groq)
 
-1. Sign up at [Groq Console](https://console.groq.com).
-2. Generate an API Key under **API Keys**.
-3. Add `GROQ_API_KEY` to Vercel environment variables.
-4. Verify connectivity using the health endpoint: `https://your-domain.vercel.app/api/ai/health`.
+1. **Google Gemini**: Sign up at [Google AI Studio](https://aistudio.google.com), generate an API Key, and add `GEMINI_API_KEY` to Vercel environment variables.
+2. **Groq**: Sign up at [Groq Console](https://console.groq.com), generate an API Key, and add `GROQ_API_KEY` to Vercel environment variables.
+3. Verify connectivity using the health endpoint: `https://your-domain.vercel.app/api/ai/health`.
 
 ---
 
@@ -116,7 +116,7 @@ All four steps must finish with **0 errors**.
 | Issue | Root Cause | Solution |
 | :--- | :--- | :--- |
 | `401 Unauthorized` on AI APIs | Missing Supabase session cookie | Ensure user is logged in before calling `/api/ai/*`. |
-| `500 Configuration Error` on AI APIs | `GROQ_API_KEY` missing in Vercel | Add `GROQ_API_KEY` in Vercel project settings and redeploy. |
+| `500 Configuration Error` on AI APIs | `GEMINI_API_KEY` missing in Vercel | Add `GEMINI_API_KEY` in Vercel project settings and redeploy. |
 | Auth redirect goes to localhost | Supabase Auth Site URL set to localhost | Update Supabase Auth Site URL to production domain. |
 | TypeScript build error | Mismatched types or strict null access | Run `npx tsc --noEmit` locally to locate and fix. |
 

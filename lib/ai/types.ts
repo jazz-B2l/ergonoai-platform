@@ -1,5 +1,7 @@
 export type MessageRole = 'system' | 'user' | 'assistant';
 
+export type AIProviderType = 'auto' | 'gemini' | 'groq' | 'openai' | 'claude' | 'deepseek';
+
 export interface ChatCompletionMessage {
   role: MessageRole;
   content: string;
@@ -12,17 +14,31 @@ export interface AiModelConfig {
   timeoutMs?: number;
 }
 
+export interface AiProviderCapabilities {
+  supportsStreaming: boolean;
+  supportsVision: boolean;
+  supportsThinking: boolean;
+  supportsJSON: boolean;
+  supportsFiles: boolean;
+}
+
 export interface AiCompletionResponse {
   content: string;
   modelUsed: string;
+  providerUsed: string;
   promptTokens?: number;
   completionTokens?: number;
   totalTokens?: number;
   latencyMs: number;
+  costEstimate?: number;
+  fallbackOccurred: boolean;
+  fallbackDetails?: string;
 }
 
 export interface AiProvider {
   name: string;
+  capabilities: AiProviderCapabilities;
+  isHealthy(): Promise<boolean>;
   chatCompletion(
     messages: ChatCompletionMessage[],
     config: AiModelConfig

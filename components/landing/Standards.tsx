@@ -99,7 +99,7 @@ export function Standards() {
           <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 mt-4 leading-relaxed">
             {isAr
               ? 'تدمج إرجونو أيه آي خوارزميات القياس الدولية المعتمدة لتحويل استبيانات وتصرفات الموظفين إلى تحليلات علمية دقيقة.'
-              : 'ErgonoAI replaces subjective guessing with internationally accredited ergonomic assessment methodologies automated by Groq AI.'}
+              : 'ErgonoAI replaces subjective guessing with internationally accredited ergonomic assessment methodologies automated by Google Gemini.'}
           </p>
         </ScrollReveal>
 
@@ -178,7 +178,7 @@ export function Standards() {
                   </div>
                   <div className="flex justify-between items-center text-xs font-mono border-b border-slate-200 dark:border-slate-800 pb-3">
                     <span className="text-slate-500 dark:text-slate-400">Automation Method</span>
-                    <span className="text-emerald-400 font-bold">Groq AI Real-Time</span>
+                    <span className="text-emerald-400 font-bold">Gemini AI Real-Time</span>
                   </div>
                   <div className="flex justify-between items-center text-xs font-mono border-b border-slate-800 pb-3">
                     <span className="text-slate-400">Compliance Status</span>
