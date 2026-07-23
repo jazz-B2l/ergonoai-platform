@@ -30,11 +30,11 @@ export function HowItWorks() {
     },
     {
       num: '03',
-      title: isAr ? 'تحليل Groq AI والربط بالمعايير' : '3. AI Risk Scoring & Hazard Matching',
-      actor: isAr ? 'محرك الذكاء الاصطناعي' : 'Groq AI Engine',
+      title: isAr ? 'تحليل Gemini AI والربط بالمعايير' : '3. AI Risk Scoring & Hazard Matching',
+      actor: isAr ? 'محرك الذكاء الاصطناعي' : 'Gemini AI Engine',
       desc: isAr
         ? 'يقوم محرك الذكاء الاصطناعي بتحليل إجابات الوضعية فورا وحساب درجات خطورة ISO 7730 و RULA/REBA وتوليد قوائم التفقد.'
-        : 'Groq AI evaluates posture telemetry, maps 9 body discomfort zones, calculates RULA/REBA indices, and seeds hazard checklists.',
+        : 'Gemini AI evaluates posture telemetry, maps 9 body discomfort zones, calculates RULA/REBA indices, and seeds hazard checklists.',
       icon: Sparkles
     },
     {
