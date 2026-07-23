@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAiService, checkRateLimit } from '@/lib/ai/service';
 import { AI_CONSTANTS } from '@/lib/ai/constants';
 import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
+
+const assessmentSchema = z.object({
+  responseId: z.string().uuid(),
+  aiProvider: z.enum(['auto', 'gemini', 'groq', 'openai', 'claude', 'deepseek']).optional(),
+  aiModel: z.string().optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,17 +33,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Parse and Validate Request Payload
-    const body = await request.json();
-    const { responseId } = body;
-
-    if (!responseId) {
-      return NextResponse.json({ error: 'Validation Error', message: 'Missing responseId' }, { status: 400 });
+    // 2. Parse and Validate Request Payload with Zod
+    const parsedBody = assessmentSchema.safeParse(await request.json().catch(() => ({})));
+    if (!parsedBody.success) {
+      return NextResponse.json(
+        { error: 'Validation Error', message: parsedBody.error.message },
+        { status: 400 }
+      );
     }
+    
+    const { responseId, aiProvider, aiModel } = parsedBody.data;
 
     // 3. Call AI Service to analyze the assessment
     const aiService = getAiService();
-    const result = await aiService.analyzeAssessment(responseId);
+    const result = await aiService.analyzeAssessment(responseId, {
+      provider: aiProvider,
+      modelId: aiModel
+    });
 
     // 4. Return results
     return NextResponse.json(result, { status: 200 });

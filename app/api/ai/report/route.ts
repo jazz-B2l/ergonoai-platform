@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAiService, checkRateLimit } from '@/lib/ai/service';
 import { AI_CONSTANTS } from '@/lib/ai/constants';
 import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
+
+const reportSchema = z.object({
+  organizationId: z.string().uuid(),
+  aiProvider: z.enum(['auto', 'gemini', 'groq', 'openai', 'claude', 'deepseek']).optional(),
+  aiModel: z.string().optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,20 +33,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Parse and Validate Request Payload
-    const body = await request.json();
-    const { organizationId } = body;
-
-    if (!organizationId) {
+    // 2. Parse and Validate Request Payload with Zod
+    const parsedBody = reportSchema.safeParse(await request.json().catch(() => ({})));
+    if (!parsedBody.success) {
       return NextResponse.json(
-        { error: 'Validation Error', message: 'Missing organizationId' }, 
+        { error: 'Validation Error', message: parsedBody.error.message },
         { status: 400 }
       );
     }
 
+    const { organizationId, aiProvider, aiModel } = parsedBody.data;
+
     // 3. Call AI Service to generate report
     const aiService = getAiService();
-    const report = await aiService.generateExecutiveReport(organizationId);
+    const report = await aiService.generateExecutiveReport(organizationId, {
+      provider: aiProvider,
+      modelId: aiModel
+    });
 
     // 4. Return results
     return NextResponse.json({ report }, { status: 200 });
