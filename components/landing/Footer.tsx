@@ -70,7 +70,7 @@ export function Footer() {
               <h4 className="font-sora text-slate-900 dark:text-white text-sm font-semibold mb-4">{isAr ? 'روابط المنصة' : 'Platform'}</h4>
               <ul className="space-y-2.5 text-xs text-slate-600 dark:text-slate-400 font-sans">
                 <li><a href="#features" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">{isAr ? 'وحدات العمل' : 'Core Modules'}</a></li>
-                <li><a href="#ai-spotlight" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">{isAr ? 'مساعد الذكاء الاصطناعي' : 'Groq AI Copilot'}</a></li>
+                <li><a href="#ai-spotlight" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">{isAr ? 'مساعد الذكاء الاصطناعي' : 'Gemini AI Copilot'}</a></li>
                 <li><Link href="/role-select" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">{isAr ? 'الدخول للمنصة' : 'Portal Access'}</Link></li>
               </ul>
             </div>

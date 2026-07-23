@@ -27,8 +27,8 @@ export function Faq() {
     {
       q: isAr ? 'كيف يتم إنشاء قوائم تفقد المخاطر (Hazard Checklists)؟' : 'How are automated Hazard Checklists created from employee reports?',
       a: isAr
-        ? 'عندما يقدم الموظفون ملاحظات عن مخاطر بيئة العمل المباشرة أو يكملون التقييم، يقوم نموذج Groq AI بفرز وتصنيف المخاطر المكررة فورياً حسب مستويات الأهمية (حرج، مرتفع، متوسط، منخفض) وتوليد قوائم تفقد مع خطوات المعالجة.'
-        : 'When employees report near-misses or complete assessments, Groq AI automatically categorizes physical hazards by urgency (Critical, High, Medium, Low), aggregates duplicate reports, and auto-generates action-oriented hazard checklists.'
+        ? 'عندما يقدم الموظفون ملاحظات عن مخاطر بيئة العمل المباشرة أو يكملون التقييم، يقوم نموذج Gemini AI بفرز وتصنيف المخاطر المكررة فورياً حسب مستويات الأهمية (حرج، مرتفع، متوسط، منخفض) وتوليد قوائم تفقد مع خطوات المعالجة.'
+        : 'When employees report near-misses or complete assessments, Gemini AI automatically categorizes physical hazards by urgency (Critical, High, Medium, Low), aggregates duplicate reports, and auto-generates action-oriented hazard checklists.'
     },
     {
       q: isAr ? 'هل تتطلب المنصة تنزيل برامج خاصة على أجهزة الموظفين؟' : 'Do employees need to download software to complete assessments?',

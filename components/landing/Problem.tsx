@@ -42,7 +42,7 @@ export function Problem() {
       icon: CheckCircle2
     },
     {
-      title: isAr ? 'تحليل فوري عبر Groq AI' : 'Real-time Groq AI Analytics',
+      title: isAr ? 'تحليل فوري عبر Gemini AI' : 'Real-time Gemini AI Analytics',
       desc: isAr
         ? 'تقييم مخاطر الوضعية والبيئة فورياً مع توليد توصيات تصحيحية مخصصة لكل موظف.'
         : 'Instant evaluation of posture risks, body discomfort, and environmental factors with tailored remediation.',
