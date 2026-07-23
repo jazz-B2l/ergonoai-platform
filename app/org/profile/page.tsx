@@ -3,13 +3,16 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { Save, User, Phone, Mail, ArrowLeft, Loader2, Check, Building2, MapPin, Share2, Camera, Link2, UploadCloud, Search, Key, Plus, Trash2, Copy, Eye, EyeOff } from 'lucide-react'
+import { Save, User, Phone, Mail, ArrowLeft, Loader2, Check, Building2, MapPin, Share2, Camera, Link2, UploadCloud, Search, Key, Plus, Trash2, Copy, Eye, EyeOff, Brain } from 'lucide-react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { WILAYAS } from '@/lib/constants'
 import { useApp } from '@/lib/app-context'
 import { translations } from '@/lib/translations'
 import { authService } from '@/lib/auth/service'
+import { useAIProvider } from '@/components/providers/AIProviderContext'
+import { cn } from '@/lib/utils'
+import { AIProviderType } from '@/lib/ai/types'
 
 // Dynamically import MapPicker with SSR disabled to prevent Leaflet window errors
 const MapPicker = dynamic(() => import('@/components/map-picker'), {
@@ -41,6 +44,7 @@ export default function OrgProfilePage() {
   const [email, setEmail] = useState('') 
   const [phone, setPhone] = useState('')
   const { language, setLanguage: setGlobalLanguage } = useApp()
+  const { aiProvider, aiModel, allowedProviders, providersHealth, updateAiPreference, updateAllowedProviders, checkProvidersHealth } = useAIProvider()
   const t = translations[language].profile
 
   // Organization fields
@@ -932,6 +936,136 @@ export default function OrgProfilePage() {
                       <option value="en">English (US)</option>
                       <option value="ar">Arabic (العربية)</option>
                     </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* AI Admin Settings section (matches Point 10: Allow admin restrictions) */}
+              <div className="pt-6 border-t border-border mt-6">
+                <h3 className="text-base font-bold text-foreground mb-4 border-b border-border pb-2 font-sora flex items-center gap-2">
+                  <Brain className="w-5 h-5 text-brand" />
+                  AI Admin Settings & Core Policies
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start bg-muted/20 border border-border p-5 rounded-2xl">
+                  
+                  {/* Left Column: Allowed Providers & General Config */}
+                  <div className="space-y-4">
+                    <div>
+                      <span className="block text-sm font-semibold text-foreground mb-2">Allowed AI Engines</span>
+                      <p className="text-xs text-muted-foreground mb-3">Enable or disable specific AI engines for your company workspace. Disabled engines will not be available to users.</p>
+                      
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2.5 text-sm text-foreground font-medium cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={allowedProviders.includes('gemini')}
+                            onChange={(e) => {
+                              const list = e.target.checked
+                                ? [...allowedProviders.filter(p => p !== 'gemini'), 'gemini']
+                                : allowedProviders.filter(p => p !== 'gemini');
+                              if (list.length === 0) return alert('You must allow at least one AI provider.');
+                              updateAllowedProviders(list as AIProviderType[]);
+                            }}
+                            className="rounded border-border text-brand focus:ring-brand w-4 h-4 cursor-pointer"
+                          />
+                          <span>Google Gemini</span>
+                        </label>
+
+                        <label className="flex items-center gap-2.5 text-sm text-foreground font-medium cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={allowedProviders.includes('groq')}
+                            onChange={(e) => {
+                              const list = e.target.checked
+                                ? [...allowedProviders.filter(p => p !== 'groq'), 'groq']
+                                : allowedProviders.filter(p => p !== 'groq');
+                              if (list.length === 0) return alert('You must allow at least one AI provider.');
+                              updateAllowedProviders(list as AIProviderType[]);
+                            }}
+                            className="rounded border-border text-brand focus:ring-brand w-4 h-4 cursor-pointer"
+                          />
+                          <span>Groq AI (Llama & Mixtral)</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="pt-2">
+                      <span className="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5">Real-time Health State</span>
+                      <div className="flex gap-4">
+                        <div className="flex items-center gap-1.5 text-xs text-foreground font-semibold">
+                          <span>Gemini:</span>
+                          <span className={cn(
+                            "px-2 py-0.5 rounded-full text-[10px] font-bold border",
+                            providersHealth.gemini === 'healthy'
+                              ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                              : providersHealth.gemini === 'checking'
+                              ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                              : "bg-rose-500/10 text-rose-600 border-rose-500/20"
+                          )}>
+                            {providersHealth.gemini === 'healthy' ? '🟢 Healthy' : providersHealth.gemini === 'checking' ? '🟡 Checking...' : '🔴 Unhealthy'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs text-foreground font-semibold">
+                          <span>Groq:</span>
+                          <span className={cn(
+                            "px-2 py-0.5 rounded-full text-[10px] font-bold border",
+                            providersHealth.groq === 'healthy'
+                              ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                              : providersHealth.groq === 'checking'
+                              ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                              : "bg-rose-500/10 text-rose-600 border-rose-500/20"
+                          )}>
+                            {providersHealth.groq === 'healthy' ? '🟢 Healthy' : providersHealth.groq === 'checking' ? '🟡 Checking...' : '🔴 Unhealthy'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column: Organization Default Config */}
+                  <div className="space-y-4">
+                    <div>
+                      <label htmlFor="defaultAiProvider" className="block text-sm font-semibold text-foreground mb-1.5">Default AI Engine</label>
+                      <select
+                        id="defaultAiProvider"
+                        value={aiProvider}
+                        onChange={(e) => {
+                          const val = e.target.value as any;
+                          const defaultModel = val === 'gemini' ? 'gemini-2.5-flash' : val === 'groq' ? 'llama-3.1-8b-instant' : '';
+                          updateAiPreference(val, defaultModel);
+                        }}
+                        className="w-full bg-background border border-border rounded-xl px-4 py-2 text-xs text-foreground dark:bg-muted/20 focus:outline-none focus:ring-2 focus:ring-brand appearance-none cursor-pointer"
+                      >
+                        <option value="auto">✨ Intelligent Auto Routing</option>
+                        {allowedProviders.includes('gemini') && <option value="gemini">Google Gemini</option>}
+                        {allowedProviders.includes('groq') && <option value="groq">Groq AI</option>}
+                      </select>
+                    </div>
+
+                    {aiProvider !== 'auto' && (
+                      <div>
+                        <label htmlFor="defaultAiModel" className="block text-sm font-semibold text-foreground mb-1.5">Default Model Preference</label>
+                        <select
+                          id="defaultAiModel"
+                          value={aiModel}
+                          onChange={(e) => updateAiPreference(aiProvider, e.target.value)}
+                          className="w-full bg-background border border-border rounded-xl px-4 py-2 text-xs text-foreground dark:bg-muted/20 focus:outline-none focus:ring-2 focus:ring-brand appearance-none cursor-pointer"
+                        >
+                          {aiProvider === 'gemini' ? (
+                            <>
+                              <option value="gemini-2.5-flash">Gemini 2.5 Flash (Default)</option>
+                              <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                            </>
+                          ) : (
+                            <>
+                              <option value="llama-3.1-8b-instant">Llama 3.1 8B (Default)</option>
+                              <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
+                              <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
+                            </>
+                          )}
+                        </select>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAiService, checkRateLimit } from '@/lib/ai/service';
 import { AI_CONSTANTS } from '@/lib/ai/constants';
 import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
+
+const chatSchema = z.object({
+  conversationId: z.string().nullable().optional(),
+  organizationId: z.string().uuid(),
+  userId: z.string().uuid().optional(),
+  message: z.string().min(1),
+  aiProvider: z.enum(['auto', 'gemini', 'groq', 'openai', 'claude', 'deepseek']).optional(),
+  aiModel: z.string().optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,21 +43,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Parse and Validate Request Payload
-    const body = await request.json();
-    const { conversationId, organizationId, userId, message } = body;
-
+    // 2. Parse and Validate Request Payload with Zod
+    const parsedBody = chatSchema.safeParse(await request.json().catch(() => ({})));
+    if (!parsedBody.success) {
+      return NextResponse.json(
+        { error: 'Validation Error', message: parsedBody.error.message },
+        { status: 400 }
+      );
+    }
+    
+    const { conversationId, organizationId, userId, message, aiProvider, aiModel } = parsedBody.data;
     const activeUserId = userId || user.id;
-
-    if (!organizationId) {
-      return NextResponse.json({ error: 'Validation Error', message: 'Missing organizationId' }, { status: 400 });
-    }
-    if (!activeUserId) {
-      return NextResponse.json({ error: 'Validation Error', message: 'Missing userId' }, { status: 400 });
-    }
-    if (!message || typeof message !== 'string' || !message.trim()) {
-      return NextResponse.json({ error: 'Validation Error', message: 'Missing message content' }, { status: 400 });
-    }
 
     // 3. Call AI Service
     const aiService = getAiService();
@@ -55,7 +61,8 @@ export async function POST(request: NextRequest) {
       conversationId || null,
       organizationId,
       activeUserId,
-      message
+      message,
+      { provider: aiProvider, modelId: aiModel }
     );
 
     // 4. Return response with rate limit headers

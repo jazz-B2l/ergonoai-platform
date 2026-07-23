@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAiService, checkRateLimit } from '@/lib/ai/service';
 import { AI_CONSTANTS } from '@/lib/ai/constants';
 import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
+
+const recommendationsSchema = z.object({
+  findings: z.array(z.string()).min(1),
+  hazards: z.array(z.string()).optional(),
+  context: z.string().optional(),
+  organizationId: z.string().uuid().optional(),
+  aiProvider: z.enum(['auto', 'gemini', 'groq', 'openai', 'claude', 'deepseek']).optional(),
+  aiModel: z.string().optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,20 +36,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Parse and Validate Request Payload
-    const body = await request.json();
-    const { findings, hazards, context } = body;
-
-    if (!findings || !Array.isArray(findings) || findings.length === 0) {
+    // 2. Parse and Validate Request Payload with Zod
+    const parsedBody = recommendationsSchema.safeParse(await request.json().catch(() => ({})));
+    if (!parsedBody.success) {
       return NextResponse.json(
-        { error: 'Validation Error', message: 'Missing or empty findings array' }, 
+        { error: 'Validation Error', message: parsedBody.error.message },
         { status: 400 }
       );
     }
 
+    const { findings, hazards, context, organizationId, aiProvider, aiModel } = parsedBody.data;
+
     // 3. Call AI Service to generate recommendations
     const aiService = getAiService();
-    const recommendations = await aiService.generateRecommendations(findings, hazards, context);
+    const recommendations = await aiService.generateRecommendations(findings, hazards, context, {
+      provider: aiProvider,
+      modelId: aiModel,
+      organizationId
+    });
 
     // 4. Return results
     return NextResponse.json({ recommendations }, { status: 200 });
@@ -49,7 +63,7 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json(
       { 
-        error: 'Recommendation Generation Failed', 
+        error: 'Recommendation Failed', 
         message: error.message || 'An unexpected error occurred while generating recommendations.' 
       }, 
       { status: 500 }
