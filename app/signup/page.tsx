@@ -89,7 +89,7 @@ function SignupContent() {
   }, [roleParam])
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(({ data: { user } }: { data: { user: any } }) => {
       if (user) {
         setIsLoggedIn(true)
         setEmail(user.email || '')

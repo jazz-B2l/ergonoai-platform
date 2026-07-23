@@ -99,7 +99,7 @@ export function HROverview() {
       if (activeCampId !== 'all') {
         assignmentQuery = assignmentQuery.eq('campaign_id', activeCampId)
       } else if (campaigns && campaigns.length > 0) {
-        assignmentQuery = assignmentQuery.in('campaign_id', campaigns.map(c => c.id))
+        assignmentQuery = assignmentQuery.in('campaign_id', campaigns.map((c: any) => c.id))
       } else {
         assignmentQuery = assignmentQuery.eq('id', '00000000-0000-0000-0000-000000000000')
       }
@@ -113,7 +113,7 @@ export function HROverview() {
         const { data: resp } = await supabase
           .from('assessment_responses')
           .select('*')
-          .in('assignment_id', assignments.map(a => a.id))
+          .in('assignment_id', assignments.map((a: any) => a.id))
         responsesData = resp || []
       }
       const totalResponsesCount = responsesData.length
@@ -137,7 +137,7 @@ export function HROverview() {
       }
 
       // Compute department scores and completion breakdowns
-      const deptMap = new Map((depts || []).map(d => [d.id, { 
+      const deptMap = new Map<string, any>((depts || []).map((d: any) => [d.id, { 
         id: d.id, 
         name: d.name, 
         employeeCount: d.employee_count || 0, 
@@ -149,10 +149,10 @@ export function HROverview() {
       
       const memberDeptMap = new Map()
       const { data: membersList } = await supabase.from('organization_members').select('id, department_id').eq('organization_id', organizationId)
-      ;(membersList || []).forEach(m => memberDeptMap.set(m.id, m.department_id))
+      ;(membersList || []).forEach((m: any) => memberDeptMap.set(m.id, m.department_id))
 
       const assignmentMemberMap = new Map()
-      ;(assignments || []).forEach(a => {
+      ;(assignments || []).forEach((a: any) => {
         assignmentMemberMap.set(a.id, a.member_id)
         const deptId = memberDeptMap.get(a.member_id)
         if (deptId) {
@@ -183,7 +183,7 @@ export function HROverview() {
 
       const calculatedDepts = Array.from(deptMap.values()).map(d => {
         const avgRisk = d.scores.length > 0
-          ? d.scores.reduce((sum, s) => sum + s, 0) / d.scores.length
+          ? d.scores.reduce((sum: any, s: any) => sum + s, 0) / d.scores.length
           : 0
         return {
           id: d.id,
@@ -209,7 +209,7 @@ export function HROverview() {
           const { count } = await supabase
             .from('assessment_ai_recommendations')
             .select('*', { count: 'exact', head: true })
-            .in('analysis_id', analyses.map(a => a.id))
+            .in('analysis_id', analyses.map((a: any) => a.id))
           recsCountValue = count || 0
         }
       }
@@ -273,9 +273,9 @@ export function HROverview() {
         .eq('organization_id', organizationId)
 
       if (hazards) {
-        const open = hazards.filter(h => h.status === 'OPEN')
+        const open = hazards.filter((h: any) => h.status === 'OPEN')
         setOpenObservations(open.length)
-        setCriticalCount(open.filter(h => h.severity === 'CRITICAL' || h.severity === 'HIGH').length)
+        setCriticalCount(open.filter((h: any) => h.severity === 'CRITICAL' || h.severity === 'HIGH').length)
         setRecentObs(hazards.slice(0, 3))
       }
 

@@ -349,7 +349,7 @@ export function EmployeeReview() {
             ankles_feet: language === 'ar' ? 'الكاحلين / القدمين' : 'Ankles / Feet',
           }
 
-          const mapped: Question[] = questionsData.map(q => {
+          const mapped: Question[] = questionsData.map((q: any) => {
             const code = q.question_code || ''
             let section: 'NMQ_summary' | 'NMQ_detail' | 'ISO7730' = 'ISO7730'
             if (code.startsWith('nmq_sum')) section = 'NMQ_summary'

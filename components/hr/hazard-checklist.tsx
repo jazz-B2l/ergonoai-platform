@@ -158,13 +158,13 @@ export function HRHazardChecklist() {
         .select('id, name')
         .eq('organization_id', organizationId)
 
-      const catIdToName = new Map((categories || []).map(c => [c.id, c.name]))
+      const catIdToName = new Map((categories || []).map((c: any) => [c.id, c.name]))
 
       // 2. Fetch standard hazards
       const { data: hazards } = await supabase
         .from('hazards')
         .select('*')
-        .in('category_id', (categories || []).map(c => c.id))
+        .in('category_id', (categories || []).map((c: any) => c.id))
 
       // 3. Fetch open observations (independent of campaign)
       const { data: occurrences } = await supabase
@@ -174,14 +174,14 @@ export function HRHazardChecklist() {
 
       const activeOccurrencesMap = new Map<string, any>()
       if (occurrences) {
-        occurrences.forEach(o => {
+        occurrences.forEach((o: any) => {
           if (o.status !== 'RESOLVED') {
             activeOccurrencesMap.set(o.hazard_id, o)
           }
         })
       }
 
-      const standardChecklistItems = (hazards || []).map(h => {
+      const standardChecklistItems = (hazards || []).map((h: any) => {
         const activeOcc = activeOccurrencesMap.get(h.id)
         const catName = catIdToName.get(h.category_id) || 'Physical'
         
@@ -223,24 +223,24 @@ export function HRHazardChecklist() {
           const { data: responses } = await supabase
             .from('assessment_responses')
             .select('id')
-            .in('assignment_id', assignments.map(a => a.id))
+            .in('assignment_id', assignments.map((a: any) => a.id))
 
           if (responses && responses.length > 0) {
             // Fetch analyses
             const { data: analyses } = await supabase
               .from('assessment_ai_analysis')
               .select('id')
-              .in('response_id', responses.map(r => r.id))
+              .in('response_id', responses.map((r: any) => r.id))
 
             if (analyses && analyses.length > 0) {
               // Fetch findings
               const { data: findings } = await supabase
                 .from('assessment_ai_findings')
                 .select('*')
-                .in('analysis_id', analyses.map(a => a.id))
+                .in('analysis_id', analyses.map((a: any) => a.id))
 
               if (findings) {
-                aiChecklistItems = findings.map(f => {
+                aiChecklistItems = findings.map((f: any) => {
                   let catName: HazardCategoryName = 'Physical'
                   const checkCat = f.category || ''
                   if (checkCat.includes('Mech') || checkCat.includes('Seat') || checkCat.includes('Chair')) catName = 'Mechanical'

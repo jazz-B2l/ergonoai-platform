@@ -50,7 +50,7 @@ export function HRObservations() {
         .eq('organization_id', currentOrgId)
       
       const memberNameMap = new Map(
-        (membersList || []).map(m => {
+        (membersList || []).map((m: any) => {
           const profile = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles as any
           return [
             m.id,
@@ -65,15 +65,15 @@ export function HRObservations() {
         .select('id')
         .eq('organization_id', currentOrgId)
 
-      const categoryIds = (categories || []).map(c => c.id)
+      const categoryIds = (categories || []).map((c: any) => c.id)
 
       const { data: hazards } = await supabase
         .from('hazards')
         .select('id, name, hazard_categories(name)')
         .in('category_id', categoryIds)
 
-      const hazardNameMap = new Map((hazards || []).map(h => [h.id, h.name]))
-      const hazardCatMap = new Map((hazards || []).map(h => {
+      const hazardNameMap = new Map((hazards || []).map((h: any) => [h.id, h.name]))
+      const hazardCatMap = new Map((hazards || []).map((h: any) => {
         const cat = Array.isArray(h.hazard_categories) ? h.hazard_categories[0] : h.hazard_categories as any
         return [h.id, cat?.name || 'Safety']
       }))
@@ -84,7 +84,7 @@ export function HRObservations() {
         .select('id, name')
         .eq('organization_id', currentOrgId)
 
-      const siteMap = new Map((sites || []).map(s => [s.id, s.name]))
+      const siteMap = new Map((sites || []).map((s: any) => [s.id, s.name]))
 
       // 4. Fetch observations
       const { data: occurrences } = await supabase
@@ -94,7 +94,7 @@ export function HRObservations() {
         .order('created_at', { ascending: false })
 
       if (occurrences) {
-        const mapped = occurrences.map(o => ({
+        const mapped = occurrences.map((o: any) => ({
           id: o.id,
           title: hazardNameMap.get(o.hazard_id) || 'Unlisted Workstation Hazard',
           description: o.description || 'No description provided.',

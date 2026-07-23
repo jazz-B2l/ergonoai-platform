@@ -98,7 +98,7 @@ export function AIProviderProvider({ children }: { children: ReactNode }) {
   // supabase.auth.getUser() on every preference save (rate limit risk).
   useEffect(() => {
     if (!cachedUserIdRef.current) {
-      supabase.auth.getSession().then(({ data }) => {
+      supabase.auth.getSession().then(({ data }: { data: any }) => {
         cachedUserIdRef.current = data.session?.user?.id ?? null;
       });
     }

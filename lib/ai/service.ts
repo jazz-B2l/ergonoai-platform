@@ -678,7 +678,7 @@ export class AiService {
         .select('id')
         .eq('organization_id', organizationId);
 
-      const campaignIds = (campaigns || []).map(c => c.id);
+      const campaignIds = (campaigns || []).map((c: any) => c.id);
 
       if (campaignIds.length === 0) {
         throw new Error('No assessment campaign found. You must create an assessment campaign before generating an executive report.');
@@ -689,7 +689,7 @@ export class AiService {
         .select('id')
         .in('campaign_id', campaignIds);
 
-      const assignmentIds = (assignments || []).map(a => a.id);
+      const assignmentIds = (assignments || []).map((a: any) => a.id);
 
       if (assignmentIds.length === 0) {
         throw new Error('No employee assessment assignments found. Employees must be assigned to an assessment campaign first.');
@@ -711,7 +711,7 @@ export class AiService {
         throw new Error(`Assessment campaign is still in progress (${totalAssessments} of ${totalAssignments} employees completed). All assigned employees must finish answering their assessments before generating an executive report.`);
       }
 
-      const responseIds = (responses || []).map(r => r.id);
+      const responseIds = (responses || []).map((r: any) => r.id);
       let recentFindings: string[] = [];
 
       if (responseIds.length > 0) {
@@ -723,7 +723,7 @@ export class AiService {
           .limit(10);
 
         if (analyses) {
-          recentFindings = analyses.map(a => {
+          recentFindings = analyses.map((a: any) => {
             const recs = typeof a.recommendations === 'string' ? JSON.parse(a.recommendations) : (a.recommendations || []);
             return `${a.summary} Recommendations: ${recs.slice(0, 2).join(', ')}`;
           });
@@ -735,14 +735,14 @@ export class AiService {
         .select('id, name, employee_count')
         .eq('organization_id', organizationId);
 
-      const deptMap = new Map((departments || []).map(d => [d.id, { name: d.name, employeeCount: d.employee_count || 0, scores: [] as number[] }]));
+      const deptMap = new Map<string, any>((departments || []).map((d: any) => [d.id, { name: d.name, employeeCount: d.employee_count || 0, scores: [] as number[] }]));
 
       const { data: members } = await supabase
         .from('organization_members')
         .select('id, department_id')
         .eq('organization_id', organizationId);
       
-      const memberDeptMap = new Map((members || []).map(m => [m.id, m.department_id]));
+      const memberDeptMap = new Map<string, any>((members || []).map((m: any) => [m.id, m.department_id]));
 
       if (campaignIds.length > 0) {
         const { data: assignments } = await supabase
@@ -750,17 +750,17 @@ export class AiService {
           .select('id, member_id')
           .in('campaign_id', campaignIds);
         
-        const assignmentMemberMap = new Map((assignments || []).map(a => [a.id, a.member_id]));
+        const assignmentMemberMap = new Map<string, any>((assignments || []).map((a: any) => [a.id, a.member_id]));
 
         if (assignments && assignments.length > 0) {
           const { data: responses } = await supabase
             .from('assessment_responses')
             .select('assignment_id, ai_risk_score')
-            .in('assignment_id', assignments.map(a => a.id))
+            .in('assignment_id', assignments.map((a: any) => a.id))
             .not('ai_risk_score', 'is', null);
 
           if (responses) {
-            responses.forEach(r => {
+            responses.forEach((r: any) => {
               const memberId = assignmentMemberMap.get(r.assignment_id);
               if (memberId) {
                 const deptId = memberDeptMap.get(memberId);
@@ -778,7 +778,7 @@ export class AiService {
 
       const deptStats = Array.from(deptMap.values()).map(d => {
         const avgScore = d.scores.length > 0
-          ? d.scores.reduce((sum, s) => sum + s, 0) / d.scores.length
+          ? d.scores.reduce((sum: any, s: any) => sum + s, 0) / d.scores.length
           : 0;
         return {
           name: d.name,
@@ -827,7 +827,7 @@ export class AiService {
         .eq('organization_id', organizationId);
 
       if (hazards && hazards.length > 0) {
-        parsed.hazardsDetail = hazards.map(h => ({
+        parsed.hazardsDetail = hazards.map((h: any) => ({
           title: h.hazard_catalog?.title || 'Unknown Hazard',
           status: h.status,
           severity: h.hazard_catalog?.severity || 'medium',
@@ -845,14 +845,14 @@ export class AiService {
           .in('response_id', responseIds);
 
         if (allAnalyses && allAnalyses.length > 0) {
-          const analysisIds = allAnalyses.map(a => a.id);
+          const analysisIds = allAnalyses.map((a: any) => a.id);
           const { data: recs } = await supabase
             .from('assessment_ai_recommendations')
             .select('*')
             .in('analysis_id', analysisIds);
 
           if (recs && recs.length > 0) {
-            parsed.recommendationsDetail = recs.map(r => ({
+            parsed.recommendationsDetail = recs.map((r: any) => ({
               title: r.title,
               status: r.status || 'PENDING',
               priority: r.priority || 'medium',

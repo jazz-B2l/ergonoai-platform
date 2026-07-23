@@ -38,13 +38,13 @@ export function HRReports() {
       if (!campaigns || campaigns.length === 0) {
         setReadinessNotice('No assessment campaign created yet. You must create an assessment campaign and collect employee responses before generating an executive report.')
       } else {
-        const campaignIds = campaigns.map(c => c.id)
+        const campaignIds = campaigns.map((c: any) => c.id)
         const { data: assignments } = await supabase
           .from('assessment_assignments')
           .select('id')
           .in('campaign_id', campaignIds)
 
-        const assignmentIds = (assignments || []).map(a => a.id)
+        const assignmentIds = (assignments || []).map((a: any) => a.id)
         if (assignmentIds.length === 0) {
           setReadinessNotice('No employee assessment assignments found. Employees must be assigned to an assessment campaign first.')
         } else {
@@ -74,7 +74,7 @@ export function HRReports() {
         .order('created_at', { ascending: false })
 
       if (reportsData) {
-        const mapped = reportsData.map(r => ({
+        const mapped = reportsData.map((r: any) => ({
           id: r.id,
           title: r.name,
           subtitle: r.type === 'AI_EXECUTIVE' ? 'Executive Ergonomic Summary' : r.type,

@@ -40,7 +40,7 @@ export function HRRecommendations() {
         .from('departments')
         .select('id, name')
         .eq('organization_id', orgId)
-      const deptMap = new Map((depts || []).map(d => [d.id, d.name]))
+      const deptMap = new Map((depts || []).map((d: any) => [d.id, d.name]))
 
       // 3. Fetch all members
       const { data: members } = await supabase
@@ -48,15 +48,15 @@ export function HRRecommendations() {
         .select('id, department_id')
         .eq('organization_id', orgId)
       
-      const memberDeptMap = new Map((members || []).map(m => [m.id, m.department_id]))
+      const memberDeptMap = new Map((members || []).map((m: any) => [m.id, m.department_id]))
 
       // 4. Fetch campaigns
       const { data: campaigns } = await supabase
         .from('assessment_campaigns')
         .select('id, title')
         .eq('organization_id', orgId)
-      const campaignIds = (campaigns || []).map(c => c.id)
-      const campaignNameMap = new Map((campaigns || []).map(c => [c.id, c.title]))
+      const campaignIds = (campaigns || []).map((c: any) => c.id)
+      const campaignNameMap = new Map((campaigns || []).map((c: any) => [c.id, c.title]))
 
       if (campaignIds.length === 0) {
         setRecommendations([])
@@ -69,8 +69,8 @@ export function HRRecommendations() {
         .select('id, member_id, campaign_id')
         .in('campaign_id', campaignIds)
       
-      const assignmentMemberMap = new Map((assignments || []).map(a => [a.id, a.member_id]))
-      const assignmentCampaignMap = new Map((assignments || []).map(a => [a.id, a.campaign_id]))
+      const assignmentMemberMap = new Map((assignments || []).map((a: any) => [a.id, a.member_id]))
+      const assignmentCampaignMap = new Map((assignments || []).map((a: any) => [a.id, a.campaign_id]))
 
       if (!assignments || assignments.length === 0) {
         setRecommendations([])
@@ -81,22 +81,22 @@ export function HRRecommendations() {
       const { data: responses } = await supabase
         .from('assessment_responses')
         .select('id, assignment_id, submitted_at')
-        .in('assignment_id', assignments.map(a => a.id))
+        .in('assignment_id', assignments.map((a: any) => a.id))
 
       if (!responses || responses.length === 0) {
         setRecommendations([])
         return
       }
       
-      const responseMemberMap = new Map(responses.map(r => [r.id, assignmentMemberMap.get(r.assignment_id)]))
+      const responseMemberMap = new Map(responses.map((r: any) => [r.id, assignmentMemberMap.get(r.assignment_id)]))
       const responseCampaignMap = new Map(
-        responses.map(r => {
+        responses.map((r: any) => {
           const campaignId = assignmentCampaignMap.get(r.assignment_id)
           return [r.id, campaignNameMap.get(campaignId || '') || 'Ergonomics Campaign']
         })
       )
       const responseDateMap = new Map(
-        responses.map(r => [
+        responses.map((r: any) => [
           r.id, 
           r.submitted_at ? new Date(r.submitted_at).toLocaleDateString() : 'N/A'
         ])
@@ -106,26 +106,26 @@ export function HRRecommendations() {
       const { data: analyses } = await supabase
         .from('assessment_ai_analysis')
         .select('id, response_id, summary')
-        .in('response_id', responses.map(r => r.id))
+        .in('response_id', responses.map((r: any) => r.id))
 
       if (!analyses || analyses.length === 0) {
         setRecommendations([])
         return
       }
       
-      const analysisMemberMap = new Map(analyses.map(a => [a.id, responseMemberMap.get(a.response_id)]))
-      const analysisResponseMap = new Map(analyses.map(a => [a.id, a.response_id]))
-      const analysisSummaryMap = new Map(analyses.map(a => [a.id, a.summary]))
+      const analysisMemberMap = new Map(analyses.map((a: any) => [a.id, responseMemberMap.get(a.response_id)]))
+      const analysisResponseMap = new Map(analyses.map((a: any) => [a.id, a.response_id]))
+      const analysisSummaryMap = new Map(analyses.map((a: any) => [a.id, a.summary]))
 
       // 8. Fetch recommendations
       const { data: recs } = await supabase
         .from('assessment_ai_recommendations')
         .select('*')
-        .in('analysis_id', analyses.map(a => a.id))
+        .in('analysis_id', analyses.map((a: any) => a.id))
         .order('created_at', { ascending: false })
 
       if (recs) {
-        const combined = recs.map(r => {
+        const combined = recs.map((r: any) => {
           const responseId = analysisResponseMap.get(r.analysis_id) || ''
           const memberId = analysisMemberMap.get(r.analysis_id)
           const deptId = memberDeptMap.get(memberId)

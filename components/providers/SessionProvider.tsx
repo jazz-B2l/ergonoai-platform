@@ -43,7 +43,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     initialize()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
+      (event: any, newSession: any) => {
         setSession(newSession)
         setUser(prevUser => {
           const newUser = newSession?.user || null
