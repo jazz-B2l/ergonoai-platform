@@ -14,11 +14,14 @@ interface SessionContextType {
 
 export const SessionContext = createContext<SessionContextType | undefined>(undefined)
 
+// Create the client once at module level — not inside the component —
+// so re-renders never create a second instance with a competing refresh timer.
+const supabase = createClient()
+
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const supabase = createClient()
 
   const refreshSession = async () => {
     const { data: { session: newSession }, error } = await supabase.auth.getSession()

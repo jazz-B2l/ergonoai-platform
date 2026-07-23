@@ -1,6 +1,9 @@
-import { createBrowserClient } from '@supabase/ssr'
+// Single source of truth for the browser Supabase client.
+// Re-exports the singleton from lib/supabase/client.ts so that
+// both `import { supabase } from '@/lib/supabase'` and
+// `import { createClient } from '@/lib/supabase/client'` share
+// the exact same instance and the same session-refresh timer.
+export { createClient } from './supabase/client'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-
-export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
+import { createClient } from './supabase/client'
+export const supabase = createClient()

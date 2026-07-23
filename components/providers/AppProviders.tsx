@@ -5,6 +5,7 @@ import { SessionProvider, SessionContext } from './SessionProvider'
 import { UserProvider, UserContext } from './UserProvider'
 import { CompanyProvider, CompanyContext } from './CompanyProvider'
 import { PermissionProvider, PermissionContext } from './PermissionProvider'
+import { AIProviderProvider } from './AIProviderContext'
 import { Loader2 } from 'lucide-react'
 
 function SplashLoader() {
@@ -41,11 +42,13 @@ export function AppProviders({ children }: { children: ReactNode }) {
     <SessionProvider>
       <UserProvider>
         <CompanyProvider>
-          <PermissionProvider>
-            <ProvidersReadyGate>
-              {children}
-            </ProvidersReadyGate>
-          </PermissionProvider>
+          <AIProviderProvider>
+            <PermissionProvider>
+              <ProvidersReadyGate>
+                {children}
+              </ProvidersReadyGate>
+            </PermissionProvider>
+          </AIProviderProvider>
         </CompanyProvider>
       </UserProvider>
     </SessionProvider>

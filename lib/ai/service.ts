@@ -1,7 +1,17 @@
 import { supabase } from '@/lib/supabase';
-import { getGroqProvider, getGroqClient } from './groq';
+import { ProviderFactory } from './provider-factory';
+import { AUTO_ROUTING, PROVIDER_PRIORITY, ROUTING_POLICIES } from './routing';
 import { safeParseJson } from './parser';
-import { DEFAULT_CHAT_MODEL, DEFAULT_ANALYSIS_MODEL, DEFAULT_CHAT_CONFIG, DEFAULT_ANALYSIS_CONFIG } from './models';
+import {
+  GEMINI_MODELS,
+  GROQ_MODELS,
+  DEFAULT_GEMINI_CHAT_MODEL,
+  DEFAULT_GEMINI_ANALYSIS_MODEL,
+  DEFAULT_GROQ_CHAT_MODEL,
+  DEFAULT_GROQ_ANALYSIS_MODEL,
+  DEFAULT_CHAT_CONFIG,
+  DEFAULT_ANALYSIS_CONFIG
+} from './models';
 import { AI_CONSTANTS } from './constants';
 import * as Prompts from './prompts';
 import {
@@ -12,7 +22,10 @@ import {
   HazardExplanationResult,
   CorrectiveActionItem,
   RagDocument,
-  RagQueryOptions
+  RagQueryOptions,
+  AIProviderType,
+  AiCompletionResponse,
+  AiModelConfig
 } from './types';
 
 // Simple in-memory rate limiter
@@ -43,27 +56,18 @@ export function checkRateLimit(key: string, limit: number = AI_CONSTANTS.MAX_REQ
  */
 function sanitizeInput(text: string, maxLength: number = 2000): string {
   if (!text) return '';
-  // Trim and limit length
   let sanitized = text.substring(0, maxLength);
-  // Remove markdown code block delimiters that could close prompt fences
   sanitized = sanitized.replace(/```/g, '` ` `');
   return sanitized;
 }
 
 /**
  * RAG context retriever placeholder.
- * This establishes the abstraction points for ISO standards, OSHA, NMQ, RULA, REBA, etc.
  */
 export async function retrieveRagContext(query: string, options?: RagQueryOptions): Promise<RagDocument[]> {
   const sources = options?.sources || ['ISO 7730', 'NMQ', 'RULA', 'REBA', 'OSHA'];
   const limit = options?.limit || 3;
-  
   console.log(`[RAG SEARCH] Searching vector space for: "${query}" | Sources: ${sources.join(', ')} | Limit: ${limit}`);
-  
-  // Future implementation:
-  // const { data, error } = await supabase.rpc('match_documents', { query_embedding, match_threshold, match_count });
-  
-  // Returns empty mock context as required for RAG prep
   return [];
 }
 
@@ -79,7 +83,6 @@ ${docs.map((d, i) => `[Source ${i + 1}]: ${d.source}\n${d.content}`).join('\n\n'
 
 export class AiService {
   private static instance: AiService | null = null;
-  private provider = getGroqProvider();
 
   private constructor() {}
 
@@ -91,19 +94,170 @@ export class AiService {
   }
 
   /**
-   * Log execution metrics securely
+   * Fetches AI preferences (provider, model, allowed providers) for an organization from Supabase
    */
-  private logMetric(action: string, model: string, latencyMs: number, tokens?: number, error?: string) {
-    console.log(JSON.stringify({
-      timestamp: new Date().toISOString(),
-      requestId: crypto.randomUUID(),
-      action,
-      model,
-      latencyMs,
-      tokensUsed: tokens || 0,
-      status: error ? 'ERROR' : 'SUCCESS',
-      error: error || null,
-    }));
+  private async getOrganizationAiPreferences(organizationId?: string) {
+    const defaults = {
+      provider: 'auto' as AIProviderType,
+      model: undefined as string | undefined,
+      allowedProviders: ['gemini', 'groq'] as AIProviderType[]
+    };
+
+    if (!organizationId) return defaults;
+
+    try {
+      const { data } = await supabase
+        .from('organization_settings')
+        .select('extra_settings')
+        .eq('organization_id', organizationId)
+        .maybeSingle();
+
+      if (data?.extra_settings) {
+        const config = data.extra_settings as any;
+        const ai = config.ai || {};
+        return {
+          provider: (ai.provider || 'auto') as AIProviderType,
+          model: ai.model || undefined,
+          allowedProviders: (ai.allowedProviders || ['gemini', 'groq']) as AIProviderType[],
+        };
+      }
+    } catch (err) {
+      console.error('[AI SERVICE] Failed to fetch organization settings:', err);
+    }
+
+    return defaults;
+  }
+
+  /**
+   * Executes completion request with retry, timeout, fallback, and telemetry logic.
+   */
+  private async executeCompletion(
+    task: 'chat' | 'assessment' | 'recommendations' | 'report',
+    messages: ChatCompletionMessage[],
+    userConfig: AiModelConfig,
+    preference?: { provider?: AIProviderType; model?: string; allowedProviders?: AIProviderType[] }
+  ): Promise<AiCompletionResponse> {
+    let targetProvider = preference?.provider || 'auto';
+    let targetModel = preference?.model;
+
+    // 1. Resolve Auto Routing if selected
+    if (targetProvider === 'auto') {
+      const route = AUTO_ROUTING[task];
+      targetProvider = route.provider;
+      targetModel = route.model;
+    }
+
+    // 2. Filter allowed providers (Organization Admin restriction check)
+    const allowed = preference?.allowedProviders || ['gemini', 'groq'];
+    if (!allowed.includes(targetProvider)) {
+      console.warn(`[AI SERVICE WARNING] Selected provider "${targetProvider}" is disabled by organization admin. Finding fallback.`);
+      const fallbackProv = PROVIDER_PRIORITY.find(p => allowed.includes(p));
+      if (!fallbackProv) {
+        throw new Error('Critical Setup Error: All AI Providers are disabled for this organization.');
+      }
+      targetProvider = fallbackProv;
+      targetModel = undefined; // trigger default model resolution below
+    }
+
+    // 3. Resolve default model if none specified
+    if (!targetModel) {
+      if (targetProvider === 'groq') {
+        targetModel = task === 'chat' ? DEFAULT_GROQ_CHAT_MODEL : DEFAULT_GROQ_ANALYSIS_MODEL;
+      } else {
+        targetModel = task === 'chat' ? DEFAULT_GEMINI_CHAT_MODEL : DEFAULT_GEMINI_ANALYSIS_MODEL;
+      }
+    }
+
+    // 4. Formulate Execution chain (primary target first, followed by others in priority order)
+    const executionChain: Exclude<AIProviderType, 'auto'>[] = [
+      targetProvider as Exclude<AIProviderType, 'auto'>,
+      ...PROVIDER_PRIORITY.filter(p => p !== targetProvider && allowed.includes(p)) as Exclude<AIProviderType, 'auto'>[]
+    ];
+
+    let lastError: any = null;
+    const startTime = Date.now();
+
+    for (let i = 0; i < executionChain.length; i++) {
+      const providerId = executionChain[i];
+      const isFallback = i > 0;
+
+      let modelId = isFallback ? undefined : targetModel;
+      if (!modelId) {
+        if (providerId === 'groq') {
+          modelId = task === 'chat' ? DEFAULT_GROQ_CHAT_MODEL : DEFAULT_GROQ_ANALYSIS_MODEL;
+        } else {
+          modelId = task === 'chat' ? DEFAULT_GEMINI_CHAT_MODEL : DEFAULT_GEMINI_ANALYSIS_MODEL;
+        }
+      }
+
+      const activeProvider = ProviderFactory.get(providerId);
+      const maxRetries = ROUTING_POLICIES.maxRetries;
+      const timeoutMs = userConfig.timeoutMs || ROUTING_POLICIES.timeoutMs;
+      const temperature = userConfig.temperature;
+      const maxTokens = userConfig.maxTokens;
+
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        const requestStartTime = Date.now();
+        try {
+          const result = await activeProvider.chatCompletion(messages, {
+            modelId,
+            temperature,
+            maxTokens,
+            timeoutMs,
+          });
+
+          const latencyMs = Date.now() - startTime;
+          const resultWithTelemetry: AiCompletionResponse = {
+            ...result,
+            providerUsed: providerId,
+            latencyMs,
+            fallbackOccurred: isFallback,
+            fallbackDetails: isFallback ? `Dynamic fallback triggered after failure of initial provider. Initial error: ${lastError?.message}` : undefined,
+          };
+
+          // Telemetry Logging
+          console.log(JSON.stringify({
+            event: 'ai_completion_telemetry',
+            timestamp: new Date().toISOString(),
+            task,
+            providerUsed: providerId,
+            modelUsed: modelId,
+            latencyMs,
+            success: true,
+            fallbackOccurred: isFallback,
+            promptTokens: result.promptTokens || 0,
+            completionTokens: result.completionTokens || 0,
+            totalTokens: result.totalTokens || 0,
+          }));
+
+          return resultWithTelemetry;
+        } catch (error: any) {
+          const duration = Date.now() - requestStartTime;
+          lastError = error;
+
+          console.error(JSON.stringify({
+            event: 'ai_completion_telemetry_error',
+            timestamp: new Date().toISOString(),
+            task,
+            providerUsed: providerId,
+            modelUsed: modelId,
+            latencyMs: duration,
+            success: false,
+            error: error.message || error,
+          }));
+
+          const isRetryable = ROUTING_POLICIES.fallbackOnErrors.some(errName => 
+            error.message?.includes(errName)
+          );
+
+          if (!isRetryable) {
+            throw error; // non-retryable error
+          }
+        }
+      }
+    }
+
+    throw new Error(`All configured AI Providers failed to complete request. Last error: ${lastError?.message}`);
   }
 
   /**
@@ -114,16 +268,19 @@ export class AiService {
     organizationId: string,
     userId: string,
     message: string,
-    options?: { modelId?: string }
+    options?: { modelId?: string; provider?: AIProviderType; allowedProviders?: AIProviderType[] }
   ) {
     const startTime = Date.now();
-    const modelId = options?.modelId || DEFAULT_CHAT_MODEL;
     const sanitizedMsg = sanitizeInput(message, 1000);
+
+    const pref = await this.getOrganizationAiPreferences(organizationId);
+    const provider = options?.provider || pref.provider;
+    const modelId = options?.modelId || (provider !== 'auto' ? pref.model : undefined);
+    const allowedProviders = options?.allowedProviders || pref.allowedProviders;
 
     try {
       let activeConversationId = conversationId;
 
-      // 1. Create conversation if it does not exist
       if (!activeConversationId) {
         const title = sanitizedMsg.length > 30 ? sanitizedMsg.substring(0, 30) + '...' : sanitizedMsg;
         const { data: newConv, error: newConvErr } = await supabase
@@ -142,14 +299,12 @@ export class AiService {
         }
         activeConversationId = newConv.id;
       } else {
-        // Update conversation activity timestamp
         await supabase
           .from('ai_conversations')
           .update({ last_message_at: new Date().toISOString() })
           .eq('id', activeConversationId);
       }
 
-      // 2. Insert user message in database
       const { error: userMsgErr } = await supabase
         .from('ai_messages')
         .insert({
@@ -162,7 +317,6 @@ export class AiService {
         throw new Error(`Failed to insert user message in Supabase: ${userMsgErr.message}`);
       }
 
-      // 3. Load historical messages (limit to last 20 for context size management)
       const { data: history, error: historyErr } = await supabase
         .from('ai_messages')
         .select('role, content')
@@ -174,11 +328,9 @@ export class AiService {
         throw new Error(`Failed to load chat history: ${historyErr?.message}`);
       }
 
-      // 4. Retrieve RAG context if applicable
       const ragDocs = await retrieveRagContext(sanitizedMsg);
       const ragContextText = formatRagContext(ragDocs);
 
-      // Assemble completion messages
       const messages: ChatCompletionMessage[] = [
         { role: 'system', content: Prompts.CHAT_SYSTEM_PROMPT },
       ];
@@ -192,15 +344,17 @@ export class AiService {
         content: h.content
       })));
 
-      // 5. Invoke provider
-      const response = await this.provider.chatCompletion(messages, {
-        modelId,
+      const response = await this.executeCompletion('chat', messages, {
+        modelId: modelId || '',
         temperature: DEFAULT_CHAT_CONFIG.temperature,
         maxTokens: DEFAULT_CHAT_CONFIG.maxTokens,
         timeoutMs: DEFAULT_CHAT_CONFIG.timeoutMs,
+      }, {
+        provider,
+        model: modelId,
+        allowedProviders
       });
 
-      // 6. Save assistant response to DB
       const { error: assistantMsgErr } = await supabase
         .from('ai_messages')
         .insert({
@@ -214,15 +368,15 @@ export class AiService {
         throw new Error(`Failed to insert assistant message in Supabase: ${assistantMsgErr.message}`);
       }
 
-      this.logMetric('chat', modelId, Date.now() - startTime, response.totalTokens);
-
       return {
         conversationId: activeConversationId,
         content: response.content,
         tokensUsed: response.totalTokens,
+        providerUsed: response.providerUsed,
+        modelUsed: response.modelUsed,
+        fallbackOccurred: response.fallbackOccurred,
       };
     } catch (error: any) {
-      this.logMetric('chat', modelId, Date.now() - startTime, 0, error.message);
       throw error;
     }
   }
@@ -232,13 +386,11 @@ export class AiService {
    */
   async analyzeAssessment(
     responseId: string,
-    options?: { modelId?: string }
-  ): Promise<AssessmentAnalysisResult> {
+    options?: { modelId?: string; provider?: AIProviderType; allowedProviders?: AIProviderType[] }
+  ): Promise<AssessmentAnalysisResult & { fallbackOccurred?: boolean; providerUsed?: string }> {
     const startTime = Date.now();
-    const modelId = options?.modelId || DEFAULT_ANALYSIS_MODEL;
 
     try {
-      // 1. Fetch response
       const { data: response, error: respErr } = await supabase
         .from('assessment_responses')
         .select('*')
@@ -249,7 +401,6 @@ export class AiService {
         throw new Error(`${AI_CONSTANTS.ERRORS.RECORD_NOT_FOUND} (Response: ${responseId})`);
       }
 
-      // 2. Fetch assignment
       const { data: assignment, error: assignErr } = await supabase
         .from('assessment_assignments')
         .select('*')
@@ -260,7 +411,6 @@ export class AiService {
         throw new Error(`${AI_CONSTANTS.ERRORS.RECORD_NOT_FOUND} (Assignment: ${response.assignment_id})`);
       }
 
-      // 3. Fetch campaign & template
       const { data: campaign, error: campErr } = await supabase
         .from('assessment_campaigns')
         .select('*')
@@ -281,7 +431,6 @@ export class AiService {
         throw new Error(`${AI_CONSTANTS.ERRORS.RECORD_NOT_FOUND} (Template: ${campaign.template_id})`);
       }
 
-      // 4. Fetch Employee member details (with profile) and biometric profile
       const { data: member, error: memberErr } = await supabase
         .from('organization_members')
         .select('*, profiles!organization_members_profile_id_fkey(*)')
@@ -298,7 +447,6 @@ export class AiService {
         .eq('member_id', assignment.member_id)
         .maybeSingle();
 
-      // 5. Fetch structural locations (department & site & organization)
       const { data: department } = member.department_id
         ? await supabase.from('departments').select('*').eq('id', member.department_id).maybeSingle()
         : { data: null };
@@ -311,7 +459,6 @@ export class AiService {
         ? await supabase.from('organizations').select('*').eq('id', campaign.organization_id).maybeSingle()
         : { data: null };
 
-      // 6. Fetch answers, question text details, and options
       const { data: answers, error: answersErr } = await supabase
         .from('response_answers')
         .select('*, assessment_questions(*), question_options(*)')
@@ -321,17 +468,15 @@ export class AiService {
         throw new Error(`Failed to load answers for response: ${answersErr?.message}`);
       }
 
-      // Format answers context
       const formattedAnswers = answers.map((a: any) => ({
         questionText: a.assessment_questions?.question_text || 'N/A',
         questionCode: a.assessment_questions?.question_code || 'N/A',
         category: a.assessment_questions?.category || '',
         value: a.answer_text || a.numeric_answer?.toString() || a.question_options?.value || 'N/A',
         label: a.question_options?.label || '',
-        note: '' // Optional text notes if present
+        note: ''
       }));
 
-      // Construct user prompt
       const userPrompt = Prompts.generateAssessmentAnalysisUserPrompt({
         employee: {
           jobTitle: member.job_title,
@@ -350,22 +495,28 @@ export class AiService {
         answers: formattedAnswers
       });
 
-      // 7. Invoke Groq
+      const pref = await this.getOrganizationAiPreferences(campaign.organization_id);
+      const provider = options?.provider || pref.provider;
+      const modelId = options?.modelId || (provider !== 'auto' ? pref.model : undefined);
+      const allowedProviders = options?.allowedProviders || pref.allowedProviders;
+
       const systemPrompt = Prompts.ASSESSMENT_ANALYSIS_SYSTEM_PROMPT;
-      const responseObj = await this.provider.chatCompletion([
+      const responseObj = await this.executeCompletion('assessment', [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ], {
-        modelId,
+        modelId: modelId || '',
         temperature: DEFAULT_ANALYSIS_CONFIG.temperature,
         maxTokens: DEFAULT_ANALYSIS_CONFIG.maxTokens,
         timeoutMs: DEFAULT_ANALYSIS_CONFIG.timeoutMs,
+      }, {
+        provider,
+        model: modelId,
+        allowedProviders
       });
 
-      // 8. Parse JSON response safely
       const parsedResult = safeParseJson<AssessmentAnalysisResult>(responseObj.content);
 
-      // 9. Save analysis result in DB (assessment_ai_analysis)
       const { data: existingAnalysis } = await supabase
         .from('assessment_ai_analysis')
         .select('id')
@@ -374,8 +525,8 @@ export class AiService {
 
       const analysisData = {
         response_id: responseId,
-        ai_model: this.provider.name,
-        ai_model_version: modelId,
+        ai_model: responseObj.providerUsed,
+        ai_model_version: responseObj.modelUsed,
         overall_risk_score: parsedResult.overallRiskScore,
         risk_level: parsedResult.riskLevel,
         confidence_score: parsedResult.confidenceScore,
@@ -412,11 +563,9 @@ export class AiService {
         analysisId = insertedAnalysis.id;
       }
 
-      // 10. Clean up any existing records for findings/recommendations (cascade updates)
       await supabase.from('assessment_ai_findings').delete().eq('analysis_id', analysisId);
       await supabase.from('assessment_ai_recommendations').delete().eq('analysis_id', analysisId);
 
-      // 11. Write individual findings to `assessment_ai_findings`
       if (parsedResult.detectedRisks && parsedResult.detectedRisks.length > 0) {
         const findingsData = parsedResult.detectedRisks.map(r => ({
           analysis_id: analysisId,
@@ -433,13 +582,12 @@ export class AiService {
         }
       }
 
-      // 12. Write recommendations to `assessment_ai_recommendations`
       if (parsedResult.recommendations && parsedResult.recommendations.length > 0) {
         const recsData = parsedResult.recommendations.map(r => ({
           analysis_id: analysisId,
           title: r.substring(0, 80) + (r.length > 80 ? '...' : ''),
           description: r,
-          priority: parsedResult.riskLevel.toUpperCase(), // default to risk level severity priority
+          priority: parsedResult.riskLevel.toUpperCase(),
           category: 'Ergonomics',
           status: 'PENDING'
         }));
@@ -450,17 +598,17 @@ export class AiService {
         }
       }
 
-      // 13. Update overall risk score on the main response table for UI queries
       await supabase
         .from('assessment_responses')
         .update({ ai_risk_score: parsedResult.overallRiskScore })
         .eq('id', responseId);
 
-      this.logMetric('analyzeAssessment', modelId, Date.now() - startTime, responseObj.totalTokens);
-
-      return parsedResult;
+      return {
+        ...parsedResult,
+        fallbackOccurred: responseObj.fallbackOccurred,
+        providerUsed: responseObj.providerUsed
+      };
     } catch (error: any) {
-      this.logMetric('analyzeAssessment', modelId, Date.now() - startTime, 0, error.message);
       throw error;
     }
   }
@@ -472,28 +620,35 @@ export class AiService {
     findings: string[],
     hazards?: string[],
     context?: string,
-    options?: { modelId?: string }
-  ): Promise<RecommendationItem[]> {
-    const startTime = Date.now();
-    const modelId = options?.modelId || DEFAULT_ANALYSIS_MODEL;
+    options?: { modelId?: string; provider?: AIProviderType; allowedProviders?: AIProviderType[]; organizationId?: string }
+  ): Promise<RecommendationItem[] & { fallbackOccurred?: boolean; providerUsed?: string }> {
+    const pref = await this.getOrganizationAiPreferences(options?.organizationId);
+    const provider = options?.provider || pref.provider;
+    const modelId = options?.modelId || (provider !== 'auto' ? pref.model : undefined);
+    const allowedProviders = options?.allowedProviders || pref.allowedProviders;
 
     try {
       const userPrompt = Prompts.generateRecommendationsUserPrompt({ findings, hazards, context });
-      const response = await this.provider.chatCompletion([
+      const response = await this.executeCompletion('recommendations', [
         { role: 'system', content: Prompts.RECOMMENDATIONS_SYSTEM_PROMPT },
         { role: 'user', content: userPrompt }
       ], {
-        modelId,
+        modelId: modelId || '',
         temperature: DEFAULT_ANALYSIS_CONFIG.temperature,
         maxTokens: DEFAULT_ANALYSIS_CONFIG.maxTokens,
         timeoutMs: DEFAULT_ANALYSIS_CONFIG.timeoutMs,
+      }, {
+        provider,
+        model: modelId,
+        allowedProviders
       });
 
       const parsed = safeParseJson<RecommendationItem[]>(response.content);
-      this.logMetric('generateRecommendations', modelId, Date.now() - startTime, response.totalTokens);
-      return parsed;
+      const output = parsed as any;
+      output.fallbackOccurred = response.fallbackOccurred;
+      output.providerUsed = response.providerUsed;
+      return output;
     } catch (error: any) {
-      this.logMetric('generateRecommendations', modelId, Date.now() - startTime, 0, error.message);
       throw error;
     }
   }
@@ -503,13 +658,11 @@ export class AiService {
    */
   async generateExecutiveReport(
     organizationId: string,
-    options?: { modelId?: string }
-  ): Promise<ExecutiveReportResult> {
+    options?: { modelId?: string; provider?: AIProviderType; allowedProviders?: AIProviderType[] }
+  ): Promise<ExecutiveReportResult & { fallbackOccurred?: boolean; providerUsed?: string }> {
     const startTime = Date.now();
-    const modelId = options?.modelId || DEFAULT_ANALYSIS_MODEL;
 
     try {
-      // 1. Fetch organization details
       const { data: organization, error: orgErr } = await supabase
         .from('organizations')
         .select('*')
@@ -520,7 +673,6 @@ export class AiService {
         throw new Error(`${AI_CONSTANTS.ERRORS.RECORD_NOT_FOUND} (Organization: ${organizationId})`);
       }
 
-      // 2. Fetch all campaigns linked to this organization
       const { data: campaigns } = await supabase
         .from('assessment_campaigns')
         .select('id')
@@ -532,7 +684,6 @@ export class AiService {
         throw new Error('No assessment campaign found. You must create an assessment campaign before generating an executive report.');
       }
 
-      // Fetch all assignments
       const { data: assignments } = await supabase
         .from('assessment_assignments')
         .select('id')
@@ -544,7 +695,6 @@ export class AiService {
         throw new Error('No employee assessment assignments found. Employees must be assigned to an assessment campaign first.');
       }
 
-      // Fetch responses
       const { data: responses } = await supabase
         .from('assessment_responses')
         .select('id')
@@ -565,7 +715,6 @@ export class AiService {
       let recentFindings: string[] = [];
 
       if (responseIds.length > 0) {
-        // Fetch recent assessment analyses
         const { data: analyses } = await supabase
           .from('assessment_ai_analysis')
           .select('summary, recommendations')
@@ -581,7 +730,6 @@ export class AiService {
         }
       }
 
-      // 3. Fetch departments and compute statistics dynamically
       const { data: departments } = await supabase
         .from('departments')
         .select('id, name, employee_count')
@@ -589,7 +737,6 @@ export class AiService {
 
       const deptMap = new Map((departments || []).map(d => [d.id, { name: d.name, employeeCount: d.employee_count || 0, scores: [] as number[] }]));
 
-      // Fetch organization members to map member_id to department_id
       const { data: members } = await supabase
         .from('organization_members')
         .select('id, department_id')
@@ -598,7 +745,6 @@ export class AiService {
       const memberDeptMap = new Map((members || []).map(m => [m.id, m.department_id]));
 
       if (campaignIds.length > 0) {
-        // Fetch assignments for these campaigns
         const { data: assignments } = await supabase
           .from('assessment_assignments')
           .select('id, member_id')
@@ -607,7 +753,6 @@ export class AiService {
         const assignmentMemberMap = new Map((assignments || []).map(a => [a.id, a.member_id]));
 
         if (assignments && assignments.length > 0) {
-          // Fetch responses containing AI risk scores
           const { data: responses } = await supabase
             .from('assessment_responses')
             .select('assignment_id, ai_risk_score')
@@ -631,7 +776,6 @@ export class AiService {
         }
       }
 
-      // Compile stats with calculated averages
       const deptStats = Array.from(deptMap.values()).map(d => {
         const avgScore = d.scores.length > 0
           ? d.scores.reduce((sum, s) => sum + s, 0) / d.scores.length
@@ -649,7 +793,11 @@ export class AiService {
         ];
       }
 
-      // 4. Generate report via Groq
+      const pref = await this.getOrganizationAiPreferences(organizationId);
+      const provider = options?.provider || pref.provider;
+      const modelId = options?.modelId || (provider !== 'auto' ? pref.model : undefined);
+      const allowedProviders = options?.allowedProviders || pref.allowedProviders;
+
       const userPrompt = Prompts.generateReportUserPrompt({
         organizationName: organization.name,
         departmentStats: deptStats,
@@ -657,19 +805,22 @@ export class AiService {
         totalAssessmentsCount: totalAssessments
       });
 
-      const response = await this.provider.chatCompletion([
+      const responseObj = await this.executeCompletion('report', [
         { role: 'system', content: Prompts.REPORT_SYSTEM_PROMPT },
         { role: 'user', content: userPrompt }
       ], {
-        modelId,
+        modelId: modelId || '',
         temperature: DEFAULT_ANALYSIS_CONFIG.temperature,
         maxTokens: DEFAULT_ANALYSIS_CONFIG.maxTokens,
         timeoutMs: DEFAULT_ANALYSIS_CONFIG.timeoutMs,
+      }, {
+        provider,
+        model: modelId,
+        allowedProviders
       });
 
-      const parsed = safeParseJson<ExecutiveReportResult>(response.content);
+      const parsed = safeParseJson<ExecutiveReportResult>(responseObj.content);
 
-      // 4.5 Fetch all active hazards and AI recommendations for this org
       const { data: hazards } = await supabase
         .from('hazard_occurrences')
         .select('*, hazard_catalog(title, description, severity), departments(name)')
@@ -688,7 +839,6 @@ export class AiService {
       }
 
       if (responseIds && responseIds.length > 0) {
-        // We fetch all analyses for these responses (not just limit 10)
         const { data: allAnalyses } = await supabase
           .from('assessment_ai_analysis')
           .select('id')
@@ -718,7 +868,6 @@ export class AiService {
         parsed.recommendationsDetail = [];
       }
 
-      // 5. Store report in generated_reports table
       const reportContentString = JSON.stringify(parsed);
       const latencyMs = Date.now() - startTime;
 
@@ -739,10 +888,12 @@ export class AiService {
           file_size: reportContentString.length
         });
 
-      this.logMetric('generateExecutiveReport', modelId, latencyMs, response.totalTokens);
-      return parsed;
+      return {
+        ...parsed,
+        fallbackOccurred: responseObj.fallbackOccurred,
+        providerUsed: responseObj.providerUsed
+      };
     } catch (error: any) {
-      this.logMetric('generateExecutiveReport', modelId, Date.now() - startTime, 0, error.message);
       throw error;
     }
   }
@@ -753,28 +904,35 @@ export class AiService {
   async summarizeHazards(
     hazardTitle: string,
     description?: string,
-    options?: { modelId?: string }
-  ): Promise<HazardExplanationResult> {
-    const startTime = Date.now();
-    const modelId = options?.modelId || DEFAULT_CHAT_MODEL; // explanation is fast and can use chat model
+    options?: { modelId?: string; provider?: AIProviderType; allowedProviders?: AIProviderType[]; organizationId?: string }
+  ): Promise<HazardExplanationResult & { fallbackOccurred?: boolean; providerUsed?: string }> {
+    const pref = await this.getOrganizationAiPreferences(options?.organizationId);
+    const provider = options?.provider || pref.provider;
+    const modelId = options?.modelId || (provider !== 'auto' ? pref.model : undefined);
+    const allowedProviders = options?.allowedProviders || pref.allowedProviders;
 
     try {
       const userPrompt = Prompts.generateHazardExplanationUserPrompt(hazardTitle, description);
-      const response = await this.provider.chatCompletion([
+      const response = await this.executeCompletion('chat', [
         { role: 'system', content: Prompts.HAZARD_EXPLANATION_SYSTEM_PROMPT },
         { role: 'user', content: userPrompt }
       ], {
-        modelId,
+        modelId: modelId || '',
         temperature: DEFAULT_CHAT_CONFIG.temperature,
         maxTokens: DEFAULT_CHAT_CONFIG.maxTokens,
         timeoutMs: DEFAULT_CHAT_CONFIG.timeoutMs,
+      }, {
+        provider,
+        model: modelId,
+        allowedProviders
       });
 
       const parsed = safeParseJson<HazardExplanationResult>(response.content);
-      this.logMetric('summarizeHazards', modelId, Date.now() - startTime, response.totalTokens);
-      return parsed;
+      const output = parsed as any;
+      output.fallbackOccurred = response.fallbackOccurred;
+      output.providerUsed = response.providerUsed;
+      return output;
     } catch (error: any) {
-      this.logMetric('summarizeHazards', modelId, Date.now() - startTime, 0, error.message);
       throw error;
     }
   }
@@ -786,32 +944,38 @@ export class AiService {
     hazardTitle: string,
     riskLevel: string,
     context?: string,
-    options?: { modelId?: string }
-  ): Promise<CorrectiveActionItem[]> {
-    const startTime = Date.now();
-    const modelId = options?.modelId || DEFAULT_ANALYSIS_MODEL;
+    options?: { modelId?: string; provider?: AIProviderType; allowedProviders?: AIProviderType[]; organizationId?: string }
+  ): Promise<CorrectiveActionItem[] & { fallbackOccurred?: boolean; providerUsed?: string }> {
+    const pref = await this.getOrganizationAiPreferences(options?.organizationId);
+    const provider = options?.provider || pref.provider;
+    const modelId = options?.modelId || (provider !== 'auto' ? pref.model : undefined);
+    const allowedProviders = options?.allowedProviders || pref.allowedProviders;
 
     try {
       const userPrompt = Prompts.generateCorrectiveActionsUserPrompt(hazardTitle, riskLevel, context);
-      const response = await this.provider.chatCompletion([
+      const response = await this.executeCompletion('recommendations', [
         { role: 'system', content: Prompts.CORRECTIVE_ACTIONS_SYSTEM_PROMPT },
         { role: 'user', content: userPrompt }
       ], {
-        modelId,
+        modelId: modelId || '',
         temperature: DEFAULT_ANALYSIS_CONFIG.temperature,
         maxTokens: DEFAULT_ANALYSIS_CONFIG.maxTokens,
         timeoutMs: DEFAULT_ANALYSIS_CONFIG.timeoutMs,
+      }, {
+        provider,
+        model: modelId,
+        allowedProviders
       });
 
       const parsed = safeParseJson<CorrectiveActionItem[]>(response.content);
-      this.logMetric('generateCorrectiveActions', modelId, Date.now() - startTime, response.totalTokens);
-      return parsed;
+      const output = parsed as any;
+      output.fallbackOccurred = response.fallbackOccurred;
+      output.providerUsed = response.providerUsed;
+      return output;
     } catch (error: any) {
-      this.logMetric('generateCorrectiveActions', modelId, Date.now() - startTime, 0, error.message);
       throw error;
     }
   }
 }
 
 export const getAiService = (): AiService => AiService.getInstance();
-export { getGroqClient };
