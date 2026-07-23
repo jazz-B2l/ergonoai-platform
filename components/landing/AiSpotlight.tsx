@@ -60,8 +60,8 @@ export function AiSpotlight() {
     {
       title: isAr ? 'معالجة محلية بدون تتبع شخصي' : 'Zero Raw PII Sent to LLMs',
       desc: isAr
-        ? 'تُرسل مؤشرات بيئة العمل فقط لمحرك Groq AI بدون أي أسماء أو معرفات شخصية للحفاظ على خصوصيتك.'
-        : 'Only sanitized biomechanical indicators are sent to Groq AI. No employee PII is ever shared or stored by LLMs.',
+        ? 'تُرسل مؤشرات بيئة العمل فقط لمحرك Gemini AI بدون أي أسماء أو معرفات شخصية للحفاظ على خصوصيتك.'
+        : 'Only sanitized biomechanical indicators are sent to Gemini AI. No employee PII is ever shared or stored by LLMs.',
       icon: CheckCircle2
     }
   ]
@@ -76,7 +76,7 @@ export function AiSpotlight() {
         {/* Header */}
         <ScrollReveal className="text-center max-w-3xl mx-auto mb-16">
           <span className="text-xs font-bold font-mono tracking-widest uppercase text-teal-600 dark:text-teal-400 bg-teal-500/10 px-3.5 py-1.5 rounded-full border border-teal-500/20 mb-4 inline-block">
-            {isAr ? 'الذكاء الاصطناعي مع حماية الخصوصية' : 'Groq AI Engine & Privacy By Design'}
+            {isAr ? 'الذكاء الاصطناعي مع حماية الخصوصية' : 'Gemini AI Engine & Privacy By Design'}
           </span>
           <h2 className="font-sora text-3xl md:text-5xl font-bold text-slate-900 dark:text-white tracking-tight mt-2">
             {isAr ? 'مساعد الذكاء الاصطناعي الخاص بالسلامة المهنية' : 'Intelligent Ergonomics Copilot'}
@@ -84,7 +84,7 @@ export function AiSpotlight() {
           <p className="text-slate-600 dark:text-slate-400 text-sm md:text-base mt-4 leading-relaxed">
             {isAr
               ? 'حلول فورية لتحليل مخاطر الأقسام وتوليد التوصيات مع ضمان الخصوصية السرية التامة للموظفين.'
-              : 'Real-time hazard query engine backed by Groq LLMs while strictly safeguarding individual employee privacy.'}
+              : 'Real-time hazard query engine backed by Gemini LLMs while strictly safeguarding individual employee privacy.'}
           </p>
         </ScrollReveal>
 

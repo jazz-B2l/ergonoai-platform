@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react'
 import { FileText, Download, Clock, Shield, TrendingUp, Sparkles, Loader2, Printer, AlertTriangle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
+import { useAIProvider } from '@/components/providers/AIProviderContext'
 
 export function HRReports() {
+  const { aiProvider, aiModel } = useAIProvider()
   const [reports, setReports] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
@@ -82,7 +84,11 @@ export function HRReports() {
           responseRate: r.parameters?.totalAssessments ? `${r.parameters.totalAssessments} responses` : 'N/A',
           status: r.status === 'COMPLETED' ? 'ready' : r.status === 'FAILED' ? 'failed' : 'processing',
           description: `AI-generated report compiled in ${r.generation_time_ms || 0}ms. Storage size: ${(r.file_size / 1024).toFixed(2)} KB.`,
-          rawReport: r.parameters?.reportData
+          rawReport: r.parameters?.reportData,
+          fallbackOccurred: r.parameters?.fallbackOccurred || false,
+          fallbackDetails: r.parameters?.fallbackDetails || '',
+          providerUsed: r.parameters?.aiProvider || '',
+          modelUsed: r.parameters?.aiModel || ''
         }))
         setReports(mapped)
       }
@@ -108,7 +114,11 @@ export function HRReports() {
       const res = await fetch('/api/ai/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ organizationId: orgId })
+        body: JSON.stringify({ 
+          organizationId: orgId,
+          aiProvider,
+          aiModel: aiProvider === 'auto' ? undefined : aiModel
+        })
       })
       if (res.ok) {
         await fetchReports()
@@ -405,7 +415,7 @@ export function HRReports() {
           ` : ''}
           
           <div class="footer">
-            ErgonoAI Workplace Ergonomics Management Platform &middot; Powered by Groq AI
+            ErgonoAI Workplace Ergonomics Management Platform &middot; Powered by Google Gemini AI
           </div>
           
           <script>
@@ -547,7 +557,14 @@ export function HRReports() {
                     <FileText className={cn('w-5 h-5', report.type === 'wellbeing' ? 'text-success' : 'text-brand')} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground">{report.title}</h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-sm font-semibold text-foreground">{report.title}</h3>
+                      {report.fallbackOccurred && (
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20">
+                          Generated with Groq (fallback)
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground mt-0.5">{report.subtitle}</p>
                     <p className="text-xs text-muted-foreground mt-2 leading-relaxed max-w-xl">{report.description}</p>
                     <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">

@@ -33,14 +33,14 @@ export function Features() {
     {
       icon: Cpu,
       badge: 'MODULE 2',
-      title: isAr ? 'محرك تحليل المخاطر بـ Groq AI' : 'Groq AI Risk & Recommendation Core',
+      title: isAr ? 'محرك تحليل المخاطر بـ Gemini AI' : 'Gemini AI Risk & Recommendation Core',
       subtitle: isAr ? 'تقييم ذكي فورية للوضعية وآلام الجسم' : 'Instant posture scoring & RAG-backed remediation',
       desc: isAr
         ? 'يحلل نموذج الذكاء الاصطناعي إجابات الموظف فور إرسالها لتقييم آلام الجسم (الرقبة، الظهر، المعصم) واستخراج درجة خطورة كسر المعايير فورياً.'
         : 'Processes employee assessment telemetry instantaneously. Evaluates biomechanical strain, maps body pain zones, and calculates ISO 7730 / RULA / REBA risk scores.',
       metrics: [
         { label: isAr ? 'زمن تحليل الذكاء الاصطناعي' : 'AI Processing Time', val: '< 800ms' },
-        { label: isAr ? 'محرك الذكاء الاصطناعي' : 'AI LLM Engine', val: 'Groq Llama-3' },
+        { label: isAr ? 'محرك الذكاء الاصطناعي' : 'AI LLM Engine', val: 'Gemini 2.5' },
         { label: isAr ? 'دقة تحديد المخاطر' : 'Risk Accuracy', val: '98.4%' }
       ],
       points: isAr
