@@ -254,7 +254,7 @@ export default function OrgProfilePage() {
           const { data: roleData } = await supabase.from('roles').select('*')
           setRoles(roleData || [])
           if (roleData && roleData.length > 0) {
-            const employeeRole = roleData.find(r => r.name.toUpperCase() === 'EMPLOYEE')
+            const employeeRole = roleData.find((r: { name: string; id: string }) => r.name.toUpperCase() === 'EMPLOYEE')
             setSelectedRole(employeeRole ? employeeRole.id : roleData[0].id)
           }
         }
