@@ -1,11 +1,19 @@
 import Groq from 'groq-sdk';
-import { AiProvider, ChatCompletionMessage, AiModelConfig, AiCompletionResponse } from './types';
+import { AiProvider, ChatCompletionMessage, AiModelConfig, AiCompletionResponse, AiProviderCapabilities } from './types';
 import { AI_CONSTANTS } from './constants';
 
 export class GroqProvider implements AiProvider {
   public readonly name = 'groq';
   private static instance: GroqProvider | null = null;
   private client: Groq;
+
+  public readonly capabilities: AiProviderCapabilities = {
+    supportsStreaming: true,
+    supportsVision: true,
+    supportsThinking: false,
+    supportsJSON: true,
+    supportsFiles: false,
+  };
 
   private constructor() {
     const apiKey = process.env.GROQ_API_KEY;
@@ -16,10 +24,6 @@ export class GroqProvider implements AiProvider {
     this.client = new Groq({ apiKey });
   }
 
-  /**
-   * Retrieves the singleton instance of the GroqProvider.
-   * Throws an error immediately at startup if the API key is not configured.
-   */
   public static getInstance(): GroqProvider {
     if (!GroqProvider.instance) {
       GroqProvider.instance = new GroqProvider();
@@ -28,8 +32,26 @@ export class GroqProvider implements AiProvider {
   }
 
   /**
+   * Health check verification for Groq connectivity.
+   */
+  async isHealthy(): Promise<boolean> {
+    try {
+      const response = await this.client.chat.completions.create({
+        messages: [{ role: 'user', content: 'respond with single word "OK"' }],
+        model: 'llama-3.1-8b-instant',
+        max_tokens: 5,
+      }, {
+        timeout: 5000, // 5 seconds health check timeout
+      });
+      return !!response.choices[0]?.message?.content;
+    } catch (err) {
+      console.warn('[GROQ HEALTH CHECK FAILED]:', err);
+      return false;
+    }
+  }
+
+  /**
    * Performs chat completion against Groq API.
-   * Implements timeout and measures usage metrics.
    */
   async chatCompletion(
     messages: ChatCompletionMessage[],
@@ -42,8 +64,7 @@ export class GroqProvider implements AiProvider {
     const timeoutMs = config.timeoutMs || 30000;
 
     try {
-      // Execute chat completion with request level timeout options
-      const completionPromise = this.client.chat.completions.create({
+      const response = await this.client.chat.completions.create({
         messages: messages.map(m => ({
           role: m.role,
           content: m.content
@@ -55,7 +76,6 @@ export class GroqProvider implements AiProvider {
         timeout: timeoutMs
       });
 
-      const response = await completionPromise;
       const latencyMs = Date.now() - startTime;
       const content = response.choices[0]?.message?.content || '';
 
@@ -66,20 +86,20 @@ export class GroqProvider implements AiProvider {
       return {
         content,
         modelUsed: response.model || model,
+        providerUsed: this.name,
         promptTokens: response.usage?.prompt_tokens,
         completionTokens: response.usage?.completion_tokens,
         totalTokens: response.usage?.total_tokens,
         latencyMs,
+        fallbackOccurred: false,
       };
     } catch (error: any) {
       const latencyMs = Date.now() - startTime;
       
-      // Determine if error was a timeout
       if (error?.name === 'APIConnectionTimeoutError' || error?.message?.includes('timeout') || error?.message?.includes('Timeout')) {
         throw new Error(`${AI_CONSTANTS.ERRORS.TIMEOUT} (${timeoutMs}ms passed). Latency: ${latencyMs}ms.`);
       }
 
-      // Check for rate limits (HTTP 429)
       if (error?.status === 429 || error?.message?.includes('429') || error?.message?.includes('Rate limit')) {
         throw new Error(`${AI_CONSTANTS.ERRORS.RATE_LIMIT_EXCEEDED} Details: ${error?.message || error}`);
       }
@@ -90,7 +110,3 @@ export class GroqProvider implements AiProvider {
 }
 
 export const getGroqProvider = (): GroqProvider => GroqProvider.getInstance();
-export const getGroqClient = (): Groq => {
-  // Returns raw Groq SDK instance if needed for streaming direct
-  return GroqProvider.getInstance()['client'];
-};
