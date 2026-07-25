@@ -71,36 +71,41 @@ export async function verifyAdminPassword(password: string) {
 }
 
 export async function getOrganizationsAsAdmin() {
-  // Verify the admin session signature
-  const cookieStore = await cookies()
-  const adminToken = cookieStore.get('ergono_admin')?.value
-  const expectedToken = getAdminTokenSignature()
-  
-  if (!adminToken || adminToken !== expectedToken) {
-    throw new Error('Unauthorized')
+  try {
+    // Verify the admin session signature
+    const cookieStore = await cookies()
+    const adminToken = cookieStore.get('ergono_admin')?.value
+    const expectedToken = getAdminTokenSignature()
+    
+    if (!adminToken || adminToken !== expectedToken) {
+      return { success: false, error: 'Unauthorized: Invalid or expired admin session. Please log in again.' }
+    }
+
+    // Create a Supabase client with the Service Role Key to bypass RLS
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return { success: false, error: 'Configuration Error: Supabase environment variables (specifically SUPABASE_SERVICE_ROLE_KEY) are missing on this environment.' }
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+    const { data, error } = await supabase
+      .from('organizations')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching organizations as admin:', error)
+      return { success: false, error: 'Database Query Failed: ' + error.message }
+    }
+
+    return { success: true, data: data || [] }
+  } catch (e: any) {
+    console.error('Unexpected admin fetch error:', e)
+    return { success: false, error: 'Unexpected system error: ' + (e.message || String(e)) }
   }
-
-  // Create a Supabase client with the Service Role Key to bypass RLS
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-  if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error('Supabase environment variables not set')
-  }
-
-  const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
-  const { data, error } = await supabase
-    .from('organizations')
-    .select('*')
-    .order('created_at', { ascending: false })
-
-  if (error) {
-    console.error('Error fetching organizations as admin:', error)
-    throw new Error('Failed to fetch organizations')
-  }
-
-  return data
 }
 
 export async function toggleOrganizationActiveStatus(orgId: string, isActive: boolean) {
