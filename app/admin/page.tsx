@@ -1,6 +1,8 @@
 import { getOrganizationsAsAdmin } from './actions'
 import { OrganizationTable } from '@/components/admin/organization-table'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminPage() {
   const result = await getOrganizationsAsAdmin()
 
