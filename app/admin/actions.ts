@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@supabase/supabase-js'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { createHmac, pbkdf2Sync } from 'crypto'
 
 // A server-side secret key to sign the admin cookie
@@ -51,11 +51,16 @@ export async function verifyAdminPassword(password: string) {
     // Generate a secure signed token
     const adminToken = getAdminTokenSignature()
     
+    // Detect if running on localhost to bypass secure-cookie rejection over HTTP
+    const headerStore = await headers()
+    const host = headerStore.get('host') || ''
+    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1')
+    
     // Set a cookie to indicate the user is an admin
     const cookieStore = await cookies()
     cookieStore.set('ergono_admin', adminToken, {
       httpOnly: true, // Prevents client-side scripts from accessing the cookie
-      secure: process.env.NODE_ENV === 'production',
+      secure: !isLocalhost && process.env.NODE_ENV === 'production',
       maxAge: 60 * 60 * 24, // 1 day
       path: '/',
       sameSite: 'strict', // Protects against CSRF
