@@ -97,3 +97,37 @@ export async function getOrganizationsAsAdmin() {
 
   return data
 }
+
+export async function toggleOrganizationActiveStatus(orgId: string, isActive: boolean) {
+  // Verify the admin session signature
+  const cookieStore = await cookies()
+  const adminToken = cookieStore.get('ergono_admin')?.value
+  const expectedToken = getAdminTokenSignature()
+  
+  if (!adminToken || adminToken !== expectedToken) {
+    throw new Error('Unauthorized')
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Supabase environment variables not set')
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+  const { data, error } = await supabase
+    .from('organizations')
+    .update({ is_active: isActive })
+    .eq('id', orgId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error toggling organization status:', error)
+    throw new Error('Failed to update organization status')
+  }
+
+  return data
+}

@@ -9,6 +9,7 @@ const PUBLIC_ROUTES = [
   '/forgot-password',
   '/reset-password',
   '/role-select',
+  '/deactivated',
 ]
 
 const PUBLIC_API_ROUTES = [
@@ -52,10 +53,35 @@ export async function proxy(request: NextRequest) {
     }
   )
 
+  const pathname = request.nextUrl.pathname
+
+  // 1. Bypass normal client auth check for admin routes
+  // (The admin page verifies its own ergono_admin signed cookie securely)
+  if (pathname.startsWith('/admin')) {
+    return supabaseResponse
+  }
+
   // Validate authenticated user securely with getUser() instead of getSession()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const pathname = request.nextUrl.pathname
+  // 2. Check if user's organization is active
+  if (user && pathname !== '/deactivated' && !pathname.startsWith('/api/')) {
+    const { data: member } = await supabase
+      .from('organization_members')
+      .select('organization_id, organizations(is_active)')
+      .eq('profile_id', user.id)
+      .eq('is_active', true)
+      .limit(1)
+      .single()
+
+    const orgIsActive = (member as any)?.organizations?.is_active !== false
+
+    if (member && !orgIsActive) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/deactivated'
+      return NextResponse.redirect(url)
+    }
+  }
 
   const isPublicRoute = PUBLIC_ROUTES.some(route => {
     if (route === '/') {
