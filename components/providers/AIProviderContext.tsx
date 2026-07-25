@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { CompanyContext } from './CompanyProvider';
+import { SessionContext } from './SessionProvider';
 import { supabase } from '@/lib/supabase';
 import { AIProviderType } from '@/lib/ai/types';
 
@@ -20,6 +21,7 @@ export const AIProviderContext = createContext<AIProviderContextType | undefined
 
 export function AIProviderProvider({ children }: { children: ReactNode }) {
   const companyCtx = useContext(CompanyContext);
+  const sessionCtx = useContext(SessionContext);
   const activeOrgId = companyCtx?.activeCompany?.id;
 
   const [aiProvider, setAiProvider] = useState<AIProviderType>('auto');
@@ -97,12 +99,10 @@ export function AIProviderProvider({ children }: { children: ReactNode }) {
   // Cache the user ID once when org context is ready — avoids calling
   // supabase.auth.getUser() on every preference save (rate limit risk).
   useEffect(() => {
-    if (!cachedUserIdRef.current) {
-      supabase.auth.getSession().then(({ data }: { data: any }) => {
-        cachedUserIdRef.current = data.session?.user?.id ?? null;
-      });
+    if (sessionCtx?.user?.id) {
+      cachedUserIdRef.current = sessionCtx.user.id;
     }
-  }, []);
+  }, [sessionCtx?.user?.id]);
 
   // 3. Health Checks with 30-sec Cache
   const checkProvidersHealth = async (force = false) => {

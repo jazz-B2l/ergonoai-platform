@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import type { Role, PersonalData, SubmittedForm, StandaloneNote, ActiveAssessment } from './types'
 import { mockSubmittedForms, mockStandaloneNotes } from './types'
 import { supabase } from './supabase'
+import { SessionContext } from '@/components/providers/SessionProvider'
 
 export type HRPage =
   | 'overview'
@@ -77,14 +78,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [personalData, setPersonalData] = useState<PersonalData | null>(null)
   const [loadingProfile, setLoadingProfile] = useState(true)
 
+  const sessionCtx = useContext(SessionContext)
+  const user = sessionCtx?.user
+  const sessionLoading = sessionCtx?.isLoading
+
   useEffect(() => {
     let active = true
 
-    const loadedUserIdRef = { current: '' }
-
     const checkProfile = async (userId: string) => {
       try {
-        loadedUserIdRef.current = userId
         const { data: member, error: memberError } = await supabase
           .from('organization_members')
           .select('id')
@@ -134,41 +136,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    const initAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session?.user) {
-          await checkProfile(session.user.id)
-        } else {
-          setLoadingProfile(false)
-        }
-      } catch (err) {
-        console.error('Error getting session on init:', err)
-        setLoadingProfile(false)
-      }
+    if (sessionLoading) {
+      setLoadingProfile(true)
+    } else if (user) {
+      setLoadingProfile(true)
+      checkProfile(user.id)
+    } else {
+      setPersonalData(null)
+      setPersonalDataSubmitted(false)
+      setLoadingProfile(false)
     }
-
-    initAuth()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        if (loadedUserIdRef.current !== session.user.id) {
-          setLoadingProfile(true)
-          await checkProfile(session.user.id)
-        }
-      } else if (event === 'SIGNED_OUT') {
-        loadedUserIdRef.current = ''
-        setPersonalData(null)
-        setPersonalDataSubmitted(false)
-        setLoadingProfile(false)
-      }
-    })
 
     return () => {
       active = false
-      subscription.unsubscribe()
     }
-  }, [])
+  }, [user?.id, sessionLoading])
   const [questionAnswers, setQuestionAnswers] = useState<Record<string, string>>({})
   const [questionNotes, setQuestionNotes] = useState<Record<string, string>>({})
   const [submittedForms, setSubmittedForms] = useState<SubmittedForm[]>(mockSubmittedForms)

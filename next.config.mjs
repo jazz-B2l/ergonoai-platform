@@ -24,10 +24,9 @@ const securityHeaders = [
 ]
 
 const nextConfig = {
-  // Strict Mode is disabled because it double-invokes useEffect in dev,
-  // causing Supabase's onAuthStateChange to subscribe twice and produce
-  // concurrent token-refresh collisions (AuthRefreshDiscardedError).
-  reactStrictMode: false,
+  // Strict Mode is now safely enabled since we consolidated all client-side auth state
+  // into SessionProvider, preventing concurrent session refreshes (AuthRefreshDiscardedError).
+  reactStrictMode: true,
   poweredByHeader: false,
   typescript: {
     ignoreBuildErrors: false,

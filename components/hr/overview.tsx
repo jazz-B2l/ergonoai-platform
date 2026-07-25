@@ -314,7 +314,11 @@ export function HROverview() {
         onClose={() => setModalOpen(false)}
         departments={deptsList}
         onLaunch={async ({ title: campaignTitle, startDate, endDate, config }) => {
-          if (!orgId) return
+          if (!orgId) {
+            console.error('Failed to create campaign: No organization ID found. Ensure you are logged in and associated with an active organization.')
+            alert('Failed to launch campaign: No organization ID found. Please make sure you are logged in and associated with an active organization.')
+            return
+          }
           try {
             const { data: campaign, error } = await supabase
               .from('assessment_campaigns')
@@ -330,7 +334,12 @@ export function HROverview() {
               .select()
               .single()
 
-            if (!error && campaign) {
+            if (error) {
+              console.error('Supabase error creating campaign:', error)
+              throw new Error(error.message || 'Database error occurred')
+            }
+
+            if (campaign) {
               setActiveAssessment({
                 id: campaign.id,
                 title: campaign.title,
@@ -339,8 +348,9 @@ export function HROverview() {
               })
               await calculateStats(orgId, selectedCampaignId)
             }
-          } catch (e) {
+          } catch (e: any) {
             console.error('Failed to create campaign:', e)
+            alert('Failed to launch campaign: ' + (e.message || 'Unknown error'))
           }
         }}
       />
