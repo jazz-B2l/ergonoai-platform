@@ -42,9 +42,9 @@ export function Hero() {
         <div className={styles.blurredCircle1}></div>
         <div className={styles.blurredCircle2}></div>
         <div className={styles.animatedGrid}></div>
-        {/* Giant Hadjer watermark background text */}
-        <div className="absolute top-[25%] left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none text-[20vw] font-black opacity-[0.04] dark:opacity-[0.03] text-slate-900 dark:text-white tracking-widest uppercase font-sora z-0">
-          {t.hadjerWord}
+        {/* Giant ErgonoAI watermark background text */}
+        <div className="absolute top-[25%] left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none text-[11vw] font-black opacity-[0.04] dark:opacity-[0.03] text-slate-900 dark:text-white tracking-widest uppercase font-sora z-0 whitespace-nowrap">
+          {t.ergonoaiWord}
         </div>
         {/* Glowing particles */}
         {Array.from({ length: 15 }).map((_, i) => {
@@ -67,16 +67,6 @@ export function Hero() {
 
       {/* Content */}
       <div className="relative z-10 max-w-5xl mx-auto px-6 text-center pt-20">
-        <motion.div 
-          initial={{ opacity: 0, y: -20, filter: 'blur(4px)' }}
-          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-teal-500/10 dark:bg-teal-500/5 border border-teal-500/30 dark:border-teal-400/20 text-teal-700 dark:text-teal-300 text-base sm:text-lg font-extrabold tracking-[0.2em] uppercase mb-8 shadow-[0_0_25px_rgba(20,184,166,0.15)] hover:scale-105 transition-all duration-300 cursor-default select-none animate-fade-in"
-        >
-          <Sparkles className="w-5 h-5 text-teal-600 dark:text-teal-400 animate-pulse" />
-          <span>{t.hadjerWord}</span>
-        </motion.div>
-
         <motion.h1 
           initial={{ opacity: 0, y: 30, filter: 'blur(8px)' }}
           animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
