@@ -464,9 +464,9 @@ function SignupContent() {
               {/* Progress Bar (HR Only) */}
               {role === 'hr' && (
                 <div className="flex items-center justify-between mb-8 mt-6 max-w-md mx-auto">
-                  <div className={`h-2 rounded-full flex-1 ${step >= 1 ? 'bg-teal-600' : 'bg-slate-200'}`}></div>
+                  <div className={`h-2 rounded-full flex-1 ${step >= 1 ? 'bg-teal-600' : 'bg-slate-200 dark:bg-zinc-800'}`}></div>
                   <div className="w-2"></div>
-                  <div className={`h-2 rounded-full flex-1 ${step >= 2 ? 'bg-teal-600' : 'bg-slate-200'}`}></div>
+                  <div className={`h-2 rounded-full flex-1 ${step >= 2 ? 'bg-teal-600' : 'bg-slate-200 dark:bg-zinc-800'}`}></div>
                 </div>
               )}
 
@@ -571,9 +571,9 @@ function SignupContent() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <InputLabel htmlFor="language">{t.lang}</InputLabel>
-                          <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200 h-[50px] items-center">
-                            <button type="button" onClick={() => setLanguage('en')} className={`py-1.5 rounded-lg text-sm font-semibold transition-all ${language === 'en' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>English</button>
-                            <button type="button" onClick={() => setLanguage('ar')} className={`py-1.5 rounded-lg text-sm font-semibold transition-all ${language === 'ar' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>العربية</button>
+                          <div className="grid grid-cols-2 gap-2 bg-slate-100 dark:bg-zinc-950 p-1 rounded-xl border border-slate-200 dark:border-zinc-800 h-[50px] items-center">
+                            <button type="button" onClick={() => setLanguage('en')} className={`py-1.5 rounded-lg text-sm font-semibold transition-all cursor-pointer ${language === 'en' ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}>English</button>
+                            <button type="button" onClick={() => setLanguage('ar')} className={`py-1.5 rounded-lg text-sm font-semibold transition-all cursor-pointer ${language === 'ar' ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}>العربية</button>
                           </div>
                         </div>
                       </div>
@@ -596,21 +596,21 @@ function SignupContent() {
 
                         {inviteVerified && (
                           <div className="space-y-1.5 animate-in fade-in duration-200">
-                            <label htmlFor="signupDept" className="block text-sm font-semibold text-slate-700 mb-1">{t.selectDept}</label>
+                            <label htmlFor="signupDept" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{t.selectDept}</label>
                             {signupDepts.length > 0 ? (
                               <select
                                 id="signupDept"
                                 value={selectedDeptId}
                                 onChange={(e) => setSelectedDeptId(e.target.value)}
-                                className="block w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all appearance-none"
+                                className="block w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all appearance-none"
                               >
-                                <option value="">Choose department...</option>
+                                <option value="" className="dark:bg-zinc-900">Choose department...</option>
                                 {signupDepts.map((d) => (
-                                  <option key={d.id} value={d.id}>{d.name}</option>
+                                  <option key={d.id} value={d.id} className="dark:bg-zinc-900">{d.name}</option>
                                 ))}
                               </select>
                             ) : (
-                              <p className="text-xs text-slate-400 italic px-1">No departments set up yet — you can update this later.</p>
+                              <p className="text-xs text-slate-400 dark:text-slate-500 italic px-1">No departments set up yet — you can update this later.</p>
                             )}
                           </div>
                         )}
@@ -686,9 +686,9 @@ function SignupContent() {
                         ) : null}
                         <div>
                           <InputLabel htmlFor="language">{t.lang}</InputLabel>
-                          <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200 h-[50px] items-center">
-                            <button type="button" onClick={() => setLanguage('en')} className={`py-1.5 rounded-lg text-sm font-semibold transition-all ${language === 'en' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>English</button>
-                            <button type="button" onClick={() => setLanguage('ar')} className={`py-1.5 rounded-lg text-sm font-semibold transition-all ${language === 'ar' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>العربية</button>
+                          <div className="grid grid-cols-2 gap-2 bg-slate-100 dark:bg-zinc-950 p-1 rounded-xl border border-slate-200 dark:border-zinc-800 h-[50px] items-center">
+                            <button type="button" onClick={() => setLanguage('en')} className={`py-1.5 rounded-lg text-sm font-semibold transition-all cursor-pointer ${language === 'en' ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}>English</button>
+                            <button type="button" onClick={() => setLanguage('ar')} className={`py-1.5 rounded-lg text-sm font-semibold transition-all cursor-pointer ${language === 'ar' ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}>العربية</button>
                           </div>
                         </div>
                       </div>
@@ -714,7 +714,7 @@ function SignupContent() {
               {/* STEP 2: Organization Identity */}
               {step === 2 && role === 'hr' && (
                 <div className="space-y-4 animate-in fade-in duration-300">
-                  <h3 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-2 mb-4 font-sora">{t.stepOrgIdentity}</h3>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-zinc-800 pb-2 mb-4 font-sora">{t.stepOrgIdentity}</h3>
                   
                   <div>
                     <InputLabel htmlFor="organizationName">{t.orgName} *</InputLabel>
@@ -729,7 +729,7 @@ function SignupContent() {
                       value={organizationDescription}
                       onChange={(e) => setOrganizationDescription(e.target.value)}
                       placeholder={t.orgDescPlaceholder}
-                      className="block w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all resize-none"
+                      className="block w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all resize-none"
                     />
                   </div>
 
@@ -744,14 +744,14 @@ function SignupContent() {
                         id="organizationSize"
                         value={organizationSize}
                         onChange={(e) => setOrganizationSize(e.target.value)}
-                        className="block w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all appearance-none"
+                        className="block w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all appearance-none"
                       >
-                        <option value="">{t.selectSize}</option>
-                        <option value="1-10">1 - 10 employees</option>
-                        <option value="11-50">11 - 50 employees</option>
-                        <option value="51-200">51 - 200 employees</option>
-                        <option value="201-500">201 - 500 employees</option>
-                        <option value="500+">500+ employees</option>
+                        <option value="" className="dark:bg-zinc-900">{t.selectSize}</option>
+                        <option value="1-10" className="dark:bg-zinc-900">1 - 10 employees</option>
+                        <option value="11-50" className="dark:bg-zinc-900">11 - 50 employees</option>
+                        <option value="51-200" className="dark:bg-zinc-900">51 - 200 employees</option>
+                        <option value="201-500" className="dark:bg-zinc-900">201 - 500 employees</option>
+                        <option value="500+" className="dark:bg-zinc-900">500+ employees</option>
                       </select>
                     </div>
                     <div>
@@ -771,8 +771,8 @@ function SignupContent() {
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-slate-100 mt-4 space-y-4">
-                    <h4 className="text-sm font-semibold text-slate-800">{t.socialLinks}</h4>
+                  <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 mt-4 space-y-4">
+                    <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">{t.socialLinks}</h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <Input id="organizationLinkedin" type="url" value={organizationLinkedin} onChange={(e) => setOrganizationLinkedin(e.target.value)} placeholder="LinkedIn URL" />
                       <Input id="organizationTwitter" type="url" value={organizationTwitter} onChange={(e) => setOrganizationTwitter(e.target.value)} placeholder="Twitter URL" />
@@ -781,7 +781,7 @@ function SignupContent() {
                   </div>
 
                   <div className="pt-4 flex justify-between">
-                    <button type="button" onClick={prevStep} className="flex items-center gap-2 py-3 px-6 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition-all cursor-pointer">
+                    <button type="button" onClick={prevStep} className="flex items-center gap-2 py-3 px-6 rounded-xl bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-700 dark:text-slate-200 font-semibold transition-all cursor-pointer">
                       <ChevronLeft className="w-4 h-4" /> {t.back}
                     </button>
                     <button type="submit" disabled={loading} className="flex items-center justify-center gap-2 py-3 px-6 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold transition-all shadow-md cursor-pointer">
@@ -793,9 +793,9 @@ function SignupContent() {
             </form>
           )}
 
-          <div className="mt-6 flex items-start gap-3 p-4 rounded-xl bg-slate-50 border border-slate-200">
+          <div className="mt-6 flex items-start gap-3 p-4 rounded-xl bg-slate-50 dark:bg-zinc-950/50 border border-slate-200 dark:border-zinc-800">
             <Activity className="w-4 h-4 text-teal-600 mt-0.5 shrink-0 animate-pulse" />
-            <p className="text-xs text-slate-500 leading-relaxed font-medium">
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
               {t.gdprNotice}
             </p>
           </div>
