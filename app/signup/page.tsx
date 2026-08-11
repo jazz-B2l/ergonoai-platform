@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, useContext } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Brain, Activity, Shield, User, ArrowRight, Loader2, Check, ChevronRight, ChevronLeft, Eye, EyeOff } from 'lucide-react'
@@ -10,6 +10,8 @@ import { WILAYAS } from '@/lib/constants'
 
 import { translations } from '@/lib/translations'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { UserContext } from '@/components/providers/UserProvider'
+import { CompanyContext } from '@/components/providers/CompanyProvider'
 
 const InputLabel = ({ htmlFor, children }: { htmlFor: string, children: React.ReactNode }) => (
   <label htmlFor={htmlFor} className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{children}</label>
@@ -26,6 +28,8 @@ function SignupContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { setRole: setAppRole, language, setLanguage } = useApp()
+  const userCtx = useContext(UserContext)
+  const companyCtx = useContext(CompanyContext)
   
   const roleParam = searchParams.get('role')
   const initialRole = roleParam === 'hr' || roleParam === 'employee' ? roleParam : 'hr'
@@ -98,7 +102,8 @@ function SignupContent() {
   }, [])
 
   const verifyInviteCode = async (code: string) => {
-    if (!code || code.trim().length < 5) {
+    const normalizedCode = code.trim().toUpperCase()
+    if (!normalizedCode || normalizedCode.length < 5) {
       setInviteVerified(false)
       setSignupDepts([])
       return
@@ -108,7 +113,7 @@ function SignupContent() {
       const { data: invite } = await supabase
         .from('invite_codes')
         .select('organization_id')
-        .eq('code', code.trim())
+        .eq('code', normalizedCode)
         .maybeSingle()
 
       if (invite?.organization_id) {
@@ -131,7 +136,7 @@ function SignupContent() {
   }
 
   useEffect(() => {
-    const code = inviteCode.trim()
+    const code = inviteCode.trim().toUpperCase()
     if (code.length >= 12) {
       verifyInviteCode(code)
     } else {
@@ -140,7 +145,45 @@ function SignupContent() {
     }
   }, [inviteCode])
 
-  const nextStep = () => setStep(s => s + 1)
+  const validateStep1 = () => {
+    setError(null)
+
+    if (isLoggedIn) return true
+
+    if (!email) {
+      setError(language === 'ar' ? 'الرجاء إدخال البريد الإلكتروني.' : 'Email is required.')
+      return false
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setError(language === 'ar' ? 'الرجاء إدخال بريد إلكتروني صحيح.' : 'Please enter a valid email address.')
+      return false
+    }
+
+    if (!password) {
+      setError(language === 'ar' ? 'الرجاء إدخال كلمة المرور.' : 'Password is required.')
+      return false
+    }
+
+    if (password.length < 6) {
+      setError(language === 'ar' ? 'يجب أن تكون كلمة المرور 6 أحرف على الأقل.' : 'Password must be at least 6 characters.')
+      return false
+    }
+
+    if (password !== confirmPassword) {
+      setError(language === 'ar' ? 'كلمتا المرور غير متطابقتين. يرجى التحقق وإعادة المحاولة.' : 'Passwords do not match. Please check and try again.')
+      return false
+    }
+
+    return true
+  }
+
+  const nextStep = () => {
+    if (validateStep1()) {
+      setStep(s => s + 1)
+    }
+  }
   const prevStep = () => setStep(s => s - 1)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -210,7 +253,7 @@ function SignupContent() {
           updated_at: new Date().toISOString()
         })
 
-      if (profileError) console.error('Error inserting profile:', profileError.message)
+      if (profileError) throw new Error(`Profile creation failed: ${profileError.message}`)
 
       // 3. Role specific logic
       if (role === 'hr') {
@@ -244,6 +287,18 @@ function SignupContent() {
 
         if (organizationError) throw new Error(`Organization creation failed: ${organizationError.message}`)
 
+        // Create organization settings
+        const { error: settingsError } = await supabase
+          .from('organization_settings')
+          .insert({
+            organization_id: organization.id,
+            language: language,
+            theme: 'system',
+            updated_by: user.id
+          })
+
+        if (settingsError) console.error('Error creating organization settings:', settingsError.message)
+
         let { data: adminRole } = await supabase
           .from('roles')
           .select('id')
@@ -260,18 +315,20 @@ function SignupContent() {
         }
 
         if (adminRole) {
-          await supabase.from('organization_members').insert({
+          const { error: memberError } = await supabase.from('organization_members').insert({
             profile_id: user.id,
             organization_id: organization.id,
             role_id: adminRole.id,
             is_active: true
           })
+          if (memberError) throw new Error(`Failed to associate admin membership: ${memberError.message}`)
         }
       } else {
+        const normalizedInviteCode = inviteCode.trim().toUpperCase()
         const { data: invite, error: inviteError } = await supabase
           .from('invite_codes')
           .select('*')
-          .eq('code', inviteCode)
+          .eq('code', normalizedInviteCode)
           .single()
 
         if (inviteError || !invite) {
@@ -294,8 +351,18 @@ function SignupContent() {
 
         if (memberError) throw new Error(`Failed to join organization: ${memberError.message}`)
 
-        await supabase.from('employee_profiles').insert({ member_id: member.id })
+        const { error: empProfileError } = await supabase.from('employee_profiles').insert({ member_id: member.id })
+        if (empProfileError) throw new Error(`Failed to create employee profile: ${empProfileError.message}`)
+
         await supabase.from('invite_codes').update({ used_count: (invite.used_count || 0) + 1 }).eq('id', invite.id)
+      }
+
+      // Refresh the contexts so the app knows the profile and organization are ready
+      if (userCtx) {
+        await userCtx.refreshProfile() // refresh profile
+      }
+      if (companyCtx) {
+        await companyCtx.refreshCompany() // refresh company list
       }
 
       setAppRole(role)
@@ -404,7 +471,7 @@ function SignupContent() {
               )}
 
               {error && (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-600 font-medium text-center animate-in fade-in duration-200">
+                <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-xl p-4 text-sm text-red-600 dark:text-red-400 font-medium text-center animate-in fade-in duration-200">
                   {error}
                 </div>
               )}
@@ -445,7 +512,7 @@ function SignupContent() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="••••••••"
-                                className="block w-full pl-4 pr-12 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                                className="block w-full pl-4 pr-12 py-3 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                               />
                               <button
                                 type="button"
@@ -471,12 +538,12 @@ function SignupContent() {
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 placeholder="••••••••"
-                                className={`block w-full pl-4 pr-12 py-3 bg-white border rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all ${
+                                className={`block w-full pl-4 pr-12 py-3 bg-white dark:bg-zinc-900 border rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all ${
                                   confirmPassword && password !== confirmPassword
-                                    ? 'border-red-300 focus:ring-red-400'
+                                    ? 'border-red-300 dark:border-red-900/50 focus:ring-red-400'
                                     : confirmPassword && password === confirmPassword
-                                    ? 'border-emerald-300 focus:ring-emerald-400'
-                                    : 'border-slate-200'
+                                    ? 'border-emerald-300 dark:border-emerald-800/50 focus:ring-emerald-400'
+                                    : 'border-slate-200 dark:border-zinc-800'
                                 }`}
                               />
                               <button
@@ -567,7 +634,7 @@ function SignupContent() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="••••••••"
-                                className="block w-full pl-4 pr-12 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                                className="block w-full pl-4 pr-12 py-3 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                               />
                               <button
                                 type="button"
@@ -593,12 +660,12 @@ function SignupContent() {
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 placeholder="••••••••"
-                                className={`block w-full pl-4 pr-12 py-3 bg-white border rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all ${
+                                className={`block w-full pl-4 pr-12 py-3 bg-white dark:bg-zinc-900 border rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all ${
                                   confirmPassword && password !== confirmPassword
-                                    ? 'border-red-300 focus:ring-red-400'
+                                    ? 'border-red-300 dark:border-red-900/50 focus:ring-red-400'
                                     : confirmPassword && password === confirmPassword
-                                    ? 'border-emerald-300 focus:ring-emerald-400'
-                                    : 'border-slate-200'
+                                    ? 'border-emerald-300 dark:border-emerald-800/50 focus:ring-emerald-400'
+                                    : 'border-slate-200 dark:border-zinc-800'
                                 }`}
                               />
                               <button

@@ -23,15 +23,26 @@ function ProvidersReadyGate({ children }: { children: ReactNode }) {
   const companyCtx = useContext(CompanyContext)
   const permissionCtx = useContext(PermissionContext)
 
-  // If ANY provider is still loading, show the splash screen
-  const isAnyLoading = 
-    sessionCtx?.isLoading || 
-    userCtx?.isLoading || 
-    companyCtx?.isLoading || 
-    permissionCtx?.isLoading
+  // Determine if we are on a public route where we don't need user details
+  const path = typeof window !== 'undefined' ? window.location.pathname : ''
+  const publicRoutes = ['/login', '/signup', '/verify-email', '/forgot-password', '/reset-password', '/']
+  const isPublic = publicRoutes.some(r => path === r || path.startsWith(r + '/'))
 
-  if (isAnyLoading) {
+  // If session is still loading, we must always wait to know the auth state
+  if (sessionCtx?.isLoading) {
     return <SplashLoader />
+  }
+
+  // If we are on a public route, we don't need to block on profile, company, or permissions loading
+  if (!isPublic) {
+    const isProtectedLoading = 
+      userCtx?.isLoading || 
+      companyCtx?.isLoading || 
+      permissionCtx?.isLoading
+
+    if (isProtectedLoading) {
+      return <SplashLoader />
+    }
   }
 
   return <>{children}</>
