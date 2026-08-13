@@ -360,16 +360,16 @@ export function HROverview() {
   // Onboarding Checklist for Empty State
   if (deptsList.length === 0) {
     return (
-      <div className="flex-1 h-full flex flex-col items-center justify-center p-6 bg-slate-50/50 overflow-y-auto">
+      <div className="flex-1 h-full flex flex-col items-center justify-center p-6 bg-slate-50/50 dark:bg-transparent overflow-y-auto">
         <div className="w-full max-w-5xl space-y-10 my-auto text-center font-sans">
           <div className="space-y-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-teal-600 bg-teal-50 px-3 py-1 rounded-full border border-teal-200/50">
+            <span className="text-xs font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/20 px-3 py-1 rounded-full border border-teal-200/50 dark:border-teal-900/30">
               {t.onboardingTitle}
             </span>
-            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 font-sora sm:text-4xl">
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-sora sm:text-4xl">
               {t.welcome}
             </h1>
-            <p className="text-sm text-slate-500 max-w-lg mx-auto leading-relaxed">
+            <p className="text-sm text-slate-500 dark:text-muted-foreground max-w-lg mx-auto leading-relaxed">
               {t.onboardingDesc}
             </p>
           </div>
@@ -378,7 +378,7 @@ export function HROverview() {
             {[
               {
                 icon: Building2,
-                color: 'text-teal-600 bg-teal-50 border-teal-100',
+                color: 'text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/20 border-teal-100 dark:border-teal-900/30',
                 title: t.stepDeptsTitle,
                 description: t.stepDeptsDesc,
                 action: (
@@ -393,13 +393,13 @@ export function HROverview() {
               },
               {
                 icon: Users,
-                color: 'text-indigo-600 bg-indigo-50 border-indigo-100',
+                color: 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/20 border-indigo-100 dark:border-indigo-900/30',
                 title: t.stepInviteTitle,
                 description: t.stepInviteDesc,
                 action: (
                   <Link
                     href="/org/settings"
-                    className="mt-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-all w-full text-center shadow-sm"
+                    className="mt-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-zinc-700 transition-all w-full text-center shadow-sm"
                   >
                     {t.stepInviteAction}
                     <Plus className="w-3.5 h-3.5" />
@@ -408,13 +408,13 @@ export function HROverview() {
               },
               {
                 icon: Sparkles,
-                color: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+                color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900/30',
                 title: t.stepSurveyTitle,
                 description: t.stepSurveyDesc,
                 action: (
                   <button
                     onClick={() => setModalOpen(true)}
-                    className="mt-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-all cursor-pointer w-full text-center shadow-sm"
+                    className="mt-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-zinc-700 transition-all cursor-pointer w-full text-center shadow-sm"
                   >
                     {t.stepSurveyAction}
                     <Play className="w-3 h-3 text-emerald-600 fill-emerald-600" />
@@ -422,13 +422,13 @@ export function HROverview() {
                 )
               }
             ].map(({ icon: Icon, color, title, description, action }) => (
-              <div key={title} className="group relative flex flex-col p-6 rounded-2xl bg-white border border-slate-200 hover:border-slate-300 transition-all duration-300 hover:shadow-md h-full justify-between space-y-6">
+              <div key={title} className="group relative flex flex-col p-6 rounded-2xl bg-card border border-border hover:border-border/80 transition-all duration-300 hover:shadow-md h-full justify-between space-y-6">
                 <div className="flex flex-col items-center text-center space-y-3 flex-1">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center border font-bold text-sm shrink-0 transition-transform group-hover:scale-105 ${color}`}>
                     <Icon className="w-5 h-5" />
                   </div>
-                  <h3 className="text-base font-bold text-slate-900 font-sora">{title}</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed max-w-[200px] flex-1">{description}</p>
+                  <h3 className="text-base font-bold text-foreground font-sora">{title}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed max-w-[200px] flex-1">{description}</p>
                 </div>
                 <div className="pt-2">
                   {action}
