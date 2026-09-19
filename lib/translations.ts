@@ -300,7 +300,10 @@ export const translations = {
       inviteInvalid: 'Invalid invite code',
       selectDept: 'Select Department',
       accountCreated: 'Account created!',
-      redirecting: 'Redirecting to your dashboard...'
+      redirecting: 'Redirecting to your dashboard...',
+      continueWithGoogle: 'Continue with Google',
+      signUpWithGoogle: 'Sign up with Google',
+      orContinueWithEmail: 'or continue with email'
     },
     dashboard: {
       title: 'DASHBOARD',
@@ -414,6 +417,8 @@ export const translations = {
       goDashboard: 'Go to Dashboard',
       completeOnboarding: 'Complete Onboarding',
       signOutAnother: 'Sign out / Use another account',
+      continueWithGoogle: 'Continue with Google',
+      orContinueWithEmail: 'or continue with email',
     },
     employee: {
       private: 'Private',
@@ -806,7 +811,10 @@ export const translations = {
       inviteInvalid: 'رمز الدعوة غير صالح',
       selectDept: 'اختر القسم',
       accountCreated: 'تم إنشاء الحساب بنجاح!',
-      redirecting: 'جاري التوجيه إلى لوحة التحكم...'
+      redirecting: 'جاري التوجيه إلى لوحة التحكم...',
+      continueWithGoogle: 'المتابعة باستخدام جوجل',
+      signUpWithGoogle: 'التسجيل باستخدام جوجل',
+      orContinueWithEmail: 'أو المتابعة بالبريد الإلكتروني'
     },
     dashboard: {
       title: 'لوحة التحكم',
@@ -920,6 +928,8 @@ export const translations = {
       goDashboard: 'الذهاب إلى لوحة التحكم',
       completeOnboarding: 'إكمال إعداد الحساب',
       signOutAnother: 'تسجيل الخروج / استخدام حساب آخر',
+      continueWithGoogle: 'المتابعة باستخدام جوجل',
+      orContinueWithEmail: 'أو المتابعة بالبريد الإلكتروني',
     },
     employee: {
       private: 'خاص / سرّي',

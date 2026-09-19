@@ -84,6 +84,7 @@ function SignupContent() {
   const tc = translations[language].common
 
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
 
   useEffect(() => {
     if (roleParam === 'hr' || roleParam === 'employee') {
@@ -97,9 +98,35 @@ function SignupContent() {
       if (user) {
         setIsLoggedIn(true)
         setEmail(user.email || '')
+        if (user.user_metadata) {
+          const fullName = user.user_metadata.full_name || user.user_metadata.name || ''
+          if (fullName) {
+            const parts = fullName.trim().split(' ')
+            setFirstName(prev => prev || parts[0] || '')
+            setLastName(prev => prev || parts.slice(1).join(' ') || '')
+          }
+        }
       }
     })
   }, [])
+
+  const handleGoogleSignUp = async () => {
+    setError(null)
+    setGoogleLoading(true)
+    try {
+      const callbackUrl = `${window.location.origin}/auth/callback?role=${role}`
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: callbackUrl,
+        },
+      })
+      if (oauthError) throw oauthError
+    } catch (err: any) {
+      setError(err.message || 'Failed to initialize Google sign-up')
+      setGoogleLoading(false)
+    }
+  }
 
   const verifyInviteCode = async (code: string) => {
     const normalizedCode = code.trim().toUpperCase()
@@ -479,7 +506,33 @@ function SignupContent() {
               {/* STEP 1: Login Details */}
               {step === 1 && (
                 <div className="space-y-4 animate-in fade-in duration-300">
-                  <h3 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-2 mb-4 font-sora">
+                  {/* Google Sign-up Button */}
+                  {!isLoggedIn && (
+                    <div className="space-y-4 mb-6">
+                      <button
+                        type="button"
+                        onClick={handleGoogleSignUp}
+                        disabled={googleLoading || loading}
+                        className="w-full py-3 px-4 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-zinc-800/80 font-medium transition-all shadow-sm flex items-center justify-center gap-3 cursor-pointer"
+                      >
+                        {googleLoading ? (
+                          <Loader2 className="w-5 h-5 animate-spin text-slate-500" />
+                        ) : (
+                          <GoogleIcon className="w-5 h-5 shrink-0" />
+                        )}
+                        <span>{t.signUpWithGoogle || 'Sign up with Google'}</span>
+                      </button>
+
+                      <div className="relative flex items-center justify-center my-4">
+                        <div className="border-t border-slate-200 dark:border-zinc-800 w-full" />
+                        <span className="bg-white dark:bg-zinc-900 px-3 text-xs uppercase tracking-wider text-slate-400 dark:text-zinc-500 absolute font-medium">
+                          {t.orContinueWithEmail || 'or continue with email'}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-zinc-800 pb-2 mb-4 font-sora">
                     {role === 'hr' ? t.stepOrgCredentials : 'Your Personal Details'}
                   </h3>
                   
@@ -816,3 +869,27 @@ export default function SignupPage() {
     </Suspense>
   )
 }
+
+function GoogleIcon({ className = "w-5 h-5" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24">
+      <path
+        fill="#4285F4"
+        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+      />
+    </svg>
+  )
+}
+

@@ -30,6 +30,18 @@ class AuthService {
     return data
   }
 
+  async signInWithGoogle(redirectTo?: string) {
+    const targetUrl = redirectTo || `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`
+    const { data, error } = await this.supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: targetUrl,
+      },
+    })
+    if (error) throw error
+    return data
+  }
+
   async logout() {
     const { error } = await this.supabase.auth.signOut()
     if (error) throw error
