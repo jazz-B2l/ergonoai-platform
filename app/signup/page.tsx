@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense, useContext } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Brain, Activity, Shield, User, ArrowRight, Loader2, Check, ChevronRight, ChevronLeft, Eye, EyeOff } from 'lucide-react'
+import { Brain, Activity, Shield, User, ArrowRight, Loader2, Check, ChevronRight, ChevronLeft, Eye, EyeOff, LogOut } from 'lucide-react'
 import { useApp } from '@/lib/app-context'
 import { supabase } from '@/lib/supabase'
 import { WILAYAS } from '@/lib/constants'
@@ -84,7 +84,9 @@ function SignupContent() {
   const tc = translations[language].common
 
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [loggedInEmail, setLoggedInEmail] = useState('')
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [logoutLoading, setLogoutLoading] = useState(false)
 
   useEffect(() => {
     if (roleParam === 'hr' || roleParam === 'employee') {
@@ -97,6 +99,7 @@ function SignupContent() {
     supabase.auth.getUser().then(({ data: { user } }: { data: { user: any } }) => {
       if (user) {
         setIsLoggedIn(true)
+        setLoggedInEmail(user.email || '')
         setEmail(user.email || '')
         if (user.user_metadata) {
           const fullName = user.user_metadata.full_name || user.user_metadata.name || ''
@@ -109,6 +112,13 @@ function SignupContent() {
       }
     })
   }, [])
+
+  const handleLogout = async () => {
+    setLogoutLoading(true)
+    await supabase.auth.signOut()
+    // Reload the page so the form resets to a clean unauthenticated state
+    window.location.reload()
+  }
 
   const handleGoogleSignUp = async () => {
     setError(null)
@@ -415,6 +425,17 @@ function SignupContent() {
     <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-white flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden transition-colors duration-300">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-teal-500/5 via-slate-50 to-slate-50 dark:via-zinc-950 dark:to-zinc-950 z-0"></div>
       
+      {/* Back Button */}
+      <div className="absolute top-6 left-6 z-20">
+        <button
+          onClick={() => router.back()}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-all cursor-pointer"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          {language === 'ar' ? 'رجوع' : 'Back'}
+        </button>
+      </div>
+
       {/* Floating ThemeToggle & Language */}
       <div className="absolute top-6 right-6 flex items-center gap-3 z-20">
         <ThemeToggle />
@@ -445,6 +466,35 @@ function SignupContent() {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-2xl relative z-10">
+        {/* Switch Account Banner */}
+        {isLoggedIn && (
+          <div className="mb-4 flex items-center justify-between gap-4 px-4 py-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 rounded-full bg-amber-100 dark:bg-amber-900/50 border border-amber-200 dark:border-amber-700 flex items-center justify-center shrink-0">
+                <User className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">
+                  {language === 'ar' ? 'أنت مسجّل الدخول بـ' : 'Signed in as'}
+                </p>
+                <p className="text-xs text-amber-700 dark:text-amber-400 truncate font-mono">{loggedInEmail}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={logoutLoading}
+              className="inline-flex items-center gap-1.5 shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/50 transition-all cursor-pointer"
+            >
+              {logoutLoading
+                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                : <LogOut className="w-3.5 h-3.5" />
+              }
+              {language === 'ar' ? 'تسجيل الخروج' : 'Switch Account'}
+            </button>
+          </div>
+        )}
+
         <div className="bg-white dark:bg-zinc-900 py-8 px-4 sm:px-10 border border-slate-200 dark:border-zinc-800 shadow-xl rounded-2xl">
           
           {success ? (

@@ -40,14 +40,18 @@ export function RoleSelector() {
         })}
       </div>
 
-      {/* Floating ThemeToggle & Back link */}
-      <div className="absolute top-6 right-6 flex items-center gap-4 z-20">
-        <Link 
-          href="/" 
+      {/* Back to Site — top left */}
+      <div className="absolute top-6 left-6 z-20">
+        <Link
+          href="/"
           className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors py-2 px-4 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 backdrop-blur-md"
         >
           {language === 'ar' ? '← ' + tc.backToSite : tc.backToSite + ' →'}
         </Link>
+      </div>
+
+      {/* Floating ThemeToggle — top right */}
+      <div className="absolute top-6 right-6 z-20">
         <ThemeToggle />
       </div>
 
