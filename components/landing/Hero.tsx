@@ -5,14 +5,27 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useApp } from '@/lib/app-context'
 import { translations } from '@/lib/translations'
-import { Sparkles, TrendingUp, Info, ShieldCheck } from 'lucide-react'
+import { Sparkles, TrendingUp, Info, ShieldCheck, ChevronRight } from 'lucide-react'
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
-import { MouseEvent } from 'react'
+import { MouseEvent, useState } from 'react'
+
+const dashboardImages = [
+  { src: '/dashboard-preview.png', alt: 'ErgonoAI Departments Dashboard', label: 'Departments' },
+  { src: '/dashboard-preview-2.jpg', alt: 'ErgonoAI AI Recommendations Dashboard', label: 'AI Recommendations' },
+]
 
 export function Hero() {
   const { language } = useApp()
   const t = translations[language].hero
   const tc = translations[language].common
+
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [imageKey, setImageKey] = useState(0)
+
+  function handleNextImage() {
+    setCurrentImageIndex((prev) => (prev + 1) % dashboardImages.length)
+    setImageKey((prev) => prev + 1)
+  }
 
   // Mouse parallax motion for 3D Dashboard preview
   const mouseX = useMotionValue(0)
@@ -116,13 +129,14 @@ export function Hero() {
               <div className="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-600"></div>
               <div className="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-600"></div>
             </div>
-            {/* Real App Screenshot */}
+            {/* Real App Screenshot — switchable */}
             <div className="relative w-full" style={{ paddingBottom: '48.83%' }}>
               <Image
-                src="/dashboard-preview.png"
-                alt="ErgonoAI Departments Dashboard"
+                key={imageKey}
+                src={dashboardImages[currentImageIndex].src}
+                alt={dashboardImages[currentImageIndex].alt}
                 fill
-                className="object-cover object-top"
+                className={`object-cover object-top ${styles.dashboardImage}`}
                 priority
               />
             </div>
@@ -165,6 +179,16 @@ export function Hero() {
                </span>
              </div>
           </div>
+
+          {/* Next Image Button — above floatingCard2 */}
+          <button
+            onClick={handleNextImage}
+            className={styles.nextImageBtn}
+            aria-label="Next dashboard screenshot"
+          >
+            <ChevronRight className="w-4 h-4" />
+            <span className="text-xs font-semibold font-mono">Next</span>
+          </button>
 
           {/* Dynamic Expandable Floating Card 2: ISO 7730 */}
           <div 
