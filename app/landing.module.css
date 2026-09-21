@@ -219,3 +219,49 @@
   }
 }
 
+/* Dashboard image fade-in on swap */
+@keyframes dashboardFadeIn {
+  from { opacity: 0; transform: scale(1.02); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.dashboardImage {
+  animation: dashboardFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Next image button — floats above floatingCard2 */
+.nextImageBtn {
+  position: absolute;
+  bottom: calc(20% + 200px);
+  right: -5%;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: rgba(20, 184, 166, 0.15);
+  border: 1px solid rgba(20, 184, 166, 0.4);
+  color: #14b8a6;
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  transition: background 0.25s, border-color 0.25s, transform 0.2s;
+  transform: translateZ(140px);
+}
+
+.nextImageBtn:hover {
+  background: rgba(20, 184, 166, 0.3);
+  border-color: rgba(20, 184, 166, 0.7);
+  transform: translateZ(140px) scale(1.06);
+}
+
+@media (max-width: 767px) {
+  .nextImageBtn {
+    position: relative !important;
+    bottom: auto !important;
+    right: auto !important;
+    transform: none !important;
+    align-self: flex-end;
+    margin-bottom: -0.5rem;
+  }
+}
