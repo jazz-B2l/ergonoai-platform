@@ -36,7 +36,7 @@ export async function updateSession(request: NextRequest) {
 
   if (!user && (isOrgRoute || isEmployeeRoute)) {
     const url = request.nextUrl.clone()
-    url.pathname = isOrgRoute ? '/login/org' : '/login/employee'
+    url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 

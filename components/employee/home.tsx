@@ -264,6 +264,7 @@ export function EmployeeHome() {
     setRole,
     loadingProfile,
     activeAssessment,
+    setActiveAssessment,
     personalData,
     personalDataSubmitted,
     submittedForms,
@@ -277,6 +278,48 @@ export function EmployeeHome() {
 
   const [noteModalOpen, setNoteModalOpen] = useState(false)
   const [reviewingForm, setReviewingForm] = useState<SubmittedForm | null>(null)
+
+  // Load active campaign for user's organization if not set in context
+  useEffect(() => {
+    async function loadActiveCampaign() {
+      if (activeAssessment) return
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        const { data: member } = await supabase
+          .from('organization_members')
+          .select('id, organization_id')
+          .eq('profile_id', user.id)
+          .eq('is_active', true)
+          .limit(1)
+          .maybeSingle()
+
+        if (!member) return
+
+        const { data: activeCamp } = await supabase
+          .from('assessment_campaigns')
+          .select('id, title, created_at, config')
+          .eq('organization_id', member.organization_id)
+          .eq('status', 'ACTIVE')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+        if (activeCamp) {
+          setActiveAssessment({
+            id: activeCamp.id,
+            title: activeCamp.title,
+            createdAt: activeCamp.created_at,
+            config: activeCamp.config
+          })
+        }
+      } catch (err) {
+        console.error('Error fetching active campaign in EmployeeHome:', err)
+      }
+    }
+    loadActiveCampaign()
+  }, [activeAssessment, setActiveAssessment])
 
   // Redirect to profile if not submitted
   useEffect(() => {

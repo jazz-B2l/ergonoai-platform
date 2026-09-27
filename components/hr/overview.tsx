@@ -320,6 +320,38 @@ export function HROverview() {
             return
           }
           try {
+            // 1. Resolve template_id dynamically from database or insert default template if missing
+            let templateId: string | null = null
+            const { data: existingTemplate } = await supabase
+              .from('assessment_templates')
+              .select('id')
+              .limit(1)
+              .maybeSingle()
+
+            if (existingTemplate?.id) {
+              templateId = existingTemplate.id
+            } else {
+              const { data: newTemplate, error: tmplErr } = await supabase
+                .from('assessment_templates')
+                .insert({
+                  name: 'ISO 7730 & NMQ Standard Ergonomic Assessment',
+                  code: 'ISO7730_NMQ_STD_' + Date.now(),
+                  description: 'Standard ergonomic assessment template for physical and environmental workplace evaluation.',
+                  standard: 'ISO7730',
+                  version: 1,
+                  is_active: true
+                })
+                .select('id')
+                .single()
+
+              if (tmplErr || !newTemplate) {
+                console.error('Error creating default template:', tmplErr)
+                throw new Error(tmplErr?.message || 'Failed to initialize assessment template')
+              }
+              templateId = newTemplate.id
+            }
+
+            // 2. Insert new campaign into assessment_campaigns
             const { data: campaign, error } = await supabase
               .from('assessment_campaigns')
               .insert({
@@ -328,7 +360,7 @@ export function HROverview() {
                 status: 'ACTIVE',
                 start_date: startDate || new Date().toISOString().split('T')[0],
                 end_date: endDate || null,
-                template_id: '06493e5b-b9f8-494a-ac6a-1f878d16dd1c',
+                template_id: templateId,
                 config: config
               })
               .select()
@@ -340,13 +372,44 @@ export function HROverview() {
             }
 
             if (campaign) {
+              // 3. Create assignments for targeted organization members
+              let memberQuery = supabase
+                .from('organization_members')
+                .select('id, department_id')
+                .eq('organization_id', orgId)
+                .eq('is_active', true)
+
+              const targetDepts = config?.targetDepartments || ['all']
+              if (!targetDepts.includes('all') && targetDepts.length > 0) {
+                memberQuery = memberQuery.in('department_id', targetDepts)
+              }
+
+              const { data: targetMembers } = await memberQuery
+
+              if (targetMembers && targetMembers.length > 0) {
+                const assignmentsToInsert = targetMembers.map((m: any) => ({
+                  campaign_id: campaign.id,
+                  member_id: m.id,
+                  status: 'NOT_STARTED'
+                }))
+
+                const { error: assignErr } = await supabase
+                  .from('assessment_assignments')
+                  .insert(assignmentsToInsert)
+
+                if (assignErr) {
+                  console.error('Error creating assessment assignments:', assignErr)
+                }
+              }
+
               setActiveAssessment({
                 id: campaign.id,
                 title: campaign.title,
                 createdAt: campaign.created_at,
                 config: config
               })
-              await calculateStats(orgId, selectedCampaignId)
+              setSelectedCampaignId(campaign.id)
+              await calculateStats(orgId, campaign.id)
             }
           } catch (e: any) {
             console.error('Failed to create campaign:', e)

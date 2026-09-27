@@ -52,6 +52,14 @@ export function Hero() {
     >
       {/* Background Elements */}
       <div className={styles.heroBackground}>
+        <Image
+          src="/hero-bg.png"
+          alt="ErgonoAI Hero Background"
+          fill
+          priority
+          className="object-cover object-center opacity-60 dark:opacity-30 pointer-events-none select-none transition-opacity duration-500"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-50/50 via-slate-50/20 to-slate-50/90 dark:from-[#020617]/70 dark:via-[#020617]/40 dark:to-[#020617] pointer-events-none" />
         <div className={styles.blurredCircle1}></div>
         <div className={styles.blurredCircle2}></div>
         <div className={styles.animatedGrid}></div>

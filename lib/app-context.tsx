@@ -89,7 +89,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       try {
         const { data: member, error: memberError } = await supabase
           .from('organization_members')
-          .select('id')
+          .select('id, organization_id')
           .eq('profile_id', userId)
           .eq('is_active', true)
           .limit(1)
@@ -100,6 +100,59 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
 
         if (member && active) {
+          // Fetch active assessment campaign for this organization
+          const { data: activeCamp } = await supabase
+            .from('assessment_campaigns')
+            .select('id, title, created_at, config')
+            .eq('organization_id', member.organization_id)
+            .eq('status', 'ACTIVE')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+
+          if (activeCamp && active) {
+            setActiveAssessment({
+              id: activeCamp.id,
+              title: activeCamp.title,
+              createdAt: activeCamp.created_at,
+              config: activeCamp.config
+            })
+          }
+
+          // Fetch member's completed assessment responses
+          const { data: assignments } = await supabase
+            .from('assessment_assignments')
+            .select('id, campaign_id')
+            .eq('member_id', member.id)
+
+          if (assignments && assignments.length > 0) {
+            const { data: responses } = await supabase
+              .from('assessment_responses')
+              .select('id, assignment_id, submitted_at')
+              .in('assignment_id', assignments.map((a: { id: string }) => a.id))
+              .eq('completion_percentage', 100)
+
+            if (responses && responses.length > 0 && active) {
+              const dbForms: SubmittedForm[] = responses.map((r: { id: string; assignment_id: string; submitted_at: string }) => {
+                const assign = assignments.find((a: { id: string; campaign_id: string }) => a.id === r.assignment_id)
+                return {
+                  id: r.id,
+                  assessmentId: assign?.campaign_id || '',
+                  submittedAt: r.submitted_at || new Date().toISOString(),
+                  answeredCount: 0,
+                  questionCount: 0,
+                  sections: [],
+                  answers: {}
+                }
+              })
+              setSubmittedForms(prev => {
+                const existingIds = new Set(prev.map(p => p.assessmentId))
+                const filterNew = dbForms.filter(f => !existingIds.has(f.assessmentId))
+                return [...filterNew, ...prev]
+              })
+            }
+          }
+
           const { data: empProfile, error: empProfileError } = await supabase
             .from('employee_profiles')
             .select('full_name, work_position, gender, date_of_birth, place_of_birth, marital_status, height_cm, weight_kg, years_in_role, working_hours_per_day, has_part_time_job')

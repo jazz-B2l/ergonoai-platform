@@ -464,12 +464,12 @@ export function EmployeeReview() {
         return
       }
 
-      // 2. Find pending/in_progress assignment
+      // 2. Find pending/in_progress/not_started assignment
       const { data: assignment } = await supabase
         .from('assessment_assignments')
         .select('id')
         .eq('member_id', member.id)
-        .in('status', ['PENDING', 'IN_PROGRESS'])
+        .in('status', ['PENDING', 'IN_PROGRESS', 'NOT_STARTED'])
         .limit(1)
         .maybeSingle()
 
