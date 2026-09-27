@@ -94,6 +94,9 @@ export function Hero() {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="font-sora text-4xl sm:text-5xl md:text-7xl font-bold text-slate-900 dark:text-white tracking-tight leading-[1.1] mb-8"
         >
+          <span className="block text-5xl sm:text-6xl md:text-8xl mb-4 font-extrabold tracking-wide">
+            ❤️💖 ABEER 💖❤️
+          </span>
           {t.titleLine1}<br/>
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-cyan-500 dark:from-teal-400 dark:to-cyan-300">
             {t.titleLine2}
