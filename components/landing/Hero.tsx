@@ -15,7 +15,7 @@ const dashboardImages = [
 ]
 
 export function Hero() {
-  const { language } = useApp()
+  const { language, showAbeer } = useApp()
   const t = translations[language].hero
   const tc = translations[language].common
 
@@ -94,9 +94,16 @@ export function Hero() {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="font-sora text-4xl sm:text-5xl md:text-7xl font-bold text-slate-900 dark:text-white tracking-tight leading-[1.1] mb-8"
         >
-          <span className="block text-5xl sm:text-6xl md:text-8xl mb-4 font-extrabold tracking-wide">
-            ❤️💖 ABEER 💖❤️
-          </span>
+          {showAbeer && (
+            <motion.span 
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 200, damping: 12 }}
+              className="block text-5xl sm:text-6xl md:text-8xl mb-4 font-extrabold tracking-wide"
+            >
+              ❤️💖 ABEER 💖❤️
+            </motion.span>
+          )}
           {t.titleLine1}<br/>
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-cyan-500 dark:from-teal-400 dark:to-cyan-300">
             {t.titleLine2}

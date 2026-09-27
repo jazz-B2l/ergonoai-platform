@@ -61,6 +61,8 @@ interface AppContextValue {
   // Theme support
   theme: 'light' | 'dark'
   toggleTheme: () => void
+  themeToggleCount: number
+  showAbeer: boolean
 
   // Language support
   language: 'en' | 'ar'
@@ -218,6 +220,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
   // Theme support state and persistence
+  const [themeToggleCount, setThemeToggleCount] = useState(0)
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null
@@ -239,7 +242,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const toggleTheme = () => {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'))
+    setThemeToggleCount(prev => prev + 1)
   }
+
+  const showAbeer = themeToggleCount >= 10
 
   // Language support state and persistence
   const [language, setLanguageState] = useState<'en' | 'ar'>('en')
@@ -277,6 +283,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         submittedForms, addSubmittedForm,
         standaloneNotes, addStandaloneNote,
         theme, toggleTheme,
+        themeToggleCount, showAbeer,
         language, setLanguage,
       }}
     >
