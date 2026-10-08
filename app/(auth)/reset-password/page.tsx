@@ -44,7 +44,12 @@ export default function ResetPasswordPage() {
         router.push('/login')
       }, 3000)
     } catch (err: any) {
-      setError(err.message || 'Failed to reset password. The link might be expired.')
+      const msg = err?.message || ''
+      if (msg.includes('Failed to fetch') || msg.includes('unreachable') || msg.includes('Network Error')) {
+        setError('Unable to reach the authentication server. Please check your internet connection or verify that your Supabase project is active and unpaused.')
+      } else {
+        setError(msg || 'Failed to reset password. The link might be expired.')
+      }
     }
   }
 

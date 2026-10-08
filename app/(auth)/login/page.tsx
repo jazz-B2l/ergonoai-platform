@@ -83,10 +83,13 @@ export default function LoginPage() {
       await refreshSession()
       router.push('/org/profile')
     } catch (err: any) {
-      if (err.message?.includes('Email not confirmed')) {
+      const msg = err?.message || ''
+      if (msg.includes('Email not confirmed')) {
         router.push(`/verify-email?email=${encodeURIComponent(data.email)}`)
+      } else if (msg.includes('Failed to fetch') || msg.includes('unreachable') || msg.includes('Network Error')) {
+        setError('Unable to reach the authentication server. Please check your internet connection or verify that your Supabase project is active and unpaused.')
       } else {
-        setError(err.message || 'Failed to login')
+        setError(msg || 'Failed to login')
       }
     }
   }

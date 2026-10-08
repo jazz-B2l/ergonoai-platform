@@ -32,7 +32,12 @@ export default function ForgotPasswordPage() {
       await authService.forgotPassword(data.email)
       setSuccess(true)
     } catch (err: any) {
-      setError(err.message || 'Failed to request password reset')
+      const msg = err?.message || ''
+      if (msg.includes('Failed to fetch') || msg.includes('unreachable') || msg.includes('Network Error')) {
+        setError('Unable to reach the authentication server. Please check your internet connection or verify that your Supabase project is active and unpaused.')
+      } else {
+        setError(msg || 'Failed to request password reset')
+      }
     }
   }
 
