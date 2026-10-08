@@ -30,6 +30,7 @@ import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { translations } from '@/lib/translations'
 import { AssessmentCampaignModal } from '@/components/hr/AssessmentCampaignModal'
+import { EndCampaignModal } from '@/components/hr/EndCampaignModal'
 
 function ScoreRing({ score }: { score: number }) {
   if (score === 0) {
@@ -49,6 +50,7 @@ export function HROverview() {
   const { activeAssessment, setActiveAssessment, language } = useApp()
   const t = translations[language].dashboard
   const [modalOpen, setModalOpen] = useState(false)
+  const [endModalOpen, setEndModalOpen] = useState(false)
   const [title, setTitle] = useState('Q3 2026 Ergonomic Assessment')
 
   // DB States
@@ -72,6 +74,49 @@ export function HROverview() {
   const [totalAssign, setTotalAssign] = useState(0)
   const [completedCount, setCompletedCount] = useState(0)
   const [orgId, setOrgId] = useState<string | null>(null)
+  const [endingCampaign, setEndingCampaign] = useState(false)
+
+  async function handleEndAssessment() {
+    if (!activeAssessment) return
+    const campaignIdToEnd = activeAssessment.id
+    setEndingCampaign(true)
+
+    // 1. Optimistically clear active assessment from UI state immediately
+    setActiveAssessment(null)
+
+    try {
+      if (orgId) {
+        await supabase
+          .from('assessment_campaigns')
+          .update({
+            status: 'COMPLETED',
+            end_date: new Date().toISOString().split('T')[0],
+            updated_at: new Date().toISOString()
+          })
+          .eq('organization_id', orgId)
+          .eq('status', 'ACTIVE')
+      }
+
+      if (campaignIdToEnd) {
+        await supabase
+          .from('assessment_campaigns')
+          .update({
+            status: 'COMPLETED',
+            end_date: new Date().toISOString().split('T')[0],
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', campaignIdToEnd)
+      }
+
+      if (orgId) {
+        await calculateStats(orgId, selectedCampaignId)
+      }
+    } catch (err) {
+      console.warn('Error ending assessment in database:', err)
+    } finally {
+      setEndingCampaign(false)
+    }
+  }
 
   async function calculateStats(organizationId: string, campaignId: string) {
     try {
@@ -351,7 +396,18 @@ export function HROverview() {
               templateId = newTemplate.id
             }
 
-            // 2. Insert new campaign into assessment_campaigns
+            // 2. Mark any previous active campaigns for this organization as COMPLETED
+            await supabase
+              .from('assessment_campaigns')
+              .update({
+                status: 'COMPLETED',
+                end_date: new Date().toISOString().split('T')[0],
+                updated_at: new Date().toISOString()
+              })
+              .eq('organization_id', orgId)
+              .eq('status', 'ACTIVE')
+
+            // 3. Insert new campaign into assessment_campaigns
             const { data: campaign, error } = await supabase
               .from('assessment_campaigns')
               .insert({
@@ -540,13 +596,18 @@ export function HROverview() {
                 <span className="text-xs font-semibold text-foreground truncate max-w-[120px]">{activeAssessment.title}</span>
               </div>
               <button
-                onClick={async () => {
-                  setActiveAssessment(null)
-                  if (orgId) await calculateStats(orgId, selectedCampaignId)
-                }}
-                className="px-2.5 py-1 rounded bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold transition-colors cursor-pointer"
+                onClick={() => setEndModalOpen(true)}
+                disabled={endingCampaign}
+                className="px-2.5 py-1 rounded bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-[10px] font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
               >
-                End
+                {endingCampaign ? (
+                  <>
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Ending...
+                  </>
+                ) : (
+                  'End'
+                )}
               </button>
             </div>
           ) : (
@@ -766,6 +827,13 @@ export function HROverview() {
       </div>
 
       {modalOpen && renderCampaignModal()}
+
+      <EndCampaignModal
+        isOpen={endModalOpen}
+        onClose={() => setEndModalOpen(false)}
+        onConfirm={handleEndAssessment}
+        campaignTitle={activeAssessment?.title}
+      />
     </div>
   )
 }
