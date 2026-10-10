@@ -22,7 +22,8 @@ import {
   Search,
   Layers,
   StopCircle,
-  X
+  X,
+  Edit3
 } from 'lucide-react'
 import {
   LineChart,
@@ -41,6 +42,7 @@ import Link from 'next/link'
 import { translations } from '@/lib/translations'
 import { AssessmentCampaignModal } from '@/components/hr/AssessmentCampaignModal'
 import { EndCampaignModal } from '@/components/hr/EndCampaignModal'
+import { EditCampaignModal } from '@/components/hr/EditCampaignModal'
 
 function ScoreRing({ score }: { score: number }) {
   if (score === 0) {
@@ -78,7 +80,9 @@ export function HROverview() {
   const t = translations[language].dashboard
   const [modalOpen, setModalOpen] = useState(false)
   const [endModalOpen, setEndModalOpen] = useState(false)
+  const [editModalOpen, setEditModalOpen] = useState(false)
   const [campaignToEnd, setCampaignToEnd] = useState<any | null>(null)
+  const [campaignToEdit, setCampaignToEdit] = useState<any | null>(null)
   const [campaignToDelete, setCampaignToDelete] = useState<any | null>(null)
   const [deletingCampaignId, setDeletingCampaignId] = useState<string | null>(null)
 
@@ -176,6 +180,62 @@ export function HROverview() {
       alert('An unexpected error occurred while deleting the campaign.')
     } finally {
       setDeletingCampaignId(null)
+    }
+  }
+
+  async function handleSaveEditedCampaign(updatedData: {
+    id: string
+    title: string
+    status: string
+    startDate: string | null
+    endDate: string | null
+    targetDepartments: string[]
+  }) {
+    const currentConfig = campaignToEdit?.config || {}
+    const res = await fetch(`/api/campaigns/${updatedData.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: updatedData.title,
+        status: updatedData.status,
+        start_date: updatedData.startDate,
+        end_date: updatedData.endDate,
+        config: {
+          ...currentConfig,
+          targetDepartments: updatedData.targetDepartments
+        }
+      })
+    })
+
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.message || err.error || 'Failed to update campaign')
+    }
+
+    if (activeAssessment?.id === updatedData.id) {
+      if (updatedData.status === 'COMPLETED') {
+        setActiveAssessment(null)
+      } else {
+        setActiveAssessment({
+          ...activeAssessment,
+          title: updatedData.title,
+          startDate: updatedData.startDate,
+          endDate: updatedData.endDate
+        })
+      }
+    } else if (updatedData.status === 'ACTIVE' && (!activeAssessment || activeAssessment.id === updatedData.id)) {
+      setActiveAssessment({
+        id: updatedData.id,
+        title: updatedData.title,
+        createdAt: new Date().toISOString(),
+        status: 'ACTIVE',
+        startDate: updatedData.startDate,
+        endDate: updatedData.endDate
+      })
+    }
+
+    if (orgId) {
+      await calculateStats(orgId, selectedCampaignId)
     }
   }
 
@@ -1023,6 +1083,17 @@ export function HROverview() {
                     </div>
 
                     <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => {
+                          setCampaignToEdit(camp)
+                          setEditModalOpen(true)
+                        }}
+                        title={isAr ? 'تعديل بيانات الحملة' : 'Edit campaign'}
+                        className="p-1.5 rounded-xl border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                      </button>
+
                       {isActive && (
                         <button
                           onClick={() => {
@@ -1175,6 +1246,18 @@ export function HROverview() {
       </div>
 
       {modalOpen && renderCampaignModal()}
+
+      {/* Edit Campaign Modal */}
+      <EditCampaignModal
+        isOpen={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false)
+          setCampaignToEdit(null)
+        }}
+        onSave={handleSaveEditedCampaign}
+        campaign={campaignToEdit}
+        departments={deptsList}
+      />
 
       {/* End Campaign Password Modal */}
       <EndCampaignModal

@@ -106,8 +106,10 @@ export async function PATCH(
       updated_at: new Date().toISOString()
     }
     if (body.status) updateData.status = body.status
-    if (body.end_date) updateData.end_date = body.end_date
     if (body.title) updateData.title = body.title
+    if (body.start_date !== undefined) updateData.start_date = body.start_date
+    if (body.end_date !== undefined) updateData.end_date = body.end_date
+    if (body.config !== undefined) updateData.config = body.config
 
     const { data: updated, error: updateErr } = await supabase
       .from('assessment_campaigns')

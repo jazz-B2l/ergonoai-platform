@@ -159,6 +159,9 @@ export interface ActiveAssessment {
   id: string
   title: string
   createdAt: string
+  status?: string
+  startDate?: string | null
+  endDate?: string | null
   config?: CampaignConfig
 }
 
