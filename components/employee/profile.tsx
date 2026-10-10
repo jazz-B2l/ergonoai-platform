@@ -10,6 +10,7 @@ import type { PersonalData } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 
 const EMPTY: PersonalData = {
   fullName: '',
@@ -264,13 +265,7 @@ export function EmployeeProfile() {
           <span className="text-sm font-semibold text-foreground">{t.personalProfile}</span>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-border hover:bg-muted transition-colors cursor-pointer text-foreground"
-          >
-            {language === 'en' ? 'العربية' : 'English'}
-          </button>
+          <LanguageSwitcher />
           <ThemeToggle />
           <button
             onClick={async () => {
