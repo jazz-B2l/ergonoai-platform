@@ -8,7 +8,7 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { WILAYAS } from '@/lib/constants'
 import { useApp } from '@/lib/app-context'
-import { translations } from '@/lib/translations'
+import { translations, type Language } from '@/lib/translations'
 import { authService } from '@/lib/auth/service'
 import { useAIProvider } from '@/components/providers/AIProviderContext'
 import { cn } from '@/lib/utils'
@@ -188,7 +188,9 @@ export default function OrgProfilePage() {
           setFirstName(profile.first_name || '')
           setLastName(profile.last_name || '')
           setPhone(profile.phone || '')
-          setGlobalLanguage(profile.language === 'ar' ? 'ar' : 'en')
+          if (profile.language === 'ar' || profile.language === 'fr' || profile.language === 'en') {
+            setGlobalLanguage(profile.language)
+          }
         }
 
         const { data: member } = await supabase
@@ -239,7 +241,9 @@ export default function OrgProfilePage() {
             .maybeSingle()
 
           if (settings) {
-            setGlobalLanguage(settings.language === 'ar' ? 'ar' : 'en')
+            if (settings.language === 'ar' || settings.language === 'fr' || settings.language === 'en') {
+              setGlobalLanguage(settings.language)
+            }
           }
 
           // Fetch invite codes, departments, sites, and roles
@@ -930,11 +934,12 @@ export default function OrgProfilePage() {
                     <select
                       id="orgLanguage"
                       value={language}
-                      onChange={(e) => setGlobalLanguage(e.target.value as 'en' | 'ar')}
+                      onChange={(e) => setGlobalLanguage(e.target.value as Language)}
                       className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground dark:bg-muted/20 focus:outline-none focus:ring-2 focus:ring-brand transition-all appearance-none"
                     >
                       <option value="en">English (US)</option>
-                      <option value="ar">Arabic (العربية)</option>
+                      <option value="fr">Français (French)</option>
+                      <option value="ar">العربية (Arabic)</option>
                     </select>
                   </div>
                 </div>

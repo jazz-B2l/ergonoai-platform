@@ -10,6 +10,7 @@ import { WILAYAS } from '@/lib/constants'
 
 import { translations } from '@/lib/translations'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { UserContext } from '@/components/providers/UserProvider'
 import { CompanyContext } from '@/components/providers/CompanyProvider'
 
@@ -439,12 +440,7 @@ function SignupContent() {
       {/* Floating ThemeToggle & Language */}
       <div className="absolute top-6 right-6 flex items-center gap-3 z-20">
         <ThemeToggle />
-        <button
-          onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
-          className="text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-all cursor-pointer"
-        >
-          {language === 'en' ? 'العربية' : 'English'}
-        </button>
+        <LanguageSwitcher />
       </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-2xl relative z-10">
@@ -674,9 +670,10 @@ function SignupContent() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <InputLabel htmlFor="language">{t.lang}</InputLabel>
-                          <div className="grid grid-cols-2 gap-2 bg-slate-100 dark:bg-zinc-950 p-1 rounded-xl border border-slate-200 dark:border-zinc-800 h-[50px] items-center">
-                            <button type="button" onClick={() => setLanguage('en')} className={`py-1.5 rounded-lg text-sm font-semibold transition-all cursor-pointer ${language === 'en' ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}>English</button>
-                            <button type="button" onClick={() => setLanguage('ar')} className={`py-1.5 rounded-lg text-sm font-semibold transition-all cursor-pointer ${language === 'ar' ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}>العربية</button>
+                          <div className="grid grid-cols-3 gap-1.5 bg-slate-100 dark:bg-zinc-950 p-1 rounded-xl border border-slate-200 dark:border-zinc-800 h-[50px] items-center">
+                            <button type="button" onClick={() => setLanguage('en')} className={`py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${language === 'en' ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}>English</button>
+                            <button type="button" onClick={() => setLanguage('fr')} className={`py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${language === 'fr' ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}>Français</button>
+                            <button type="button" onClick={() => setLanguage('ar')} className={`py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${language === 'ar' ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}>العربية</button>
                           </div>
                         </div>
                       </div>
@@ -789,9 +786,10 @@ function SignupContent() {
                         ) : null}
                         <div>
                           <InputLabel htmlFor="language">{t.lang}</InputLabel>
-                          <div className="grid grid-cols-2 gap-2 bg-slate-100 dark:bg-zinc-950 p-1 rounded-xl border border-slate-200 dark:border-zinc-800 h-[50px] items-center">
-                            <button type="button" onClick={() => setLanguage('en')} className={`py-1.5 rounded-lg text-sm font-semibold transition-all cursor-pointer ${language === 'en' ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}>English</button>
-                            <button type="button" onClick={() => setLanguage('ar')} className={`py-1.5 rounded-lg text-sm font-semibold transition-all cursor-pointer ${language === 'ar' ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}>العربية</button>
+                          <div className="grid grid-cols-3 gap-1.5 bg-slate-100 dark:bg-zinc-950 p-1 rounded-xl border border-slate-200 dark:border-zinc-800 h-[50px] items-center">
+                            <button type="button" onClick={() => setLanguage('en')} className={`py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${language === 'en' ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}>English</button>
+                            <button type="button" onClick={() => setLanguage('fr')} className={`py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${language === 'fr' ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}>Français</button>
+                            <button type="button" onClick={() => setLanguage('ar')} className={`py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${language === 'ar' ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}>العربية</button>
                           </div>
                         </div>
                       </div>

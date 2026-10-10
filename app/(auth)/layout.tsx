@@ -5,9 +5,10 @@ import { Hexagon } from 'lucide-react'
 import { useApp } from '@/lib/app-context'
 import { translations } from '@/lib/translations'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
-  const { language, setLanguage } = useApp()
+  const { language } = useApp()
   const t = translations[language].auth
 
   return (
@@ -16,12 +17,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         {/* Header theme & lang controls */}
         <div className="absolute top-6 right-6 flex items-center gap-3 z-10">
           <ThemeToggle />
-          <button
-            onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
-            className="text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 transition-all cursor-pointer"
-          >
-            {language === 'en' ? 'العربية' : 'English'}
-          </button>
+          <LanguageSwitcher />
         </div>
 
         <div className="mx-auto w-full max-w-sm lg:w-96">
