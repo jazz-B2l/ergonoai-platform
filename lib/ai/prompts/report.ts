@@ -30,10 +30,33 @@ Strict rules:
 
 export function generateReportUserPrompt(input: {
   organizationName: string;
+  departmentName?: string;
+  departmentHead?: string;
   departmentStats?: Array<{ name: string; riskScore: number; headcount: number }>;
   recentFindingsList: string[];
   totalAssessmentsCount: number;
 }): string {
+  if (input.departmentName) {
+    return `Generate a Dedicated Executive Ergonomic Summary Report specifically for the "${input.departmentName}" Department:
+
+- **Department Name**: ${input.departmentName} ${input.departmentHead ? `(Head of Department: ${input.departmentHead})` : ''}
+- **Parent Organization**: ${input.organizationName}
+- **Completed Employee Assessments in this Department**: ${input.totalAssessmentsCount}
+
+${
+  input.departmentStats && input.departmentStats.length > 0
+    ? `### Department Health Metrics
+${input.departmentStats.map((d) => `- **${d.name}**: Risk Score: ${d.riskScore}/100, Headcount: ${d.headcount}`).join('\n')}`
+    : ''
+}
+
+### Top Recent Assessment Findings & Hazards in ${input.departmentName}
+${input.recentFindingsList.map((f) => `- ${f}`).join('\n')}
+
+Synthesize the findings, hazards, and employee comfort feedback for this specific department.
+Tailor the title (e.g., "${input.departmentName} Department - Ergonomics & OSH Executive Report"), executive summary, key findings, and action recommendations specifically for the leadership of the ${input.departmentName} department and the OSH Committee. Return the strict JSON structure.`;
+  }
+
   return `Generate an Executive Ergonomic Summary Report for:
 
 - **Organization**: ${input.organizationName}

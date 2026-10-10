@@ -654,11 +654,11 @@ export class AiService {
   }
 
   /**
-   * Generate Executive Report
+   * Generate Executive Report (Organization-Wide or Department-Specific)
    */
   async generateExecutiveReport(
     organizationId: string,
-    options?: { modelId?: string; provider?: AIProviderType; allowedProviders?: AIProviderType[] }
+    options?: { departmentId?: string; modelId?: string; provider?: AIProviderType; allowedProviders?: AIProviderType[] }
   ): Promise<ExecutiveReportResult & { fallbackOccurred?: boolean; providerUsed?: string }> {
     const startTime = Date.now();
 
@@ -673,6 +673,23 @@ export class AiService {
         throw new Error(`${AI_CONSTANTS.ERRORS.RECORD_NOT_FOUND} (Organization: ${organizationId})`);
       }
 
+      const isDeptSpecific = Boolean(options?.departmentId && options.departmentId !== 'all');
+      let targetDept: any = null;
+
+      if (isDeptSpecific) {
+        const { data: deptData, error: deptErr } = await supabase
+          .from('departments')
+          .select('*')
+          .eq('id', options!.departmentId)
+          .eq('organization_id', organizationId)
+          .maybeSingle();
+
+        if (deptErr || !deptData) {
+          throw new Error(`Department not found (ID: ${options!.departmentId})`);
+        }
+        targetDept = deptData;
+      }
+
       const { data: campaigns } = await supabase
         .from('assessment_campaigns')
         .select('id')
@@ -684,34 +701,62 @@ export class AiService {
         throw new Error('No assessment campaign found. You must create an assessment campaign before generating an executive report.');
       }
 
+      // Fetch organization members
+      let membersQuery = supabase
+        .from('organization_members')
+        .select('id, department_id')
+        .eq('organization_id', organizationId)
+        .eq('is_active', true);
+
+      if (isDeptSpecific) {
+        membersQuery = membersQuery.eq('department_id', targetDept.id);
+      }
+
+      const { data: members } = await membersQuery;
+      const memberIds = (members || []).map((m: any) => m.id);
+
+      if (memberIds.length === 0) {
+        throw new Error(
+          isDeptSpecific
+            ? `No active employees found in the "${targetDept.name}" department.`
+            : 'No active employees found in the organization.'
+        );
+      }
+
       const { data: assignments } = await supabase
         .from('assessment_assignments')
-        .select('id')
-        .in('campaign_id', campaignIds);
+        .select('id, member_id, campaign_id')
+        .in('campaign_id', campaignIds)
+        .in('member_id', memberIds);
 
       const assignmentIds = (assignments || []).map((a: any) => a.id);
 
       if (assignmentIds.length === 0) {
-        throw new Error('No employee assessment assignments found. Employees must be assigned to an assessment campaign first.');
+        throw new Error(
+          isDeptSpecific
+            ? `No assessment assignments found for members of "${targetDept.name}".`
+            : 'No employee assessment assignments found.'
+        );
       }
 
       const { data: responses } = await supabase
         .from('assessment_responses')
-        .select('id')
+        .select('id, assignment_id, ai_risk_score, completion_percentage')
         .in('assignment_id', assignmentIds);
 
-      const totalAssessments = responses?.length || 0;
+      const completedResponses = (responses || []).filter((r: any) => r.completion_percentage === 100 || r.ai_risk_score !== null);
+      const totalAssessments = completedResponses.length;
       const totalAssignments = assignmentIds.length;
 
       if (totalAssessments === 0) {
-        throw new Error('No completed employee assessments found. Employees must finish answering their assessments before generating an executive report.');
+        throw new Error(
+          isDeptSpecific
+            ? `No completed employee assessments found for the "${targetDept.name}" department. Employees must submit their surveys before generating a report.`
+            : 'No completed employee assessments found. Employees must finish answering their assessments before generating an executive report.'
+        );
       }
 
-      if (totalAssessments < totalAssignments) {
-        throw new Error(`Assessment campaign is still in progress (${totalAssessments} of ${totalAssignments} employees completed). All assigned employees must finish answering their assessments before generating an executive report.`);
-      }
-
-      const responseIds = (responses || []).map((r: any) => r.id);
+      const responseIds = completedResponses.map((r: any) => r.id);
       let recentFindings: string[] = [];
 
       if (responseIds.length > 0) {
@@ -732,51 +777,37 @@ export class AiService {
 
       const { data: departments } = await supabase
         .from('departments')
-        .select('id, name, employee_count')
+        .select('id, name, employee_count, chef_department')
         .eq('organization_id', organizationId);
 
-      const deptMap = new Map<string, any>((departments || []).map((d: any) => [d.id, { name: d.name, employeeCount: d.employee_count || 0, scores: [] as number[] }]));
+      const deptMap = new Map<string, any>(
+        (departments || []).map((d: any) => [
+          d.id,
+          { id: d.id, name: d.name, chef: d.chef_department, employeeCount: d.employee_count || 0, scores: [] as number[] }
+        ])
+      );
 
-      const { data: members } = await supabase
-        .from('organization_members')
-        .select('id, department_id')
-        .eq('organization_id', organizationId);
-      
       const memberDeptMap = new Map<string, any>((members || []).map((m: any) => [m.id, m.department_id]));
+      const assignmentMemberMap = new Map<string, any>((assignments || []).map((a: any) => [a.id, a.member_id]));
 
-      if (campaignIds.length > 0) {
-        const { data: assignments } = await supabase
-          .from('assessment_assignments')
-          .select('id, member_id')
-          .in('campaign_id', campaignIds);
-        
-        const assignmentMemberMap = new Map<string, any>((assignments || []).map((a: any) => [a.id, a.member_id]));
-
-        if (assignments && assignments.length > 0) {
-          const { data: responses } = await supabase
-            .from('assessment_responses')
-            .select('assignment_id, ai_risk_score')
-            .in('assignment_id', assignments.map((a: any) => a.id))
-            .not('ai_risk_score', 'is', null);
-
-          if (responses) {
-            responses.forEach((r: any) => {
-              const memberId = assignmentMemberMap.get(r.assignment_id);
-              if (memberId) {
-                const deptId = memberDeptMap.get(memberId);
-                if (deptId) {
-                  const deptObj = deptMap.get(deptId);
-                  if (deptObj && r.ai_risk_score !== null) {
-                    deptObj.scores.push(Number(r.ai_risk_score));
-                  }
-                }
-              }
-            });
+      completedResponses.forEach((r: any) => {
+        const memberId = assignmentMemberMap.get(r.assignment_id);
+        if (memberId) {
+          const deptId = memberDeptMap.get(memberId);
+          if (deptId) {
+            const deptObj = deptMap.get(deptId);
+            if (deptObj && r.ai_risk_score !== null) {
+              deptObj.scores.push(Number(r.ai_risk_score));
+            }
           }
         }
-      }
+      });
 
-      const deptStats = Array.from(deptMap.values()).map(d => {
+      const relevantDepts = isDeptSpecific
+        ? Array.from(deptMap.values()).filter((d: any) => d.id === targetDept.id)
+        : Array.from(deptMap.values());
+
+      const deptStats = relevantDepts.map((d: any) => {
         const avgScore = d.scores.length > 0
           ? d.scores.reduce((sum: any, s: any) => sum + s, 0) / d.scores.length
           : 0;
@@ -789,7 +820,9 @@ export class AiService {
 
       if (recentFindings.length === 0) {
         recentFindings = [
-          'No individual assessment findings recorded yet for this organization.'
+          isDeptSpecific
+            ? `Standard workplace assessments conducted for ${targetDept.name} employees with general posture and comfort checks.`
+            : 'No individual assessment findings recorded yet for this organization.'
         ];
       }
 
@@ -800,6 +833,8 @@ export class AiService {
 
       const userPrompt = Prompts.generateReportUserPrompt({
         organizationName: organization.name,
+        departmentName: isDeptSpecific ? targetDept.name : undefined,
+        departmentHead: isDeptSpecific ? targetDept.chef_department : undefined,
         departmentStats: deptStats,
         recentFindingsList: recentFindings,
         totalAssessmentsCount: totalAssessments
@@ -821,10 +856,17 @@ export class AiService {
 
       const parsed = safeParseJson<ExecutiveReportResult>(responseObj.content);
 
-      const { data: hazards } = await supabase
+      // Fetch hazard occurrences
+      let hazardsQuery = supabase
         .from('hazard_occurrences')
         .select('*, hazard_catalog(title, description, severity), departments(name)')
         .eq('organization_id', organizationId);
+
+      if (isDeptSpecific) {
+        hazardsQuery = hazardsQuery.eq('department_id', targetDept.id);
+      }
+
+      const { data: hazards } = await hazardsQuery;
 
       if (hazards && hazards.length > 0) {
         parsed.hazardsDetail = hazards.map((h: any) => ({
@@ -832,7 +874,7 @@ export class AiService {
           status: h.status,
           severity: h.hazard_catalog?.severity || 'medium',
           description: h.hazard_catalog?.description || '',
-          department: h.departments?.name || 'Unknown Department'
+          department: h.departments?.name || (isDeptSpecific ? targetDept.name : 'General')
         }));
       } else {
         parsed.hazardsDetail = [];
@@ -871,16 +913,27 @@ export class AiService {
       const reportContentString = JSON.stringify(parsed);
       const latencyMs = Date.now() - startTime;
 
+      const reportTitle = parsed.title || (
+        isDeptSpecific
+          ? `${targetDept.name} Department Ergonomic Report`
+          : 'Executive Ergonomic Summary Report'
+      );
+
       await supabase
         .from('generated_reports')
         .insert({
           organization_id: organizationId,
-          name: parsed.title || 'Executive Ergonomic Summary Report',
+          name: reportTitle,
           type: 'AI_EXECUTIVE',
           storage_path: `reports/${crypto.randomUUID()}.json`,
           parameters: {
+            departmentId: isDeptSpecific ? targetDept.id : 'all',
+            departmentName: isDeptSpecific ? targetDept.name : 'All Departments (Organization-Wide)',
+            departmentHead: isDeptSpecific ? targetDept.chef_department : undefined,
             totalAssessments,
-            departmentCount: deptStats.length,
+            totalAssignments,
+            completionRate: totalAssignments > 0 ? Math.round((totalAssessments / totalAssignments) * 100) : 100,
+            departmentCount: isDeptSpecific ? 1 : deptStats.length,
             reportData: parsed
           },
           status: 'COMPLETED',

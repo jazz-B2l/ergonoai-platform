@@ -6,6 +6,7 @@ import { z } from 'zod';
 
 const reportSchema = z.object({
   organizationId: z.string().uuid(),
+  departmentId: z.string().optional(),
   aiProvider: z.enum(['auto', 'gemini', 'groq', 'openai', 'claude', 'deepseek']).optional(),
   aiModel: z.string().optional(),
 });
@@ -42,11 +43,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { organizationId, aiProvider, aiModel } = parsedBody.data;
+    const { organizationId, departmentId, aiProvider, aiModel } = parsedBody.data;
 
     // 3. Call AI Service to generate report
     const aiService = getAiService();
     const report = await aiService.generateExecutiveReport(organizationId, {
+      departmentId,
       provider: aiProvider,
       modelId: aiModel
     });
