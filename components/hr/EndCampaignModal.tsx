@@ -12,8 +12,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 interface EndCampaignModalProps {
   isOpen: boolean
   onClose: () => void
-  onConfirm: () => Promise<void>
+  onConfirm: (campaignId?: string) => Promise<void>
   campaignTitle?: string
+  campaignId?: string
 }
 
 export function EndCampaignModal({
@@ -21,6 +22,7 @@ export function EndCampaignModal({
   onClose,
   onConfirm,
   campaignTitle,
+  campaignId,
 }: EndCampaignModalProps) {
   const { language } = useApp()
   const isAr = language === 'ar'
@@ -81,7 +83,7 @@ export function EndCampaignModal({
       }
 
       // 3. Password verified successfully -> trigger campaign end
-      await onConfirm()
+      await onConfirm(campaignId)
       handleClose()
     } catch (err: any) {
       console.error('Error during password confirmation to end campaign:', err)
