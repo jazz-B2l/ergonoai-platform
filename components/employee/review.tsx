@@ -605,6 +605,17 @@ export function EmployeeReview() {
           .eq('id', finalAssignmentId)
 
         if (updateErr) throw updateErr
+
+        // 6. Automatically trigger AI Assessment analysis & recommendation generation
+        try {
+          fetch('/api/ai/assessment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ responseId: response.id })
+          }).catch(e => console.warn('Background AI analysis triggered:', e))
+        } catch (e) {
+          console.warn('AI analysis launch error:', e)
+        }
       }
 
       // Success legacy integration

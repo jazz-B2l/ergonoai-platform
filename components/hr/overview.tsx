@@ -525,6 +525,18 @@ export function HROverview() {
     if (!orgId) return
     setLoading(true)
     setSelectedCampaignId(campaignId)
+    const targetCamp = campaignsList.find(c => c.id === campaignId)
+    if (targetCamp && targetCamp.status === 'ACTIVE') {
+      setActiveAssessment({
+        id: targetCamp.id,
+        title: targetCamp.title,
+        createdAt: targetCamp.created_at,
+        status: targetCamp.status,
+        startDate: targetCamp.start_date,
+        endDate: targetCamp.end_date,
+        config: targetCamp.config
+      })
+    }
     await calculateStats(orgId, campaignId)
     setLoading(false)
   }
@@ -1059,7 +1071,7 @@ export function HROverview() {
 
                   {/* Actions Footer */}
                   <div className="pt-2 border-t border-border flex items-center justify-between gap-2 flex-wrap">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <button
                         onClick={() => handleCampaignChange(camp.id)}
                         className={cn(
@@ -1074,10 +1086,26 @@ export function HROverview() {
                       </button>
 
                       <Link
-                        href="/org/reports"
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-muted/70 hover:bg-muted text-foreground text-xs font-semibold transition-all"
+                        href="/org/hazard-checklist"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-muted/70 hover:bg-muted text-foreground text-xs font-semibold transition-all"
                       >
-                        <FileBarChart className="w-3 h-3" />
+                        <AlertTriangle className="w-3 h-3 text-warning" />
+                        {isAr ? 'المخاطر' : 'Hazards'}
+                      </Link>
+
+                      <Link
+                        href="/org/recommendations"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-muted/70 hover:bg-muted text-foreground text-xs font-semibold transition-all"
+                      >
+                        <Lightbulb className="w-3 h-3 text-brand" />
+                        {isAr ? 'التوصيات' : 'AI Insights'}
+                      </Link>
+
+                      <Link
+                        href="/org/reports"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-muted/70 hover:bg-muted text-foreground text-xs font-semibold transition-all"
+                      >
+                        <FileBarChart className="w-3 h-3 text-muted-foreground" />
                         {isAr ? 'التقارير' : 'Reports'}
                       </Link>
                     </div>

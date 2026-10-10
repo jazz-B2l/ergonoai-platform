@@ -67,10 +67,13 @@ export interface AssessmentAnalysisResult {
 }
 
 export interface RecommendationItem {
+  id?: string;
   title: string;
   description: string;
   priority: 'low' | 'medium' | 'high';
   category?: string;
+  status?: string;
+  action?: string;
   estimatedImpact?: string;
 }
 
