@@ -23,6 +23,7 @@ import { useApp, type HRPage } from '@/lib/app-context'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { translations } from '@/lib/translations'
 import { useAIProvider } from '@/components/providers/AIProviderContext'
 
@@ -220,8 +221,14 @@ export function HRSidebar() {
         {/* AI Engine Dropdown */}
         <AiEngineDropdown isCollapsed={isCollapsed} />
 
-        {/* Action Buttons */}
-        <div className={cn("flex w-full items-center", isCollapsed ? "flex-col gap-3" : "gap-2")}>
+        {/* Language & Theme Controls */}
+        <div className={cn("flex w-full items-center justify-between gap-2 pt-1 border-t border-border/50", isCollapsed ? "flex-col" : "")}>
+          <LanguageSwitcher className={isCollapsed ? "w-full flex justify-center" : ""} />
+          <ThemeToggle />
+        </div>
+
+        {/* Logout Button */}
+        <div className="flex w-full items-center">
           <button
             onClick={async () => {
               await supabase.auth.signOut()
@@ -229,15 +236,14 @@ export function HRSidebar() {
               router.push('/')
             }}
             className={cn(
-              "flex items-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer rounded-lg shrink-0",
-              isCollapsed ? "p-2 justify-center" : "flex-1 gap-3 px-3 py-2.5 text-sm text-left"
+              "flex items-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer rounded-lg shrink-0 w-full",
+              isCollapsed ? "p-2 justify-center" : "gap-3 px-3 py-2 text-sm text-left"
             )}
             title={isCollapsed ? t.logout : undefined}
           >
             <LogOut className="w-4 h-4 shrink-0" />
             {!isCollapsed && <span>{t.logout}</span>}
           </button>
-          <ThemeToggle />
         </div>
       </div>
     </aside>

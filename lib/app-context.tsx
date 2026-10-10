@@ -5,6 +5,7 @@ import type { Role, PersonalData, SubmittedForm, StandaloneNote, ActiveAssessmen
 import { mockSubmittedForms, mockStandaloneNotes } from './types'
 import { supabase } from './supabase'
 import { SessionContext } from '@/components/providers/SessionProvider'
+import type { Language } from './translations'
 
 export type HRPage =
   | 'overview'
@@ -65,8 +66,8 @@ interface AppContextValue {
   showAbeer: boolean
 
   // Language support
-  language: 'en' | 'ar'
-  setLanguage: (lang: 'en' | 'ar') => void
+  language: Language
+  setLanguage: (lang: Language) => void
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
@@ -248,11 +249,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const showAbeer = themeToggleCount >= 10
 
   // Language support state and persistence
-  const [language, setLanguageState] = useState<'en' | 'ar'>('en')
+  const [language, setLanguageState] = useState<Language>('en')
 
   useEffect(() => {
-    const savedLanguage = localStorage.getItem('language') as 'en' | 'ar' | null
-    if (savedLanguage) {
+    const savedLanguage = localStorage.getItem('language') as Language | null
+    if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'ar' || savedLanguage === 'fr')) {
       setLanguageState(savedLanguage)
     }
   }, [])
@@ -264,7 +265,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('language', language)
   }, [language])
 
-  const setLanguage = (lang: 'en' | 'ar') => {
+  const setLanguage = (lang: Language) => {
     setLanguageState(lang)
   }
 

@@ -6,10 +6,11 @@ import { useApp } from '@/lib/app-context'
 import { translations } from '@/lib/translations'
 
 import { ThemeToggle } from '@/components/theme-toggle'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { AdminModal } from './admin-modal'
 
 export function Navbar() {
-  const { language, setLanguage } = useApp()
+  const { language } = useApp()
   const t = translations[language].navbar
   const [scrolled, setScrolled] = useState(false)
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false)
@@ -56,16 +57,7 @@ export function Navbar() {
             <ThemeToggle />
 
             {/* Language Switcher */}
-            <button
-              onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
-              className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
-                scrolled
-                  ? 'border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white'
-                  : 'border-slate-300 dark:border-white/10 text-slate-700 dark:text-white hover:bg-slate-200/60 dark:hover:bg-white/10'
-              }`}
-            >
-              {language === 'en' ? 'العربية' : 'English'}
-            </button>
+            <LanguageSwitcher />
 
             <div 
               onMouseEnter={handleMouseEnterLogin}
