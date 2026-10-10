@@ -6,6 +6,7 @@ import { useApp } from '@/lib/app-context'
 import Link from 'next/link'
 import styles from '@/app/landing.module.css'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { translations } from '@/lib/translations'
 
 export function RoleSelector() {
@@ -50,9 +51,10 @@ export function RoleSelector() {
         </Link>
       </div>
 
-      {/* Floating ThemeToggle — top right */}
-      <div className="absolute top-6 right-6 z-20">
+      {/* Floating ThemeToggle & Language — top right */}
+      <div className="absolute top-6 right-6 z-20 flex items-center gap-3">
         <ThemeToggle />
+        <LanguageSwitcher />
       </div>
 
       {/* Logo / Brand */}

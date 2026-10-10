@@ -18,27 +18,34 @@ import {
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useApp } from '@/lib/app-context'
+import { translations, translateQuestionText, translateOptionText, translateBodyRegion } from '@/lib/translations'
 import type { SubmittedForm, StandaloneNote } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatDate(iso: string) {
+function formatDate(iso: string, lang: string) {
   const d = new Date(iso)
-  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+  const locale = lang === 'ar' ? 'ar-DZ' : lang === 'fr' ? 'fr-FR' : 'en-GB'
+  return d.toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
-function formatTime(iso: string) {
+function formatTime(iso: string, lang: string) {
   const d = new Date(iso)
-  return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+  const locale = lang === 'ar' ? 'ar-DZ' : lang === 'fr' ? 'fr-FR' : 'en-GB'
+  return d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
 }
 
 // ─── Form Card ────────────────────────────────────────────────────────────────
 
 function FormCard({ form, onReview }: { form: SubmittedForm; onReview: () => void }) {
+  const { language } = useApp()
+  const t = translations[language].employee
+
   return (
     <div className="bg-card border border-border rounded-xl p-5 flex items-start justify-between gap-4 hover:border-brand/30 transition-colors">
       <div className="flex items-start gap-4">
@@ -47,20 +54,22 @@ function FormCard({ form, onReview }: { form: SubmittedForm; onReview: () => voi
         </div>
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-sm font-semibold text-foreground">Assessment Form</span>
+            <span className="text-sm font-semibold text-foreground">
+              {language === 'ar' ? 'نموذج التقييم' : language === 'fr' ? 'Formulaire d’évaluation' : 'Assessment Form'}
+            </span>
             <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-success/10 text-success border border-success/20 font-medium">
               <CheckCircle2 className="w-3 h-3" />
-              Submitted
+              {language === 'ar' ? 'تم الإرسال' : language === 'fr' ? 'Soumis' : 'Submitted'}
             </span>
           </div>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <Clock className="w-3 h-3" />
-              {formatDate(form.submittedAt)} at {formatTime(form.submittedAt)}
+              {formatDate(form.submittedAt, language)} {language === 'ar' ? 'في' : language === 'fr' ? 'à' : 'at'} {formatTime(form.submittedAt, language)}
             </span>
             <span className="flex items-center gap-1">
               <Hash className="w-3 h-3" />
-              {form.answeredCount} / {form.questionCount} questions
+              {form.answeredCount} / {form.questionCount} {t.questionsCount}
             </span>
           </div>
           <div className="flex flex-wrap gap-1 mt-2">
@@ -74,10 +83,10 @@ function FormCard({ form, onReview }: { form: SubmittedForm; onReview: () => voi
       </div>
       <button
         onClick={onReview}
-        className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-muted-foreground border border-border hover:text-foreground hover:border-brand/40 transition-colors"
+        className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-muted-foreground border border-border hover:text-foreground hover:border-brand/40 transition-colors cursor-pointer"
       >
         <Eye className="w-3.5 h-3.5" />
-        Review
+        {t.reviewBtn}
       </button>
     </div>
   )
@@ -86,6 +95,8 @@ function FormCard({ form, onReview }: { form: SubmittedForm; onReview: () => voi
 // ─── Standalone Note Modal ────────────────────────────────────────────────────
 
 function NoteModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (text: string) => void }) {
+  const { language } = useApp()
+  const t = translations[language].employee
   const [text, setText] = useState('')
 
   function handleSubmit(e: React.FormEvent) {
@@ -96,53 +107,48 @@ function NoteModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (text
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl">
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <div className="flex items-center gap-2">
-            <StickyNote className="w-4 h-4 text-amber-400" />
-            <span className="text-sm font-semibold text-foreground">Write a Note</span>
+            <StickyNote className="w-4 h-4 text-amber-500" />
+            <span className="text-sm font-semibold text-foreground">{t.noteModalTitle}</span>
           </div>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
             <X className="w-4 h-4" />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
-          <div>
-            <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-              This note will be sent to your HR team anonymously. Only your department will be visible — your identity will not.
-            </p>
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-success/5 border border-success/20 mb-4">
-              <Lock className="w-3.5 h-3.5 text-success mt-0.5 shrink-0" />
-              <p className="text-xs text-muted-foreground leading-snug">
-                Visible to HR as: <strong className="text-foreground">Anonymous · Engineering</strong>
-              </p>
-            </div>
-            <textarea
-              value={text}
-              onChange={e => setText(e.target.value)}
-              rows={5}
-              placeholder="Write your note here... e.g. a concern, suggestion, or observation about your working conditions."
-              autoFocus
-              className="w-full px-3 py-2.5 rounded-lg bg-input border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/60 transition-colors resize-none"
-            />
-            <p className="text-xs text-muted-foreground mt-1.5 text-right">{text.length} characters</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            {t.noteModalDesc}
+          </p>
+          <textarea
+            value={text}
+            onChange={e => setText(e.target.value)}
+            rows={4}
+            placeholder={t.notePlaceholder}
+            className="w-full px-3 py-2.5 rounded-lg bg-input border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 transition-colors resize-none"
+            autoFocus
+          />
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Lock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+            <span>{t.privacyGuaranteedDesc}</span>
           </div>
           <div className="flex gap-2 justify-end">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-lg text-sm text-muted-foreground border border-border hover:text-foreground transition-colors"
+              className="px-4 py-2 rounded-lg text-sm text-muted-foreground border border-border hover:text-foreground transition-colors cursor-pointer"
             >
-              Cancel
+              {t.cancel}
             </button>
             <button
               type="submit"
               disabled={!text.trim()}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/90 text-white text-sm font-semibold hover:bg-amber-500 transition-colors disabled:opacity-40"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/90 text-white text-sm font-semibold hover:bg-amber-500 transition-colors disabled:opacity-40 cursor-pointer"
             >
               <Send className="w-3.5 h-3.5" />
-              Send Note
+              {t.submitBtn}
             </button>
           </div>
         </form>
@@ -154,6 +160,8 @@ function NoteModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (text
 // ─── Form Review Modal (read-only) ────────────────────────────────────────────
 
 function ReviewModal({ form, onClose }: { form: SubmittedForm; onClose: () => void }) {
+  const { language } = useApp()
+  const t = translations[language].employee
   const [questions, setQuestions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -164,8 +172,10 @@ function ReviewModal({ form, onClose }: { form: SubmittedForm; onClose: () => vo
           .from('assessment_questions')
           .select(`
             id,
+            question_code,
             question_text,
             question_type,
+            category,
             options:question_options (
               id,
               option_text,
@@ -186,19 +196,23 @@ function ReviewModal({ form, onClose }: { form: SubmittedForm; onClose: () => vo
 
   function renderAnswerRow(qId: string, answer: string) {
     const q = questions.find(x => x.id === qId)
-    const displayQuestion = q ? q.question_text : `Question ID: ${qId}`
+    const displayQuestion = q
+      ? translateQuestionText(q.question_code || '', q.question_text, q.category || '', language)
+      : `Question ID: ${qId}`
 
     let displayAnswer = answer
     if (q && q.question_type === 'radio' && q.options) {
       const opt = q.options.find((o: any) => o.id === answer || o.option_value === answer)
       if (opt) {
-        displayAnswer = opt.option_text
+        displayAnswer = translateOptionText(opt.option_text, opt.option_value || '', language)
       }
+    } else if (answer === 'Yes' || answer === 'No') {
+      displayAnswer = translateOptionText(answer, answer, language)
     }
 
     return (
       <div key={qId} className="flex flex-col gap-1 py-3 border-b border-border last:border-0 text-left">
-        <span className="text-xs font-semibold text-slate-500">
+        <span className="text-xs font-semibold text-slate-500 dark:text-zinc-400">
           {displayQuestion}
         </span>
         <span className="text-sm font-medium text-foreground">
@@ -209,16 +223,18 @@ function ReviewModal({ form, onClose }: { form: SubmittedForm; onClose: () => vo
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       <div className="w-full max-w-2xl max-h-[80vh] flex flex-col bg-card border border-border rounded-2xl shadow-2xl">
         <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
           <div>
-            <span className="text-sm font-semibold text-foreground">Assessment Review</span>
+            <span className="text-sm font-semibold text-foreground">
+              {language === 'ar' ? 'مراجعة التقييم' : language === 'fr' ? 'Revue de l’évaluation' : 'Assessment Review'}
+            </span>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Submitted {formatDate(form.submittedAt)} at {formatTime(form.submittedAt)}
+              {language === 'ar' ? 'تم الإرسال' : language === 'fr' ? 'Soumis le' : 'Submitted'} {formatDate(form.submittedAt, language)} {language === 'ar' ? 'في' : language === 'fr' ? 'à' : 'at'} {formatTime(form.submittedAt, language)}
             </p>
           </div>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -226,7 +242,11 @@ function ReviewModal({ form, onClose }: { form: SubmittedForm; onClose: () => vo
           <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border border-border mb-4">
             <Lock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
             <p className="text-xs text-muted-foreground">
-              This form has been submitted. Answers are read-only and cannot be edited.
+              {language === 'ar'
+                ? 'تم إرسال هذا النموذج. الإجابات للقراءة فقط ولا يمكن تعديلها.'
+                : language === 'fr'
+                ? 'Ce formulaire a été soumis. Les réponses sont en lecture seule et ne peuvent plus être modifiées.'
+                : 'This form has been submitted. Answers are read-only and cannot be edited.'}
             </p>
           </div>
           {loading ? (
@@ -235,7 +255,7 @@ function ReviewModal({ form, onClose }: { form: SubmittedForm; onClose: () => vo
             </div>
           ) : Object.keys(form.answers).length === 0 ? (
             <div className="text-center py-12 text-muted-foreground text-sm">
-              This is a historical mock form — detailed answers were not stored.
+              {language === 'ar' ? 'لا توجد إجابات تفصيلية مسجلة.' : language === 'fr' ? 'Aucune réponse détaillée enregistrée.' : 'No detailed answers stored.'}
             </div>
           ) : (
             <div className="space-y-1 divide-y divide-border">
@@ -246,9 +266,9 @@ function ReviewModal({ form, onClose }: { form: SubmittedForm; onClose: () => vo
         <div className="px-6 py-4 border-t border-border shrink-0">
           <button
             onClick={onClose}
-            className="w-full py-2.5 rounded-lg bg-muted text-sm font-medium text-foreground hover:bg-muted/80 transition-colors"
+            className="w-full py-2.5 rounded-lg bg-muted text-sm font-medium text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
           >
-            Close
+            {t.close}
           </button>
         </div>
       </div>
@@ -262,11 +282,9 @@ export function EmployeeHome() {
   const router = useRouter()
   const {
     setRole,
-    loadingProfile,
     activeAssessment,
     setActiveAssessment,
     personalData,
-    personalDataSubmitted,
     submittedForms,
     standaloneNotes,
     addStandaloneNote,
@@ -276,6 +294,7 @@ export function EmployeeHome() {
     language,
   } = useApp()
 
+  const t = translations[language].employee
   const [noteModalOpen, setNoteModalOpen] = useState(false)
   const [reviewingForm, setReviewingForm] = useState<SubmittedForm | null>(null)
 
@@ -299,54 +318,39 @@ export function EmployeeHome() {
 
         const { data: activeCamp } = await supabase
           .from('assessment_campaigns')
-          .select('id, title, created_at, config')
+          .select('id, title, status')
           .eq('organization_id', member.organization_id)
           .eq('status', 'ACTIVE')
-          .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle()
 
         if (activeCamp) {
           setActiveAssessment({
             id: activeCamp.id,
-            title: activeCamp.title,
-            createdAt: activeCamp.created_at,
-            config: activeCamp.config
+            title: activeCamp.title || 'Workplace Ergonomics Assessment',
+            createdAt: new Date().toISOString(),
+            status: activeCamp.status || 'ACTIVE'
           })
         }
       } catch (err) {
-        console.error('Error fetching active campaign in EmployeeHome:', err)
+        console.error('Error loading active campaign:', err)
       }
     }
     loadActiveCampaign()
   }, [activeAssessment, setActiveAssessment])
 
-  // Redirect to profile if not submitted
-  useEffect(() => {
-    if (!loadingProfile && !personalDataSubmitted) {
-      router.push('/employee/profile')
-    }
-  }, [loadingProfile, personalDataSubmitted, router])
-
-  if (loadingProfile) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-brand" />
-      </div>
-    )
-  }
-
   function handleSubmitNote(text: string) {
-    addStandaloneNote({
+    const newNote: StandaloneNote = {
       id: `note_${Date.now()}`,
       text,
-      department: 'Engineering',
+      department: personalData?.workPosition || 'General',
       submittedAt: new Date().toISOString(),
-    })
+    }
+    addStandaloneNote(newNote)
   }
 
-  // Check if there's an active campaign not yet completed by the employee
-  const pendingAssessment = activeAssessment && !submittedForms.some(f => f.assessmentId === activeAssessment.id)
+  // Check if there's an active campaign requiring submission
+  const pendingAssessment = !!activeAssessment && activeAssessment.status === 'ACTIVE'
 
   // Check if there's an in-progress session
   const hasInProgress = Object.keys(questionAnswers).length > 0
@@ -360,28 +364,8 @@ export function EmployeeHome() {
     router.push('/employee/questionnaire')
   }
 
-
-  const t = {
-    activeCampaignTitle: 'Active Assessment Campaign',
-    activeCampaignDesc: 'Your HR team has launched a new ergonomics assessment. Please complete it at your earliest convenience:',
-    privacyGuaranteed: 'Privacy guaranteed',
-    privacyGuaranteedDesc: 'Your responses are anonymised — only aggregated results are visible to HR.',
-    requiredStep: 'Required step',
-    requiredStepDesc: 'This assessment helps your organisation improve workplace wellbeing.',
-    resumeBtn: 'Resume Assessment',
-    startAssessmentNow: 'Start Assessment Now',
-    welcomeGreeting: 'Welcome back,',
-    writeANote: 'Write a Note',
-    noActiveCampaigns: 'No active assessment campaigns at the moment. Check back later.',
-    pastAssessments: 'Past Assessments',
-    noAssessmentsYet: 'No assessments submitted yet',
-    startFirstAssessment: 'Your completed assessments will appear here once you submit one.',
-    notesSent: 'Notes Sent',
-    sentAnonymously: 'Sent anonymously',
-  }
-
-  const displayName = personalData?.fullName || "Mohamed Ali"
-  const displayPosition = personalData?.workPosition ? `${personalData.workPosition} · HQ` : "Engineering · HQ Floor 3"
+  const displayName = personalData?.fullName || (language === 'ar' ? 'محمد علي' : 'Mohamed Ali')
+  const displayPosition = personalData?.workPosition ? `${personalData.workPosition}` : (language === 'ar' ? 'الهندسة · المقر الرئيسي' : 'Engineering · HQ Floor 3')
   const displayFirstName = displayName.split(' ')[0]
   const displayInitial = displayName.charAt(0).toUpperCase()
 
@@ -394,7 +378,7 @@ export function EmployeeHome() {
         <ReviewModal form={reviewingForm} onClose={() => setReviewingForm(null)} />
       )}
 
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background" dir={language === 'ar' ? 'rtl' : 'ltr'}>
         {/* Header */}
         <header className="bg-card border-b border-border px-6 py-4">
           <div className="max-w-3xl mx-auto flex items-center justify-between">
@@ -407,9 +391,9 @@ export function EmployeeHome() {
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-success/5 border border-success/20">
+              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-success/5 border border-success/20">
                 <Lock className="w-3 h-3 text-success" />
-                <span className="text-xs text-success font-medium">Private</span>
+                <span className="text-xs text-success font-medium">{t.private}</span>
               </div>
               <Link href="/employee/profile" className="flex items-center gap-2 hover:opacity-85 transition-opacity cursor-pointer">
                 <div className="w-7 h-7 rounded-full bg-brand/20 border border-brand/30 flex items-center justify-center text-xs font-semibold text-brand">
@@ -417,16 +401,18 @@ export function EmployeeHome() {
                 </div>
                 <span className="text-sm font-medium text-foreground">{displayName}</span>
               </Link>
+              <LanguageSwitcher />
               <ThemeToggle />
               <button
-                onClick={() => {
+                onClick={async () => {
+                  await supabase.auth.signOut()
                   setRole(null)
                   router.push('/')
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-muted-foreground border border-border hover:text-foreground hover:border-brand/40 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-muted-foreground border border-border hover:text-foreground hover:border-brand/40 transition-colors cursor-pointer"
               >
                 <LogOut className="w-3.5 h-3.5" />
-                Log out
+                {t.logout}
               </button>
             </div>
           </div>
@@ -479,7 +465,7 @@ export function EmployeeHome() {
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => setNoteModalOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium border border-amber-500/30 text-amber-400 bg-amber-500/5 hover:bg-amber-500/10 transition-colors cursor-pointer"
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium border border-amber-500/30 text-amber-500 bg-amber-500/5 hover:bg-amber-500/10 transition-colors cursor-pointer"
                   >
                     <StickyNote className="w-4 h-4" />
                     {t.writeANote}
@@ -497,10 +483,10 @@ export function EmployeeHome() {
               {/* Past Forms */}
               <section className="mb-8">
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-sm font-semibold text-foreground uppercase tracking-widest text-muted-foreground">
+                  <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
                     {t.pastAssessments}
                   </h2>
-                  <span className="text-xs text-muted-foreground">{submittedForms.length} {language === 'ar' ? 'إجمالي' : 'total'}</span>
+                  <span className="text-xs text-muted-foreground">{submittedForms.length} {language === 'ar' ? 'إجمالي' : language === 'fr' ? 'au total' : 'total'}</span>
                 </div>
 
                 {submittedForms.length === 0 ? (
@@ -529,16 +515,16 @@ export function EmployeeHome() {
                     <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">
                       {t.notesSent}
                     </h2>
-                    <span className="text-xs text-muted-foreground">{standaloneNotes.length} {language === 'ar' ? 'إجمالي' : 'total'}</span>
+                    <span className="text-xs text-muted-foreground">{standaloneNotes.length} {language === 'ar' ? 'إجمالي' : language === 'fr' ? 'au total' : 'total'}</span>
                   </div>
                   <div className="flex flex-col gap-2">
                     {standaloneNotes.map(note => (
                       <div key={note.id} className="bg-card border border-amber-500/20 rounded-xl p-4 flex items-start gap-3">
-                        <StickyNote className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                        <StickyNote className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-foreground leading-relaxed">{note.text}</p>
                           <p className="text-xs text-muted-foreground mt-1.5">
-                            {formatDate(note.submittedAt)} {language === 'ar' ? 'في' : 'at'} {formatTime(note.submittedAt)} · {t.sentAnonymously}
+                            {formatDate(note.submittedAt, language)} {language === 'ar' ? 'في' : language === 'fr' ? 'à' : 'at'} {formatTime(note.submittedAt, language)} · {t.sentAnonymously}
                           </p>
                         </div>
                       </div>
